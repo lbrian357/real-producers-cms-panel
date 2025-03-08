@@ -1,0 +1,187 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+
+<script>
+    USERS_COLLECTION_ID = "658f30a87b1a52ef8ad0b74b"
+    BRANDS_COLLECTION_ID = "658f30a87b1a52ef8ad0b77b"
+    PARTNERS_COLLECTION_ID = "65e7ff7b313c5cd8cd924886"
+
+    // Fetch brands allowed for the user
+    function fetchUserBrands() {
+        const USER_SLUG = $('div').find(`[data-ms-member='wf-users-slug']`).text();
+        $.ajax({
+            url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${USERS_COLLECTION_ID}/items/live?slug=${USER_SLUG}&sortBy=lastPublished&sortOrder=desc`,
+            method: "GET",
+            success: function(response) {
+                if (response.items.length > 0) {
+                    let brands = response.items[0].fieldData["brand-s"];
+                    brands.forEach(brandId => fetchBrandDetails(brandId));
+                }
+            },
+            error: function(error) { console.error("Error fetching brands:", error); }
+        });
+    }
+
+    // Fetch and populate brands dropdown
+    function fetchBrandDetails(brandId) {
+        $.ajax({
+            url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${BRANDS_COLLECTION_ID}/items/${brandId}/live`,
+            method: "GET",
+            success: function(response) {
+                $("#city-select").append(`<option value="${response.id}">${response.fieldData.name}</option>`);
+            },
+            error: function(error) { console.error("Error fetching brand details:", error); }
+        });
+    }
+
+    // Fetch partners for selected brand
+    function fetchPartners(brandId) {
+        $.ajax({
+            url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNERS_COLLECTION_ID}/items/live?sortBy=lastPublished&sortOrder=desc`,
+            method: "GET",
+            success: function(response) {
+                $("#collection-list").empty();
+                response.items
+                    .filter(item => item.fieldData.city.includes(brandId))
+                    .forEach(partner => {
+                        $("#collection-list").append(
+                            `<li class="collection-item" data-id="${partner.id}" data-slug="${partner.fieldData.slug}">
+                                ${partner.fieldData.name} <button class="edit-item">Edit</button>
+                            </li>`
+                        );
+                    });
+            },
+            error: function(error) { console.error("Error fetching partners:", error); }
+        });
+    }
+
+    // Fetch partner details and open modal
+    function fetchPartnerDetails(slug) {
+        $.ajax({
+            url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNERS_COLLECTION_ID}/items/live?slug=${slug}&sortBy=lastPublished&sortOrder=desc`,
+            method: "GET",
+            success: function(response) {
+                if (response.items.length > 0) {
+                    let partner = response.items[0];
+                    selectedPartnerId = partner.id;
+
+                                            // Populate all form fields
+                    $("#partner-name").val(partner.fieldData.name);
+                    $("#partner-company").val(partner.fieldData.company);
+                    $("#partner-title").val(partner.fieldData["company-type"]);
+                    $("#partner-phone").val(partner.fieldData.phone);
+                    $("#partner-email").val(partner.fieldData.email);
+                    $("#partner-website").val(partner.fieldData.website);
+                    $("#partner-license").val(partner.fieldData["license-number"]);
+                    $("#partner-facebook").val(partner.fieldData["url-facebook"]);
+                    $("#partner-instagram").val(partner.fieldData["url-instagram"]);
+                    $("#partner-x").val(partner.fieldData["url-x"]);
+                    $("#partner-youtube").val(partner.fieldData["url-youtube"]);
+                    $("#partner-linkedin").val(partner.fieldData["url-linkedin"]);
+                    $("#partner-tiktok").val(partner.fieldData["url-tiktok"]);
+                    $("#partner-description").val(partner.fieldData["description"]);
+                    $("#partner-preview-text").val(partner.fieldData["preview-text"]);
+                    $("#partner-address").val(partner.fieldData["address"]);
+                    $("#partner-city").val(partner.fieldData["city-state-zip"]);
+
+                    // Populate multi-reference fields (dropdown with multiple selections)
+                    $("#partner-categories").val(partner.fieldData["partner-categories"]);
+
+                    $("#collection-item-modal").removeClass("hidden");
+                }
+            },
+            error: function(error) { console.error("Error fetching partner details:", error); }
+        });
+    }
+
+    // Update partner details
+    function updatePartner() {
+            let updatedData = {
+        fieldData: {
+            name: $("#partner-name").val(),
+            company: $("#partner-company").val(),
+            "company-type": $("#partner-title").val(),
+            phone: $("#partner-phone").val(),
+            email: $("#partner-email").val(),
+            website: $("#partner-website").val(),
+            "license-number": $("#partner-license").val(),
+            "url-facebook": $("#partner-facebook").val(),
+            "url-instagram": $("#partner-instagram").val(),
+            "url-x": $("#partner-x").val(),
+            "url-youtube": $("#partner-youtube").val(),
+            "url-linkedin": $("#partner-linkedin").val(),
+            "url-tiktok": $("#partner-tiktok").val(),
+            description: $("#partner-description").val(),
+            "preview-text": $("#partner-preview-text").val(),
+            address: $("#partner-address").val(),
+            "city-state-zip": $("#partner-city").val(),
+            "partner-categories": $("#partner-categories").val() // Multi-reference
+        }
+        };
+        $.ajax({
+        url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNERS_COLLECTION_ID}/items/${selectedPartnerId}/live?sortBy=lastPublished&sortOrder=desc`,
+        headers: { 
+            "Content-Type": "application/json"
+        },
+        method: "PATCH",
+        data: JSON.stringify(updatedData),
+        success: function() {
+            alert("Partner updated!");
+            $("#collection-item-modal").addClass("hidden");
+            fetchPartners($("#city-select").val()); // Refresh list
+        },
+        error: function(error) { console.error("Error updating partner:", error); }
+        });
+    }
+
+    // Event listeners
+    $(document).ready(function() {
+            // Append modal dynamically for now until frontend components are available
+        $("body").append(`
+            <div id="collection-item-modal" class="hidden collection-item-modal">
+                <div class="collection-item-modal-content">
+                <h3>Edit Partner</h3>
+                <label>Name:</label><input type="text" id="partner-name">
+                <label>Company:</label><input type="text" id="partner-company">
+                <label>Title:</label><input type="text" id="partner-title">
+                <label>Phone:</label><input type="text" id="partner-phone">
+                <label>Email:</label><input type="email" id="partner-email">
+                <label>Website:</label><input type="text" id="partner-website">
+                <label>License Number:</label><input type="text" id="partner-license">
+                <label>Facebook:</label><input type="text" id="partner-facebook">
+                <label>Instagram:</label><input type="text" id="partner-instagram">
+                <label>X (Twitter):</label><input type="text" id="partner-x">
+                <label>YouTube:</label><input type="text" id="partner-youtube">
+                <label>LinkedIn:</label><input type="text" id="partner-linkedin">
+                <label>TikTok:</label><input type="text" id="partner-tiktok">
+                <label>Description:</label><textarea id="partner-description"></textarea>
+                <label>Preview Text:</label><input type="text" id="partner-preview-text">
+                <label>Address:</label><input type="text" id="partner-address">
+                <label>City, State Zip:</label><input type="text" id="partner-city">
+                <label>Partner Categories:</label>
+                <select id="partner-categories" multiple>
+                    <option value="65e96b6acdfd2898d9dc2be8">Category 1</option>
+                    <option value="some-other-id">Category 2</option>
+                </select>
+                <button id="save-partner">Save</button>
+                <button id="close-modal">Close</button>
+                </div>
+            </div>
+        `);
+        
+        fetchUserBrands();
+
+        $("#city-select").on("change", function() {
+            let brandId = $(this).val();
+            if (brandId) fetchPartners(brandId);
+        });
+
+        $("#collection-list").on("click", ".edit-item", function() {
+            let slug = $(this).closest("li").data("slug");
+            fetchPartnerDetails(slug);
+        });
+
+        $("#save-partner").on("click", updatePartner);
+        $("#close-modal").on("click", function() { $("#collection-item-modal").addClass("hidden"); });
+    });
+</script>
