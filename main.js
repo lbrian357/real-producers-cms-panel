@@ -12,6 +12,13 @@ USERS_COLLECTION_ID = "658f30a87b1a52ef8ad0b74b";
 BRANDS_COLLECTION_ID = "658f30a87b1a52ef8ad0b77b";
 PARTNERS_COLLECTION_ID = "65e7ff7b313c5cd8cd924886";
 
+
+
+
+
+
+
+
 var rpLib = {
   partnersPage: {
     init: function () {
