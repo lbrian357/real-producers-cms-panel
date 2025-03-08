@@ -1,4 +1,3 @@
-// I am trying to convert the above code to a library that can be used on multiple pages. I have the following code so far:
 $(document).ready(function () {
   //
   // Run the scripts on relevant pages
@@ -387,3 +386,4 @@ var rpLib = {
     },
   },
 };
+
