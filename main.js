@@ -49,7 +49,7 @@ var rpLib = {
           // Fetch all users after city selection
           $("#city-select").on("change", function () {
             let brandId = $(this).val();
-            if (brandId) rpLib.api.fetchUsers(brandId);
+            if (brandId) rpLib.api.fetchBrandUsers(brandId);
           });
   
           // Event listener for edit button click
@@ -288,11 +288,11 @@ var rpLib = {
       rpLib.api.fetchAllPaginated(url, (items) => {
         if (items.length > 0) {
           let brands = items[0].fieldData["brand-s"];
-          brands.forEach((brandId) => rpLib.api.fetchBrandDetails(brandId));
+          brands.forEach((brandId) => rpLib.api.fetchBrandDetailsAndPopulateDropdown(brandId));
         }
       });
     },
-    fetchBrandDetails: function (brandId) {
+    fetchBrandDetailsAndPopulateDropdown: function (brandId) {
       $.ajax({
         url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${BRANDS_COLLECTION_ID}/items/${brandId}/live`,
         method: "GET",
@@ -304,7 +304,7 @@ var rpLib = {
         },
       });
     },
-    fetchUsers: function (brandId) {
+    fetchBrandUsers: function (brandId) {
       const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${USERS_COLLECTION_ID}/items/live?sortBy=lastPublished&sortOrder=desc`;
   
       // Clear existing user list
@@ -578,7 +578,7 @@ var rpLib = {
           success: function () {
               alert("User updated!");
               $("#collection-item-modal").addClass("hidden");
-              usersPage.fetchUsers($("#city-select").val()); // Refresh the user list
+              rpLib.api.fetchBrandUsers($("#city-select").val()); // Refresh list
           },
           error: function (error) {
               console.error("Error updating user:", error);
