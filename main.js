@@ -179,76 +179,63 @@ var rpLib = {
       $("#save-user").on("click", function () {
         const userId = $("#collection-item-modal").data("user-id");
 
-        let filesToUpload = 0;
-        if (profilePicFile) filesToUpload++;
-        if (fullPicFile) filesToUpload++;
-        
-        // If no files to upload, just save the user data
-        if (filesToUpload === 0) {
-            rpLib.api.updateUserAndRefreshList(userId);
-            return;
-        }
-        
+        let uploadPromises = [];
+
         // Show saving status
         $('#save-user').text('Uploading images...');
         $('#save-user').prop('disabled', true);
-        
+
         // Upload profile pic if needed
-        let profilePicUploaded = !profilePicFile;
-        let fullPicUploaded = !fullPicFile;
-        
         if (profilePicFile) {
             $('#profile-pic-upload-status').text('Uploading...');
-            
-            rpLib.api.uploadImage(profilePicFile, 
-                function(result) {
-                    $('#profile-pic-upload-status').text('Upload complete!');
-                    $('#user-profile-pic').val(result.url);
-                    profilePicUploaded = true;
-                    
-                    // Check if all uploads are done
-                    if (profilePicUploaded && fullPicUploaded) {
-                        rpLib.api.updateUserAndRefreshList(userId);
+            let profilePicPromise = new Promise((resolve) => {
+                rpLib.api.uploadImage(profilePicFile, 
+                    function(result) {
+                        $('#profile-pic-upload-status').text('Upload complete!');
+                        $('#user-profile-pic').val(result.url);
+                        resolve(); // Resolve when upload succeeds
+                    },
+                    function(error) {
+                        $('#profile-pic-upload-status').text('Upload failed: ' + error.statusText);
+                        resolve(); // Resolve even if upload fails
                     }
-                },
-                function(error) {
-                    $('#profile-pic-upload-status').text('Upload failed: ' + error.statusText);
-                    profilePicUploaded = true;
-                    
-                    // Continue with save even if upload fails
-                    if (profilePicUploaded && fullPicUploaded) {
-                        rpLib.api.updateUserAndRefreshList(userId);
-                    }
-                }
-            );
+                );
+            });
+            uploadPromises.push(profilePicPromise);
         }
-        
+
+        // Upload full pic if needed
         if (fullPicFile) {
             $('#full-pic-upload-status').text('Uploading...');
+            let fullPicPromise = new Promise((resolve) => {
+                rpLib.api.uploadImage(fullPicFile, 
+                    function(result) {
+                        $('#full-pic-upload-status').text('Upload complete!');
+                        $('#user-full-pic').val(result.url);
+                        resolve();
+                    },
+                    function(error) {
+                        $('#full-pic-upload-status').text('Upload failed: ' + error.statusText);
+                        resolve();
+                    }
+                );
+            });
+            uploadPromises.push(fullPicPromise);
+        }
+
+        // Wait for all uploads to finish before saving and closing modal
+        Promise.all(uploadPromises).then(() => {
+            rpLib.api.updateUserAndRefreshList(userId);
             
-            rpLib.api.uploadImage(fullPicFile, 
-                function(result) {
-                    $('#full-pic-upload-status').text('Upload complete!');
-                    $('#user-full-pic').val(result.url);
-                    fullPicUploaded = true;
-                    
-                    // Check if all uploads are done
-                    if (profilePicUploaded && fullPicUploaded) {
-                        rpLib.api.updateUserAndRefreshList(userId);
-                    }
-                },
-                function(error) {
-                    $('#full-pic-upload-status').text('Upload failed: ' + error.statusText);
-                    fullPicUploaded = true;
-                    
-                    // Continue with save even if upload fails
-                    if (profilePicUploaded && fullPicUploaded) {
-                        rpLib.api.updateUserAndRefreshList(userId);
-                    }
-                }
-            );
-          }
+            // Reset button text and re-enable it
+            $('#save-user').text('Save');
+            $('#save-user').prop('disabled', false);
+            
+            // Close the modal
+            $("#collection-item-modal").addClass("hidden");
+        });
       });
+
 
     },
     renderUser: function (user) {
@@ -701,7 +688,9 @@ var rpLib = {
             $("#user-last-name").val(user.fieldData["last-name"] || "");
             $("#user-title").val(user.fieldData.title || "");
             $("#user-profile-pic").val(user.fieldData["profile-picture"]?.url || "");
+            $("#profile-pic-preview").attr("src", user.fieldData["profile-picture"]?.url || "");
             $("#user-full-pic").val(user.fieldData["full-picture"]?.url || "");
+            $("#full-pic-preview").attr("src", user.fieldData["full-picture"]?.url || "");
             $("#user-email").val(user.fieldData.email || "");
             $("#user-phone").val(user.fieldData.phone || "");
             $("#user-bio").val(user.fieldData.bio || "");
