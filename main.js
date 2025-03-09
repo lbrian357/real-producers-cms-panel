@@ -204,8 +204,8 @@ var rpLib = {
     fetchPartners: function (brandId) {
       const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNERS_COLLECTION_ID}/items/live?sortBy=lastPublished&sortOrder=desc`;
 
+      $("#collection-list").empty();
       rpLib.api.fetchAllPaginated(url, (items) => {
-        $("#collection-list").empty();
         items
           .filter((item) => item.fieldData.city.includes(brandId))
           .forEach((partner) => {
@@ -298,8 +298,8 @@ var rpLib = {
     fetchEvents: function (brandId) {
       const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${EVENTS_COLLECTION_ID}/items/live?sortBy=lastPublished&sortOrder=desc`;
 
+      $("#collection-list").empty();
       rpLib.api.fetchAllPaginated(url, (items) => {
-        $("#collection-list").empty();
         items
           .filter((item) => item.fieldData.brand === brandId)
           .forEach((event) => {
