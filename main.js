@@ -1,4 +1,10 @@
+EVENTS_COLLECTION_ID = "658f30a87b1a52ef8ad0b8e4";
+USERS_COLLECTION_ID = "658f30a87b1a52ef8ad0b74b";
+BRANDS_COLLECTION_ID = "658f30a87b1a52ef8ad0b77b";
+PARTNERS_COLLECTION_ID = "65e7ff7b313c5cd8cd924886";
+
 $(document).ready(function () {
+  rpLib.utils.injectCSS();
   //
   // Run the scripts on relevant pages
   //
@@ -6,18 +12,6 @@ $(document).ready(function () {
   if (window.location.pathname === "/account/events") rpLib.eventsPage.init();
   if (window.location.pathname === "/account/users") rpLib.usersPage.init();
 });
-
-EVENTS_COLLECTION_ID = "658f30a87b1a52ef8ad0b8e4";
-USERS_COLLECTION_ID = "658f30a87b1a52ef8ad0b74b";
-BRANDS_COLLECTION_ID = "658f30a87b1a52ef8ad0b77b";
-PARTNERS_COLLECTION_ID = "65e7ff7b313c5cd8cd924886";
-
-
-
-
-
-
-
 
 var rpLib = {
   partnersPage: {
@@ -61,11 +55,10 @@ var rpLib = {
         if (brandId) rpLib.api.fetchPartners(brandId);
       });
 
-      $("#collection-list").on("click", ".edit-item", function () {
-        let partnerId = $(this).closest("li").data("partner-id");
+      $("body").on("click", ".item-edit-btn", function(event) {
+        let partnerId = $(this).closest(".collection-item").data("partner-id");
+        let slug = $(this).closest(".collection-item").data("slug");
         $("#collection-item-modal").attr("data-event-id", partnerId);
-
-        let slug = $(this).closest("li").data("slug");
         rpLib.api.fetchPartnerDetails(slug);
       });
 
@@ -144,6 +137,15 @@ var rpLib = {
   },
 
   utils: {
+    injectCSS: function () {
+      $("head").append(`
+            <style>
+              .collection-item-row-template {
+                  display: none;
+              }
+            </style>
+        `);
+    },
     updateImageGallery: function (eventData, field, container) {
       let images = eventData?.fieldData?.[field] || [];
       let previewContainer = $(container);
@@ -204,18 +206,25 @@ var rpLib = {
     fetchPartners: function (brandId) {
       const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNERS_COLLECTION_ID}/items/live?sortBy=lastPublished&sortOrder=desc`;
 
-      $("#collection-list").empty();
+      $("#collection-list .collection-item").not('.collection-item-row-template').remove();
       rpLib.api.fetchAllPaginated(url, (items) => {
         items
           .filter((item) => item.fieldData.city.includes(brandId))
           .forEach((partner) => {
-            $("#collection-list").append(
-              `<li class="collection-item" data-partner-id="${partner.id}" data-slug="${partner.fieldData.slug}">
-                          ${partner.fieldData.name} <button class="edit-item">Edit</button>
-                      </li>`
-            );
+            const templateRowItem = $(".collection-item-row-template").clone();
+            templateRowItem.removeClass('collection-item-row-template');
+            templateRowItem.attr('data-slug', partner.fieldData.slug); // partner.id
+            templateRowItem.attr('data-partner-id', partner.id);
+            templateRowItem.find(".partner-pic").attr("src", partner.fieldData.logo?.url || "");
+            templateRowItem.find(".parner-name").text(partner.fieldData.name);
+            templateRowItem.find(".partner-number").text(partner.fieldData.phone);
+            templateRowItem.find(".partner-email").text(partner.fieldData.email);
+            templateRowItem.find(".item-view-btn").attr("href", partner.id);
+
+            $("#collection-list").append(templateRowItem);
           });
       });
+
     },
     fetchPartnerDetails: function (slug) {
       $.ajax({
@@ -298,7 +307,7 @@ var rpLib = {
     fetchEvents: function (brandId) {
       const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${EVENTS_COLLECTION_ID}/items/live?sortBy=lastPublished&sortOrder=desc`;
 
-      $("#collection-list").empty();
+      $("#collection-list .collection-item").not('.collection-item-row-template').empty();
       rpLib.api.fetchAllPaginated(url, (items) => {
         items
           .filter((item) => item.fieldData.brand === brandId)
@@ -393,12 +402,3 @@ var rpLib = {
     },
   },
 };
-
-
-
-
-
-
-
-
-
