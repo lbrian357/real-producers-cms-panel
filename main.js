@@ -49,7 +49,7 @@ var rpLib = {
           // Fetch all users after city selection
           $("#city-select").on("change", function () {
             let brandId = $(this).val();
-            if (brandId) rpLib.api.fetchBrandUsers(brandId);
+            if (brandId) rpLib.api.fetchBrandUsersAndRender(brandId);
           });
   
           // Event listener for edit button click
@@ -57,12 +57,12 @@ var rpLib = {
               let userId = $(this).closest(".collection-item").data("user-id");
               let slug = $(this).closest(".collection-item").data("slug");
               $("#collection-item-modal").attr("data-user-id", userId);
-              rpLib.api.fetchUserDetails(slug);
+              rpLib.api.fetchUserDetailsAndOpenModal(slug);
           });
   
           // Save user details
           $("#save-user").on("click", function () {
-              usersPage.updateUser($("#collection-item-modal").data("user-id"));
+              usersPage.updateUserAndRefreshList($("#collection-item-modal").data("user-id"));
           });
   
           // Close modal
@@ -123,18 +123,18 @@ var rpLib = {
       rpLib.api.fetchUserBrands();
       $("#city-select").on("change", function () {
         let brandId = $(this).val();
-        if (brandId) rpLib.api.fetchPartners(brandId);
+        if (brandId) rpLib.api.fetchPartnersAndRender(brandId);
       });
 
       $("body").on("click", ".item-edit-btn", function(event) {
         let partnerId = $(this).closest(".collection-item").data("partner-id");
         let slug = $(this).closest(".collection-item").data("slug");
         $("#collection-item-modal").attr("data-event-id", partnerId);
-        rpLib.api.fetchPartnerDetails(slug);
+        rpLib.api.fetchPartnerDetailsAndOpenModal(slug);
       });
 
       $("#save-partner").on("click", function () {
-        rpLib.api.updatePartner($("#collection-item-modal").data("partner-id"));
+        rpLib.api.updatePartnerAndRefreshList($("#collection-item-modal").data("partner-id"));
       });
       $("#close-modal").on("click", function () {
         $("#collection-item-modal").addClass("hidden");
@@ -203,16 +203,16 @@ var rpLib = {
 
       rpLib.api.fetchUserBrands();
       $("#city-select").on("change", function () {
-        rpLib.api.fetchEvents($(this).val());
+        rpLib.api.fetchEventsAndRender($(this).val());
       });
       $("#collection-list").on("click", ".item-edit-btn", function () {
         let eventId = $(this).closest(".collection-item").data("event-id");
         let slug = $(this).closest(".collection-item").data("slug");
         $("#collection-item-modal").attr("data-event-id", eventId);
-        rpLib.api.fetchEventDetails(slug);
+        rpLib.api.fetchEventDetailsAndOpenModal(slug);
       });
       $("#save-event").on("click", function () {
-        rpLib.api.updateEvent($("#collection-item-modal").data("event-id"));
+        rpLib.api.updateEventAndRefreshList($("#collection-item-modal").data("event-id"));
       });
       $("#close-modal").on("click", function () {
         $("#collection-item-modal").addClass("hidden");
@@ -304,7 +304,7 @@ var rpLib = {
         },
       });
     },
-    fetchBrandUsers: function (brandId) {
+    fetchBrandUsersAndRender: function (brandId) {
       const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${USERS_COLLECTION_ID}/items/live?sortBy=lastPublished&sortOrder=desc`;
   
       // Clear existing user list
@@ -320,7 +320,7 @@ var rpLib = {
           });
       });
   },
-    fetchPartners: function (brandId) {
+    fetchPartnersAndRender: function (brandId) {
       const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNERS_COLLECTION_ID}/items/live?sortBy=lastPublished&sortOrder=desc`;
 
       // Clear existing providers in list
@@ -335,7 +335,7 @@ var rpLib = {
       });
 
     },
-    fetchPartnerDetails: function (slug) {
+    fetchPartnerDetailsAndOpenModal: function (slug) {
       $.ajax({
         url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNERS_COLLECTION_ID}/items/live?slug=${slug}&sortBy=lastPublished&sortOrder=desc`,
         method: "GET",
@@ -373,7 +373,7 @@ var rpLib = {
         },
       });
     },
-    updatePartner: function (partnerId) {
+    updatePartnerAndRefreshList: function (partnerId) {
       let updatedData = {
         fieldData: {
           name: $("#partner-name").val(),
@@ -406,14 +406,14 @@ var rpLib = {
         success: function () {
           alert("Partner updated!");
           $("#collection-item-modal").addClass("hidden");
-          rpLib.api.fetchPartners($("#city-select").val()); // Refresh list
+          rpLib.api.fetchPartnersAndRender($("#city-select").val()); // Refresh list
         },
         error: function (error) {
           console.error("Error updating partner:", error);
         },
       });
     },
-    fetchEvents: function (brandId) {
+    fetchEventsAndRender: function (brandId) {
       const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${EVENTS_COLLECTION_ID}/items/live?sortBy=lastPublished&sortOrder=desc`;
 
       // Clear existing events in list
@@ -428,7 +428,7 @@ var rpLib = {
       }
       );
     },
-    fetchEventDetails: function (slug) {
+    fetchEventDetailsAndOpenModal: function (slug) {
       $.ajax({
         url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${EVENTS_COLLECTION_ID}/items/live?slug=${slug}&sortBy=lastPublished&sortOrder=desc`,
         method: "GET",
@@ -472,7 +472,7 @@ var rpLib = {
         },
       });
     },
-    updateEvent: function (eventId) {
+    updateEventAndRefreshList: function (eventId) {
       let updatedData = {
         fieldData: {
           name: $("#event-name").val(),
@@ -501,14 +501,14 @@ var rpLib = {
         success: function () {
           alert("Event updated!");
           $("#collection-item-modal").addClass("hidden");
-          rpLib.api.fetchEvents($("#city-select").val());
+          rpLib.api.fetchEventsAndRender($("#city-select").val());
         },
         error: function (error) {
           console.error("Error updating event:", error);
         },
       });
     },
-      fetchUserDetails: function (slug) {
+      fetchUserDetailsAndOpenModal: function (slug) {
           $.ajax({
               url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${USERS_COLLECTION_ID}/items/live?slug=${slug}`,
               method: "GET",
@@ -542,7 +542,7 @@ var rpLib = {
       });
   },
 
-  updateUser: function (userId) {
+  updateUserAndRefreshList: function (userId) {
       let updatedData = {
           fieldData: {
               "first-name": $("#user-first-name").val(),
@@ -578,7 +578,7 @@ var rpLib = {
           success: function () {
               alert("User updated!");
               $("#collection-item-modal").addClass("hidden");
-              rpLib.api.fetchBrandUsers($("#city-select").val()); // Refresh list
+              rpLib.api.fetchBrandUsersAndRender($("#city-select").val()); // Refresh list
           },
           error: function (error) {
               console.error("Error updating user:", error);
