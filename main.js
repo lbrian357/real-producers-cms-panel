@@ -148,8 +148,8 @@ var rpLib = {
 
             templateRowItem.find(".partner-pic").attr("src", partner.fieldData.logo?.url || "");
             templateRowItem.find(".parner-name").text(partner.fieldData.name || "");
-            templateRowItem.find(".partner-number").text(partner.fieldData.phone || "");j
-            templateRowItem.find(".partner-email").text(partner.fieldData.email || "");j
+            templateRowItem.find(".partner-number").text(partner.fieldData.phone || "");
+            templateRowItem.find(".partner-email").text(partner.fieldData.email || "");
             templateRowItem.find(".item-view-btn").attr("href", partner.id || "");
 
             $("#collection-list").append(templateRowItem);
