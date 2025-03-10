@@ -327,48 +327,361 @@ var rpLib = {
     init: function () {
       // Append modal dynamically for now until frontend components are available
       $("body").append(`
-            <div id="collection-item-modal" class="hidden collection-item-modal" data-event-id="">
-                <div class="collection-item-modal-content">
-                    <h3>Edit Event</h3>
-                    <label>Name:</label><input type="text" id="event-name">
-                    <label>Date:</label><input type="date" id="event-date">
-                    <label>Location Name:</label><input type="text" id="event-location-name">
-                    <label>Location Address:</label><input type="text" id="event-location-address">
-                    <label>Button URL:</label><input type="text" id="button-url">
-                    <label>Button Text:</label><input type="text" id="button-text">
-                    <label>Event Flyer URL:</label><input type="text" id="event-flyer">
-
-                    <!-- Main Image -->
-                    <label>Main Image:</label>
-                    <img id="main-image-preview" class="preview-img" />
-                    <input type="file" id="main-image" accept="image/*">
-
-                    <!-- Image Gallery 1 -->
-                    <label>Image Gallery 1:</label>
-                    <div id="image-gallery-preview" class="gallery-preview"></div>
-                    <input type="file" id="image-gallery" accept="image/*" multiple>
-
-                    <!-- Image Gallery 2 -->
-                    <label>Image Gallery 2:</label>
-                    <div id="image-gallery-2-preview" class="gallery-preview"></div>
-                    <input type="file" id="image-gallery-2" accept="image/*" multiple>
-
-                    <!-- Image Gallery 3 -->
-                    <label>Image Gallery 3:</label>
-                    <div id="image-gallery-3-preview" class="gallery-preview"></div>
-                    <input type="file" id="image-gallery-3" accept="image/*" multiple>
-
-                    <label>YouTube Video ID:</label><input type="text" id="youtube-video-id">
-                    <label>YouTube Video ID 2:</label><input type="text" id="youtube-video-id-2">
-                    <label>Description:</label><textarea id="event-description"></textarea>
-                    <label>Sponsor Event Button URL:</label><input type="text" id="sponsor-button-url">
-                    <label>Sponsor Event Button Text:</label><input type="text" id="sponsor-button-text">
-                    <button id="save-event">Save</button>
-                    <button id="close-modal">Close</button>
-                </div>
-            </div>
-        `);
-
+        <div id="collection-item-modal" class="hidden collection-item-modal" data-event-id="">
+          <div class="collection-item-modal-content">
+              <h3>Edit Event</h3>
+              <label>Name:</label><input type="text" id="event-name">
+              <label>Date:</label><input type="date" id="event-date">
+              <label>Location Name:</label><input type="text" id="event-location-name">
+              <label>Location Address:</label><input type="text" id="event-location-address">
+              <label>Button URL:</label><input type="text" id="button-url">
+              <label>Button Text:</label><input type="text" id="button-text">
+              
+              <!-- Main Image -->
+              <div>
+                  <label>Main Image:</label>
+                  <div class="image-upload-container">
+                      <input type="text" id="event-main-image" placeholder="Image URL">
+                      <div class="upload-section">
+                          <input type="file" id="main-image-upload" accept="image/*">
+                          <span id="main-image-upload-status"></span>
+                      </div>
+                      <div class="image-preview">
+                          <img id="main-image-preview" src="" alt="Main Image Preview">
+                      </div>
+                  </div>
+              </div>
+              
+              <!-- Image Gallery 1 -->
+              <div>
+                  <label>Image Gallery 1:</label>
+                  <div class="image-upload-container">
+                      <div class="upload-section">
+                          <input type="file" id="gallery-1-upload" accept="image/*" multiple>
+                          <span id="gallery-1-upload-status"></span>
+                      </div>
+                      <div class="gallery-preview" id="gallery-1-preview">
+                          <!-- Preview thumbnails will be inserted here -->
+                      </div>
+                  </div>
+              </div>
+              
+              <!-- Image Gallery 2 -->
+              <div>
+                  <label>Image Gallery 2:</label>
+                  <div class="image-upload-container">
+                      <div class="upload-section">
+                          <input type="file" id="gallery-2-upload" accept="image/*" multiple>
+                          <span id="gallery-2-upload-status"></span>
+                      </div>
+                      <div class="gallery-preview" id="gallery-2-preview">
+                          <!-- Preview thumbnails will be inserted here -->
+                      </div>
+                  </div>
+              </div>
+              
+              <!-- Image Gallery 3 -->
+              <div>
+                  <label>Image Gallery 3:</label>
+                  <div class="image-upload-container">
+                      <div class="upload-section">
+                          <input type="file" id="gallery-3-upload" accept="image/*" multiple>
+                          <span id="gallery-3-upload-status"></span>
+                      </div>
+                      <div class="gallery-preview" id="gallery-3-preview">
+                          <!-- Preview thumbnails will be inserted here -->
+                      </div>
+                  </div>
+              </div>
+              
+              <label>Event Flyer URL:</label><input type="text" id="event-flyer">
+              <label>YouTube Video ID:</label><input type="text" id="youtube-video-id">
+              <label>YouTube Video ID 2:</label><input type="text" id="youtube-video-id-2">
+              <label>Description:</label><textarea id="event-description"></textarea>
+              <label>Sponsor Event Button URL:</label><input type="text" id="sponsor-event-button-url">
+              <label>Sponsor Event Button Text:</label><input type="text" id="sponsor-event-button-text">
+              <button id="save-event">Save</button>
+              <button id="close-modal">Close</button>
+          </div>
+        </div>
+      `);
+      
+      // Add CSS for the image upload components
+      $("head").append(`
+        <style>
+          .image-upload-container {
+              margin-bottom: 15px;
+          }
+          .upload-section {
+              margin: 10px 0;
+              display: flex;
+              align-items: center;
+          }
+          .upload-section span {
+              margin-left: 10px;
+              font-size: 0.85em;
+              color: #666;
+          }
+          .image-preview {
+              margin-top: 10px;
+          }
+          .image-preview img {
+              max-width: 150px;
+              max-height: 150px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              padding: 3px;
+          }
+          .gallery-preview {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 5px;
+              margin-top: 10px;
+          }
+          .gallery-preview .thumbnail {
+              width: 80px;
+              height: 80px;
+              object-fit: cover;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+          }
+          .gallery-counter {
+              display: block;
+              margin: 5px 0;
+              font-size: 0.8em;
+              color: #666;
+          }
+        </style>
+      `);
+  
+      // Initialize file storage
+      let mainImageFile = null;
+      let gallery1Files = [];
+      let gallery2Files = [];
+      let gallery3Files = [];
+      
+      // Existing event data storage
+      let existingGallery1 = [];
+      let existingGallery2 = [];
+      let existingGallery3 = [];
+      
+      // Main Image Preview Handler
+      $('#main-image-upload').on('change', function(e) {
+        mainImageFile = e.target.files[0];
+        if (!mainImageFile) return;
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            $('#main-image-preview').attr('src', e.target.result);
+            $('#main-image-upload-status').text('Image selected (will upload when saved)');
+        }
+        reader.readAsDataURL(mainImageFile);
+      });
+      
+      // Update preview when URL is manually entered
+      $('#event-main-image').on('change input', function() {
+        if ($(this).val()) {
+            $('#main-image-preview').attr('src', $(this).val());
+            // If URL is entered manually, clear the file selection
+            mainImageFile = null;
+            $('#main-image-upload').val('');
+        }
+      });
+      
+      // Gallery 1 Preview Handler
+      $('#gallery-1-upload').on('change', function(e) {
+        const files = Array.from(e.target.files);
+        gallery1Files = files;
+        
+        if (files.length === 0) return;
+        
+        // Clear existing preview
+        $('#gallery-1-preview').empty();
+        
+        // Show preview for each file
+        files.forEach(file => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const img = $('<img>').addClass('thumbnail').attr('src', e.target.result);
+            $('#gallery-1-preview').append(img);
+          }
+          reader.readAsDataURL(file);
+        });
+        
+        $('#gallery-1-upload-status').text(`${files.length} images selected (will upload when saved)`);
+      });
+      
+      // Gallery 2 Preview Handler
+      $('#gallery-2-upload').on('change', function(e) {
+        const files = Array.from(e.target.files);
+        gallery2Files = files;
+        
+        if (files.length === 0) return;
+        
+        // Clear existing preview
+        $('#gallery-2-preview').empty();
+        
+        // Show preview for each file
+        files.forEach(file => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const img = $('<img>').addClass('thumbnail').attr('src', e.target.result);
+            $('#gallery-2-preview').append(img);
+          }
+          reader.readAsDataURL(file);
+        });
+        
+        $('#gallery-2-upload-status').text(`${files.length} images selected (will upload when saved)`);
+      });
+      
+      // Gallery 3 Preview Handler
+      $('#gallery-3-upload').on('change', function(e) {
+        const files = Array.from(e.target.files);
+        gallery3Files = files;
+        
+        if (files.length === 0) return;
+        
+        // Clear existing preview
+        $('#gallery-3-preview').empty();
+        
+        // Show preview for each file
+        files.forEach(file => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const img = $('<img>').addClass('thumbnail').attr('src', e.target.result);
+            $('#gallery-3-preview').append(img);
+          }
+          reader.readAsDataURL(file);
+        });
+        
+        $('#gallery-3-upload-status').text(`${files.length} images selected (will upload when saved)`);
+      });
+  
+      // Save event with image uploads
+      $("#save-event").on("click", function() {
+        const eventId = $("#collection-item-modal").data("event-id");
+        
+        // Show saving status
+        $('#save-event').text('Uploading images...');
+        $('#save-event').prop('disabled', true);
+        
+        let uploadPromises = [];
+        
+        // Upload main image if selected
+        if (mainImageFile) {
+          $('#main-image-upload-status').text('Uploading...');
+          let mainImagePromise = new Promise((resolve) => {
+            rpLib.api.uploadImage(mainImageFile, 
+              function(result) {
+                $('#main-image-upload-status').text('Upload complete!');
+                $('#event-main-image').val(result.url);
+                resolve();
+              },
+              function(error) {
+                $('#main-image-upload-status').text('Upload failed: ' + error.statusText);
+                resolve(); // Resolve even if upload fails
+              }
+            );
+          });
+          uploadPromises.push(mainImagePromise);
+        }
+        
+        // Upload gallery 1 images if selected
+        if (gallery1Files.length > 0) {
+          $('#gallery-1-upload-status').text('Uploading...');
+          let gallery1Promise = new Promise((resolve) => {
+            rpLib.api.uploadMultipleImages(
+              gallery1Files,
+              function(progress, total) {
+                $('#gallery-1-upload-status').text(`Uploading ${progress}/${total}...`);
+              },
+              function(results) {
+                // Store the results to be saved
+                const gallery1Results = results.map(result => ({ id: result.id, url: result.url }));
+                
+                // Store these to be used in the final save call
+                $('#gallery-1-upload-status').text('Upload complete!');
+                
+                // Store in a data attribute to retrieve when saving
+                $('#gallery-1-preview').data('uploaded-images', gallery1Results);
+                resolve();
+              },
+              function(error) {
+                $('#gallery-1-upload-status').text('Upload failed: ' + error.statusText);
+                resolve(); // Resolve even if upload fails
+              }
+            );
+          });
+          uploadPromises.push(gallery1Promise);
+        }
+        
+        // Upload gallery 2 images if selected
+        if (gallery2Files.length > 0) {
+          $('#gallery-2-upload-status').text('Uploading...');
+          let gallery2Promise = new Promise((resolve) => {
+            rpLib.api.uploadMultipleImages(
+              gallery2Files,
+              function(progress, total) {
+                $('#gallery-2-upload-status').text(`Uploading ${progress}/${total}...`);
+              },
+              function(results) {
+                // Store the results to be saved
+                const gallery2Results = results.map(result => ({ id: result.id, url: result.url }));
+                
+                // Store these to be used in the final save call
+                $('#gallery-2-upload-status').text('Upload complete!');
+                
+                // Store in a data attribute to retrieve when saving
+                $('#gallery-2-preview').data('uploaded-images', gallery2Results);
+                resolve();
+              },
+              function(error) {
+                $('#gallery-2-upload-status').text('Upload failed: ' + error.statusText);
+                resolve(); // Resolve even if upload fails
+              }
+            );
+          });
+          uploadPromises.push(gallery2Promise);
+        }
+        
+        // Upload gallery 3 images if selected
+        if (gallery3Files.length > 0) {
+          $('#gallery-3-upload-status').text('Uploading...');
+          let gallery3Promise = new Promise((resolve) => {
+            rpLib.api.uploadMultipleImages(
+              gallery3Files,
+              function(progress, total) {
+                $('#gallery-3-upload-status').text(`Uploading ${progress}/${total}...`);
+              },
+              function(results) {
+                // Store the results to be saved
+                const gallery3Results = results.map(result => ({ id: result.id, url: result.url }));
+                
+                // Store these to be used in the final save call
+                $('#gallery-3-upload-status').text('Upload complete!');
+                
+                // Store in a data attribute to retrieve when saving
+                $('#gallery-3-preview').data('uploaded-images', gallery3Results);
+                resolve();
+              },
+              function(error) {
+                $('#gallery-3-upload-status').text('Upload failed: ' + error.statusText);
+                resolve(); // Resolve even if upload fails
+              }
+            );
+          });
+          uploadPromises.push(gallery3Promise);
+        }
+        
+        // Wait for all uploads to finish before saving
+        Promise.all(uploadPromises).then(() => {
+          // Once all uploads are complete, call the update function
+          rpLib.api.updateEventAndRefreshList(eventId);
+        });
+      });
+  
+      // Remaining event bindings
       rpLib.api.fetchUserBrands();
       $("#city-select").on("change", function () {
         rpLib.api.fetchEventsAndRender($(this).val());
@@ -379,28 +692,27 @@ var rpLib = {
         $("#collection-item-modal").attr("data-event-id", eventId);
         rpLib.api.fetchEventDetailsAndOpenModal(slug);
       });
-      $("#save-event").on("click", function () {
-        rpLib.api.updateEventAndRefreshList($("#collection-item-modal").data("event-id"));
-      });
       $("#close-modal").on("click", function () {
         $("#collection-item-modal").addClass("hidden");
       });
     },
+    
     renderEvent: function (event) {
       const templateRowItem = $(".collection-item-row-template").clone();
       templateRowItem.removeClass("collection-item-row-template");
       templateRowItem.attr("data-slug", event.fieldData.slug);
       templateRowItem.attr("data-event-id", event.id);
-
+  
       templateRowItem.find(".event-pic").attr("src", event.fieldData["main-image"]?.url || "");
       templateRowItem.find(".event-name").text(event.fieldData.name || "");
       templateRowItem.find(".event-date").text(event.fieldData.date || "");
       templateRowItem.find(".event-location").text(event.fieldData["location-name"] || "");
       templateRowItem.find(".item-view-btn").attr("href", event.id || "");
-
+  
       $("#collection-list").append(templateRowItem);
-    },
+    }
   },
+  
 
   utils: {
     injectDependencies: function () {
@@ -598,40 +910,72 @@ var rpLib = {
     },
     fetchEventDetailsAndOpenModal: function (slug) {
       $.ajax({
-        url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${EVENTS_COLLECTION_ID}/items/live?slug=${slug}&sortBy=lastPublished&sortOrder=desc`,
+        url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${EVENTS_COLLECTION_ID}/items/live?slug=${slug}`,
         method: "GET",
         success: function (response) {
           if (response.items.length > 0) {
             let event = response.items[0];
-            selectedEventId = event.id;
-
-            // Populate text fields
-            $("#event-name").val(event.fieldData?.name || "");
-            $("#event-date").val(event.fieldData?.date || "");
-            $("#event-time").val(event.fieldData?.time || "");
-            $("#event-location").val(event.fieldData?.location || "");
-            $("#event-description").val(event.fieldData?.description || "");
-            $("#button-url").val(event.fieldData?.["button-url"] || "");
-            $("#button-text").val(event.fieldData?.["button-text"] || "");
-            $("#youtube-video-id").val(event.fieldData?.["youtube-video-id"] || "");
-            $("#youtube-video-id-2").val(event.fieldData?.["youtube-video-id-2"] || "");
-            $("#sponsor-button-url").val(event.fieldData?.["sponsor-event-button-url"] || "");
-            $("#sponsor-button-text").val(event.fieldData?.["sponsor-event-button-text"] || "");
-
-            // Handle main image
-            $("#main-image-preview").attr("src", event.fieldData?.["main-image"]?.url || "");
-            $("#main-image").val(""); // Clear existing input to allow re-selection
-
-            // Populate image galleries
-            rpLib.utils.updateImageGallery(event, "image-gallery", "#image-gallery-preview");
-            rpLib.utils.updateImageGallery(event, "image-gallery-2", "#image-gallery-2-preview");
-            rpLib.utils.updateImageGallery(event, "image-gallery-3", "#image-gallery-3-preview");
-
-            // Clear existing file inputs to allow new selections
-            $("#image-gallery").val("");
-            $("#image-gallery-2").val("");
-            $("#image-gallery-3").val("");
-
+            
+            // Populate form fields with event data
+            $("#event-name").val(event.fieldData.name || "");
+            $("#event-date").val(event.fieldData.date || "");
+            $("#event-location-name").val(event.fieldData["location-name"] || "");
+            $("#event-location-address").val(event.fieldData["location-address"] || "");
+            $("#button-url").val(event.fieldData["button-url"] || "");
+            $("#button-text").val(event.fieldData["button-text"] || "");
+            $("#event-flyer").val(event.fieldData["event-flyer"] || "");
+            $("#youtube-video-id").val(event.fieldData["youtube-video-id"] || "");
+            $("#youtube-video-id-2").val(event.fieldData["youtube-video-id-2"] || "");
+            $("#event-description").val(event.fieldData.description || "");
+            $("#sponsor-event-button-url").val(event.fieldData["sponsor-event-button-url"] || "");
+            $("#sponsor-event-button-text").val(event.fieldData["sponsor-event-button-text"] || "");
+            
+            // Populate main image
+            $("#event-main-image").val(event.fieldData["main-image"]?.url || "");
+            $("#main-image-preview").attr("src", event.fieldData["main-image"]?.url || "");
+            
+            // Store existing galleries to handle partial updates
+            existingGallery1 = event.fieldData["image-gallery"] || [];
+            existingGallery2 = event.fieldData["image-gallery-2"] || [];
+            existingGallery3 = event.fieldData["image-gallery-3"] || [];
+            
+            // Display existing gallery 1 images
+            $('#gallery-1-preview').empty();
+            if (existingGallery1.length > 0) {
+              existingGallery1.forEach(img => {
+                if (img && img.url) {
+                  const imgEl = $('<img>').addClass('thumbnail').attr('src', img.url);
+                  $('#gallery-1-preview').append(imgEl);
+                }
+              });
+              $('#gallery-1-upload-status').text(`${existingGallery1.length} existing images`);
+            }
+            
+            // Display existing gallery 2 images
+            $('#gallery-2-preview').empty();
+            if (existingGallery2.length > 0) {
+              existingGallery2.forEach(img => {
+                if (img && img.url) {
+                  const imgEl = $('<img>').addClass('thumbnail').attr('src', img.url);
+                  $('#gallery-2-preview').append(imgEl);
+                }
+              });
+              $('#gallery-2-upload-status').text(`${existingGallery2.length} existing images`);
+            }
+            
+            // Display existing gallery 3 images
+            $('#gallery-3-preview').empty();
+            if (existingGallery3.length > 0) {
+              existingGallery3.forEach(img => {
+                if (img && img.url) {
+                  const imgEl = $('<img>').addClass('thumbnail').attr('src', img.url);
+                  $('#gallery-3-preview').append(imgEl);
+                }
+              });
+              $('#gallery-3-upload-status').text(`${existingGallery3.length} existing images`);
+            }
+            
+            // Show the modal
             $("#collection-item-modal").removeClass("hidden");
           }
         },
@@ -639,9 +983,9 @@ var rpLib = {
           console.error("Error fetching event details:", error);
         },
       });
-    },
+    },  
     updateEventAndRefreshList: function (eventId) {
-      let updatedData = {
+      const eventData = {
         fieldData: {
           name: $("#event-name").val(),
           date: $("#event-date").val(),
@@ -649,31 +993,85 @@ var rpLib = {
           "location-address": $("#event-location-address").val(),
           "button-url": $("#button-url").val(),
           "button-text": $("#button-text").val(),
-          "main-image": $("#main-image").val(),
-          "image-gallery": $("#image-gallery").val().split(", ").slice(0, 25),
-          "image-gallery-2": $("#image-gallery-2").val().split(", ").slice(0, 25),
-          "image-gallery-3": $("#image-gallery-3").val().split(", ").slice(0, 25),
+          "event-flyer": $("#event-flyer").val(),
           "youtube-video-id": $("#youtube-video-id").val(),
           "youtube-video-id-2": $("#youtube-video-id-2").val(),
           description: $("#event-description").val(),
-          "sponsor-event-button-url": $("#sponsor-button-url").val(),
-          "sponsor-event-button-text": $("#sponsor-button-text").val(),
-        },
+          "sponsor-event-button-url": $("#sponsor-event-button-url").val(),
+          "sponsor-event-button-text": $("#sponsor-event-button-text").val()
+        }
       };
-
+      
+      // Add main image if there's a URL (either uploaded or existing)
+      if ($("#event-main-image").val()) {
+        eventData.fieldData["main-image"] = {
+          url: $("#event-main-image").val()
+        };
+      }
+      
+      // Handle image galleries - merge existing with new if needed
+      
+      // Gallery 1
+      let gallery1Data = [...existingGallery1]; // Start with existing
+      
+      // Add newly uploaded images if any
+      const newGallery1Images = $('#gallery-1-preview').data('uploaded-images');
+      if (newGallery1Images && newGallery1Images.length > 0) {
+        gallery1Data = newGallery1Images; // Replace with new images
+      }
+      
+      if (gallery1Data.length > 0) {
+        eventData.fieldData["image-gallery"] = gallery1Data;
+      }
+      
+      // Gallery 2
+      let gallery2Data = [...existingGallery2]; // Start with existing
+      
+      // Add newly uploaded images if any
+      const newGallery2Images = $('#gallery-2-preview').data('uploaded-images');
+      if (newGallery2Images && newGallery2Images.length > 0) {
+        gallery2Data = newGallery2Images; // Replace with new images
+      }
+      
+      if (gallery2Data.length > 0) {
+        eventData.fieldData["image-gallery-2"] = gallery2Data;
+      }
+      
+      // Gallery 3
+      let gallery3Data = [...existingGallery3]; // Start with existing
+      
+      // Add newly uploaded images if any
+      const newGallery3Images = $('#gallery-3-preview').data('uploaded-images');
+      if (newGallery3Images && newGallery3Images.length > 0) {
+        gallery3Data = newGallery3Images; // Replace with new images
+      }
+      
+      if (gallery3Data.length > 0) {
+        eventData.fieldData["image-gallery-3"] = gallery3Data;
+      }
+      
+      // Save the event data through the API
       $.ajax({
         url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${EVENTS_COLLECTION_ID}/items/${eventId}/live`,
-        headers: { "Content-Type": "application/json" },
         method: "PATCH",
-        data: JSON.stringify(updatedData),
-        success: function () {
-          alert("Event updated!");
+        data: JSON.stringify(eventData),
+        contentType: "application/json",
+        success: function() {
+          // Close modal
           $("#collection-item-modal").addClass("hidden");
+          
+          // Reset button text and re-enable
+          $('#save-event').text('Save');
+          $('#save-event').prop('disabled', false);
+          
+          // Refresh the event list
           rpLib.api.fetchEventsAndRender($("#city-select").val());
         },
-        error: function (error) {
+        error: function(error) {
           console.error("Error updating event:", error);
-        },
+          $('#save-event').text('Save');
+          $('#save-event').prop('disabled', false);
+        }
       });
     },
     fetchUserDetailsAndOpenModal: function (slug) {
