@@ -101,12 +101,22 @@ var rpLib = {
       `);
 
       // Fetch all brands for city selection
-      rpLib.api.fetchUserBrands();
+      rpLib.api.fetchUserBrands(() => {
+        // Set the last selected city if available
+        const lastSelectedCity = sessionStorage.getItem("selectedCity");
+        if (lastSelectedCity) {
+          $("#city-select").val(lastSelectedCity).trigger("change");
+        }
+      });
 
       // Fetch all users after city selection
       $("#city-select").on("change", function () {
         let brandId = $(this).val();
-        if (brandId) rpLib.api.fetchBrandUsersAndRender(brandId);
+        if (brandId) {
+          // Store the selected city in sessionStorage
+          sessionStorage.setItem("selectedCity", brandId);
+          rpLib.api.fetchBrandUsersAndRender(brandId);
+        } 
       });
 
       // Event listener for create button click
@@ -307,7 +317,7 @@ var rpLib = {
       templateRowItem.find(".user-name").text(user.fieldData.name || "");
       templateRowItem.find(".user-number").text(user.fieldData.phone || "");
       templateRowItem.find(".user-email").text(user.fieldData.email || "");
-      templateRowItem.find(".item-view-btn").attr("href", user.id || "");
+      templateRowItem.find(".item-view-btn").attr("href", `https://www.realproducersmagazine.com/user/${user.fieldData.slug}` || "");
 
       $("#collection-list").append(templateRowItem);
     },
@@ -347,10 +357,23 @@ var rpLib = {
             </div>
         `);
 
-      rpLib.api.fetchUserBrands();
+      // Fetch all brands for city selection
+      rpLib.api.fetchUserBrands(() => {
+        // Set the last selected city if available
+        const lastSelectedCity = sessionStorage.getItem("selectedCity");
+        if (lastSelectedCity) {
+          $("#city-select").val(lastSelectedCity).trigger("change");
+        }
+      });
+
+      // Fetch all users after city selection
       $("#city-select").on("change", function () {
         let brandId = $(this).val();
-        if (brandId) rpLib.api.fetchPartnersAndRender(brandId);
+        if (brandId) {
+          // Store the selected city in sessionStorage
+          sessionStorage.setItem("selectedCity", brandId);
+          rpLib.api.fetchPartnersAndRender(brandId);
+        } 
       });
 
       $("body").on("click", ".item-edit-btn", function (event) {
@@ -438,7 +461,7 @@ var rpLib = {
       templateRowItem.find(".partner-name").text(partner.fieldData.name || "");
       templateRowItem.find(".partner-number").text(partner.fieldData.phone || "");
       templateRowItem.find(".partner-email").text(partner.fieldData.email || "");
-      templateRowItem.find(".item-view-btn").attr("href", partner.id || "");
+      templateRowItem.find(".item-view-btn").attr("href", `http://www.realproducersmagazine.com/partner/${partner.fieldData.slug}` || "");
 
       $("#collection-list").append(templateRowItem);
     },
@@ -830,10 +853,23 @@ var rpLib = {
         });
       });
 
-      // Remaining event bindings
-      rpLib.api.fetchUserBrands();
+      // Fetch all brands for city selection
+      rpLib.api.fetchUserBrands(() => {
+        // Set the last selected city if available
+        const lastSelectedCity = sessionStorage.getItem("selectedCity");
+        if (lastSelectedCity) {
+          $("#city-select").val(lastSelectedCity).trigger("change");
+        }
+      });
+
+      // Fetch all users after city selection
       $("#city-select").on("change", function () {
-        rpLib.api.fetchEventsAndRender($(this).val());
+        let brandId = $(this).val();
+        if (brandId) {
+          // Store the selected city in sessionStorage
+          sessionStorage.setItem("selectedCity", brandId);
+          rpLib.api.fetchEventsAndRender($(this).val());
+        } 
       });
       $("#collection-list").on("click", ".item-edit-btn", function () {
         let eventId = $(this).closest(".collection-item").data("event-id");
@@ -875,7 +911,7 @@ var rpLib = {
       templateRowItem.find(".event-name").text(event.fieldData.name || "");
       templateRowItem.find(".event-date").text(event.fieldData.date || "");
       templateRowItem.find(".event-location").text(event.fieldData["location-name"] || "");
-      templateRowItem.find(".item-view-btn").attr("href", event.id || "");
+      templateRowItem.find(".item-view-btn").attr("href", `https://www.realproducersmagazine.com/event/${event.fieldData.slug}` || "");
 
       $("#collection-list").append(templateRowItem);
     },
@@ -1079,27 +1115,39 @@ var rpLib = {
         },
       });
     },
-    fetchUserBrands: function () {
+    fetchUserBrands: function (callback) {
       const USER_SLUG = $("div").find(`[data-ms-member='wf-users-slug']`).text();
       const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${USERS_COLLECTION_ID}/items/live?slug=${USER_SLUG}&sortBy=lastPublished&sortOrder=desc`;
 
       rpLib.api.fetchAllPaginated(url, (items) => {
         if (items.length > 0) {
           let brands = items[0].fieldData["brand-s"];
-          brands.forEach((brandId) => rpLib.api.fetchBrandDetailsAndPopulateDropdown(brandId));
+          let fetchBrandPromises = brands.map((brandId) => rpLib.api.fetchBrandDetailsAndPopulateDropdown(brandId));
+    
+          // Wait for all brand details to be fetched and dropdown to be populated
+          Promise.all(fetchBrandPromises).then(() => {
+            if (callback) callback();
+          });
+        } else {
+          if (callback) callback();
         }
       });
+
     },
     fetchBrandDetailsAndPopulateDropdown: function (brandId) {
-      $.ajax({
-        url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${BRANDS_COLLECTION_ID}/items/${brandId}/live`,
-        method: "GET",
-        success: function (response) {
-          $("#city-select").append(`<option value="${response.id}">${response.fieldData.name}</option>`);
-        },
-        error: function (error) {
-          console.error("Error fetching brand details:", error);
-        },
+      return new Promise((resolve, reject) => {
+        $.ajax({
+          url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${BRANDS_COLLECTION_ID}/items/${brandId}/live`,
+          method: "GET",
+          success: function (response) {
+            $("#city-select").append(`<option value="${response.id}">${response.fieldData.name}</option>`);
+            resolve();
+          },
+          error: function (error) {
+            console.error("Error fetching brand details:", error);
+            reject(error);
+          },
+        });
       });
     },
     fetchBrandUsersAndRender: function (brandId) {
