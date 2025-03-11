@@ -346,6 +346,7 @@ var rpLib = {
                 <label>Preview Text:</label><input type="text" id="partner-preview-text">
                 <label>Address:</label><input type="text" id="partner-address">
                 <label>City, State Zip:</label><input type="text" id="partner-city">
+                <label>Show on Website:</label><input type="checkbox" id="partner-show">
                 <label>Partner Categories:</label>
                 <select id="partner-categories" multiple>
                     <option value="65e96b6acdfd2898d9dc2be8">Category 1</option>
@@ -479,6 +480,7 @@ var rpLib = {
               <label>Location Address:</label><input type="text" id="event-location-address">
               <label>Button URL:</label><input type="text" id="button-url">
               <label>Button Text:</label><input type="text" id="button-text">
+              <label>Show on Website:</label><input type="checkbox" id="event-show">
               
               <!-- Main Image -->
               <div>
@@ -1212,6 +1214,7 @@ var rpLib = {
             $("#partner-preview-text").val(partner.fieldData["preview-text"]);
             $("#partner-address").val(partner.fieldData["address"]);
             $("#partner-city").val(partner.fieldData["city-state-zip"]);
+            $("#partner-show").prop("checked", partner.fieldData["show-partner"]);
 
             // Populate multi-reference fields (dropdown with multiple selections)
             $("#partner-categories").val(partner.fieldData["partner-categories"]);
@@ -1244,6 +1247,7 @@ var rpLib = {
           "preview-text": $("#partner-preview-text").val(),
           address: $("#partner-address").val(),
           "city-state-zip": $("#partner-city").val(),
+          "show-partner": $("#partner-show").prop("checked"),
           "partner-categories": $("#partner-categories").val(), // Multi-reference
         },
       };
@@ -1300,6 +1304,7 @@ var rpLib = {
             $("#event-description").val(event.fieldData.description || "");
             $("#sponsor-event-button-url").val(event.fieldData["sponsor-event-button-url"] || "");
             $("#sponsor-event-button-text").val(event.fieldData["sponsor-event-button-text"] || "");
+            $("#event-show").prop("checked", event.fieldData["show-event"]);
 
             // Populate main image
             $("#event-main-image").val(event.fieldData["main-image"]?.url || "");
@@ -1401,6 +1406,7 @@ var rpLib = {
           description: $("#event-description").val(),
           "sponsor-event-button-url": $("#sponsor-event-button-url").val(),
           "sponsor-event-button-text": $("#sponsor-event-button-text").val(),
+          "show-event": $("#event-show").is(":checked"),
         },
       };
 
