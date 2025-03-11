@@ -222,7 +222,7 @@ var rpLib = {
         const userId = $(this).closest(".collection-item").data("user-id");
         const userName = $(this).closest(".collection-item").find(".user-name").text();
         
-        if (confirm(`Are you sure you want to archive user "${userName}"? This will hide the user from the public site.`)) {
+        if (confirm(`Are you sure you want to delete user "${userName}"?`)) {
           rpLib.api.archiveItem(
             USERS_COLLECTION_ID, 
             userId, 
@@ -427,7 +427,7 @@ var rpLib = {
         const partnerId = $(this).closest(".collection-item").data("partner-id");
         const partnerName = $(this).closest(".collection-item").find(".partner-name").text();
         
-        if (confirm(`Are you sure you want to archive partner "${partnerName}"? This will hide the partner from the public site.`)) {
+        if (confirm(`Are you sure you want to delete partner "${partnerName}"?`)) {
           rpLib.api.archiveItem(
             PARTNERS_COLLECTION_ID, 
             partnerId, 
@@ -899,7 +899,7 @@ var rpLib = {
         const eventId = $(this).closest(".collection-item").data("event-id");
         const eventName = $(this).closest(".collection-item").find(".event-name").text();
         
-        if (confirm(`Are you sure you want to archive event "${eventName}"? This will hide the event from the public site.`)) {
+        if (confirm(`Are you sure you want to delete event "${eventName}"?`)) {
           rpLib.api.archiveItem(
             EVENTS_COLLECTION_ID, 
             eventId, 
