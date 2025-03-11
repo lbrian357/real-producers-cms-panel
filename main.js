@@ -109,11 +109,54 @@ var rpLib = {
         if (brandId) rpLib.api.fetchBrandUsersAndRender(brandId);
       });
 
+      // Event listener for create button click
+      $("body").on("click", ".lib-create-item-btn", function (event) {
+        // Clear modal data attribute to indicate this is a new item
+        $("#collection-item-modal").removeAttr("data-user-id");
+        
+        // Update modal title for creation
+        $("#collection-item-modal").find("h3").text("Create New User");
+        
+        // Clear all form fields
+        $("#user-first-name").val("");
+        $("#user-last-name").val("");
+        $("#user-title").val("");
+        $("#user-profile-pic").val("");
+        $("#user-full-pic").val("");
+        $("#user-email").val("");
+        $("#user-phone").val("");
+        $("#user-bio").val("");
+        $("#user-url-facebook").val("");
+        $("#user-url-instagram").val("");
+        $("#user-url-x").val("");
+        $("#user-url-youtube").val("");
+        $("#user-url-linkedin").val("");
+        $("#user-url-tiktok").val("");
+        $("#user-facebook-pixel-id").val("");
+        $("#user-google-analytics-id").val("");
+        
+        // Clear image previews
+        $("#profile-pic-preview").attr("src", "");
+        $("#full-pic-preview").attr("src", "");
+        $("#profile-pic-upload-status").text("");
+        $("#full-pic-upload-status").text("");
+        
+        // Show the modal
+        $("#collection-item-modal").removeClass("hidden");
+      });
+
       // Event listener for edit button click and open modal
       $("body").on("click", ".item-edit-btn", function (event) {
         let userId = $(this).closest(".collection-item").data("user-id");
         let slug = $(this).closest(".collection-item").data("slug");
+        
+        // Update modal title for editing
+        $("#collection-item-modal").find("h3").text("Edit User");
+        
+        // Set the user ID for editing
         $("#collection-item-modal").attr("data-user-id", userId);
+        
+        // Fetch and populate user details
         rpLib.api.fetchUserDetailsAndOpenModal(slug);
       });
 
@@ -174,10 +217,29 @@ var rpLib = {
           }
       });
 
+      // Event listener for delete button click
+      $("body").on("click", ".item-delete-btn", function(event) {
+        const userId = $(this).closest(".collection-item").data("user-id");
+        const userName = $(this).closest(".collection-item").find(".user-name").text();
+        
+        if (confirm(`Are you sure you want to archive user "${userName}"? This will hide the user from the public site.`)) {
+          rpLib.api.archiveItem(
+            USERS_COLLECTION_ID, 
+            userId, 
+            "User", 
+            function() {
+              // Refresh the list after successful archive
+              rpLib.api.fetchBrandUsersAndRender($("#city-select").val());
+            }
+          );
+        }
+      });
+
 
       // Save user details
       $("#save-user").on("click", function () {
         const userId = $("#collection-item-modal").data("user-id");
+        const isCreatingNewUser = !userId; // Check if we're creating a new user
 
         let uploadPromises = [];
 
@@ -225,7 +287,11 @@ var rpLib = {
 
         // Wait for all uploads to finish before saving and closing modal
         Promise.all(uploadPromises).then(() => {
-            rpLib.api.updateUserAndRefreshList(userId);
+            if (isCreatingNewUser) {
+              rpLib.api.createUserAndRefreshList($("#city-select").val());
+            } else {
+              rpLib.api.updateUserAndRefreshList(userId);
+            }
             
             // Reset button text and re-enable it
             $('#save-user').text('Save');
@@ -297,15 +363,81 @@ var rpLib = {
       $("body").on("click", ".item-edit-btn", function (event) {
         let partnerId = $(this).closest(".collection-item").data("partner-id");
         let slug = $(this).closest(".collection-item").data("slug");
-        $("#collection-item-modal").attr("data-event-id", partnerId);
+        
+        // Update modal title for editing
+        $("#collection-item-modal").find("h3").text("Edit Partner");
+        
+        // Set the partner ID for editing
+        $("#collection-item-modal").attr("data-partner-id", partnerId);
+        
         rpLib.api.fetchPartnerDetailsAndOpenModal(slug);
       });
 
       $("#save-partner").on("click", function () {
-        rpLib.api.updatePartnerAndRefreshList($("#collection-item-modal").data("partner-id"));
+        const partnerId = $("#collection-item-modal").data("partner-id");
+        const isCreatingNewPartner = !partnerId; // Check if we're creating a new partner
+  
+        if (isCreatingNewPartner) {
+          rpLib.api.createPartnerAndRefreshList($("#city-select").val());
+        } else {
+          rpLib.api.updatePartnerAndRefreshList(partnerId);
+        }
+        
+        // Close the modal
+        $("#collection-item-modal").addClass("hidden");
       });
       $("#close-modal").on("click", function () {
         $("#collection-item-modal").addClass("hidden");
+      });
+
+      // Event listener for create button click
+      $("body").on("click", ".lib-create-item-btn", function (event) {
+        // Clear modal data attribute to indicate this is a new item
+        $("#collection-item-modal").removeAttr("data-partner-id");
+        
+        // Update modal title for creation
+        $("#collection-item-modal").find("h3").text("Create New Partner");
+        
+        // Clear all form fields
+        $("#partner-name").val("");
+        $("#partner-company").val("");
+        $("#partner-title").val("");
+        $("#partner-phone").val("");
+        $("#partner-email").val("");
+        $("#partner-website").val("");
+        $("#partner-license").val("");
+        $("#partner-facebook").val("");
+        $("#partner-instagram").val("");
+        $("#partner-x").val("");
+        $("#partner-youtube").val("");
+        $("#partner-linkedin").val("");
+        $("#partner-tiktok").val("");
+        $("#partner-description").val("");
+        $("#partner-preview-text").val("");
+        $("#partner-address").val("");
+        $("#partner-city").val("");
+        $("#partner-categories").val([]);
+        
+        // Show the modal
+        $("#collection-item-modal").removeClass("hidden");
+      });
+
+      // Event listener for delete button click
+      $("body").on("click", ".item-delete-btn", function(event) {
+        const partnerId = $(this).closest(".collection-item").data("partner-id");
+        const partnerName = $(this).closest(".collection-item").find(".partner-name").text();
+        
+        if (confirm(`Are you sure you want to archive partner "${partnerName}"? This will hide the partner from the public site.`)) {
+          rpLib.api.archiveItem(
+            PARTNERS_COLLECTION_ID, 
+            partnerId, 
+            "Partner", 
+            function() {
+              // Refresh the list after successful archive
+              rpLib.api.fetchPartnersAndRender($("#city-select").val());
+            }
+          );
+        }
       });
     },
     renderPartner: function (partner) {
@@ -315,7 +447,7 @@ var rpLib = {
       templateRowItem.attr("data-partner-id", partner.id);
 
       templateRowItem.find(".partner-pic").attr("src", partner.fieldData.logo?.url || "");
-      templateRowItem.find(".parner-name").text(partner.fieldData.name || "");
+      templateRowItem.find(".partner-name").text(partner.fieldData.name || "");
       templateRowItem.find(".partner-number").text(partner.fieldData.phone || "");
       templateRowItem.find(".partner-email").text(partner.fieldData.email || "");
       templateRowItem.find(".item-view-btn").attr("href", partner.id || "");
@@ -557,10 +689,59 @@ var rpLib = {
         
         $('#gallery-3-upload-status').text(`${files.length} images selected (will upload when saved)`);
       });
+
+      // Event listener for create button click
+      $("body").on("click", ".lib-create-item-btn", function (event) {
+        // Clear modal data attribute to indicate this is a new item
+        $("#collection-item-modal").removeAttr("data-event-id");
+        
+        // Update modal title for creation
+        $("#collection-item-modal").find("h3").text("Create New Event");
+        
+        // Clear all form fields
+        $("#event-name").val("");
+        $("#event-date").val("");
+        $("#event-location-name").val("");
+        $("#event-location-address").val("");
+        $("#button-url").val("");
+        $("#button-text").val("");
+        $("#event-main-image").val("");
+        $("#event-flyer").val("");
+        $("#youtube-video-id").val("");
+        $("#youtube-video-id-2").val("");
+        $("#event-description").val("");
+        $("#sponsor-event-button-url").val("");
+        $("#sponsor-event-button-text").val("");
+        
+        // Clear image previews
+        $("#main-image-preview").attr("src", "");
+        $("#main-image-upload-status").text("");
+        $("#gallery-1-preview").empty();
+        $("#gallery-1-upload-status").text("");
+        $("#gallery-2-preview").empty();
+        $("#gallery-2-upload-status").text("");
+        $("#gallery-3-preview").empty();
+        $("#gallery-3-upload-status").text("");
+        
+        // Reset file variables
+        mainImageFile = null;
+        gallery1Files = [];
+        gallery2Files = [];
+        gallery3Files = [];
+        
+        // Reset existing gallery data
+        existingGallery1 = [];
+        existingGallery2 = [];
+        existingGallery3 = [];
+        
+        // Show the modal
+        $("#collection-item-modal").removeClass("hidden");
+      });
   
       // Save event with image uploads
       $("#save-event").on("click", function() {
         const eventId = $("#collection-item-modal").data("event-id");
+        const isCreatingNewEvent = !eventId; // Check if we're creating a new event
         
         // Show saving status
         $('#save-event').text('Uploading images...');
@@ -676,8 +857,19 @@ var rpLib = {
         
         // Wait for all uploads to finish before saving
         Promise.all(uploadPromises).then(() => {
-          // Once all uploads are complete, call the update function
-          rpLib.api.updateEventAndRefreshList(eventId);
+          // Once all uploads are complete, call the appropriate function
+          if (isCreatingNewEvent) {
+            rpLib.api.createEventAndRefreshList($("#city-select").val());
+          } else {
+            rpLib.api.updateEventAndRefreshList(eventId);
+          }
+          
+          // Reset button text and re-enable it
+          $('#save-event').text('Save');
+          $('#save-event').prop('disabled', false);
+          
+          // Close the modal
+          $("#collection-item-modal").addClass("hidden");
         });
       });
   
@@ -689,11 +881,35 @@ var rpLib = {
       $("#collection-list").on("click", ".item-edit-btn", function () {
         let eventId = $(this).closest(".collection-item").data("event-id");
         let slug = $(this).closest(".collection-item").data("slug");
+        
+        // Update modal title for editing
+        $("#collection-item-modal").find("h3").text("Edit Event");
+        
+        // Set the event ID for editing
         $("#collection-item-modal").attr("data-event-id", eventId);
+        
         rpLib.api.fetchEventDetailsAndOpenModal(slug);
       });
       $("#close-modal").on("click", function () {
         $("#collection-item-modal").addClass("hidden");
+      });
+
+      // Event listener for delete button click
+      $("body").on("click", ".item-delete-btn", function(event) {
+        const eventId = $(this).closest(".collection-item").data("event-id");
+        const eventName = $(this).closest(".collection-item").find(".event-name").text();
+        
+        if (confirm(`Are you sure you want to archive event "${eventName}"? This will hide the event from the public site.`)) {
+          rpLib.api.archiveItem(
+            EVENTS_COLLECTION_ID, 
+            eventId, 
+            "Event", 
+            function() {
+              // Refresh the list after successful archive
+              rpLib.api.fetchEventsAndRender($("#city-select").val());
+            }
+          );
+        }
       });
     },
     
@@ -796,7 +1012,7 @@ var rpLib = {
       rpLib.api.fetchAllPaginated(url, (items) => {
         items.forEach((user) => {
           // Check if the user has brands and if the specified brandId exists in the user's brand-s array
-          if (user.fieldData["brand-s"] && user.fieldData["brand-s"].length > 0 && user.fieldData["brand-s"].includes(brandId)) {
+          if (user.isArchived === false && user.fieldData["brand-s"] && user.fieldData["brand-s"].length > 0 && user.fieldData["brand-s"].includes(brandId)) {
             rpLib.usersPage.renderUser(user);
           }
         });
@@ -810,6 +1026,7 @@ var rpLib = {
 
       rpLib.api.fetchAllPaginated(url, (items) => {
         items
+          .filter((item) => item.isArchived === false)
           .filter((item) => item.fieldData.city.includes(brandId))
           .forEach((partner) => {
             rpLib.partnersPage.renderPartner(partner);
@@ -902,6 +1119,7 @@ var rpLib = {
 
       rpLib.api.fetchAllPaginated(url, (items) => {
         items
+          .filter((item) => item.isArchived === false)
           .filter((item) => item.fieldData.brand === brandId)
           .forEach((event) => {
             rpLib.eventsPage.renderEvent(event);
@@ -1262,6 +1480,203 @@ var rpLib = {
       
       // Start the upload process
       uploadNext(0);
+    },
+    archiveItem: function(collectionId, itemId, itemType, successCallback) {
+      const archiveData = {
+        isArchived: true
+      };
+      
+      $.ajax({
+        url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${collectionId}/items/${itemId}/live`,
+        method: "PATCH",
+        data: JSON.stringify(archiveData),
+        contentType: "application/json",
+        success: function() {
+          alert(`${itemType} archived successfully!`);
+          if (typeof successCallback === 'function') {
+            successCallback();
+          }
+        },
+        error: function(error) {
+          console.error(`Error archiving ${itemType}:`, error);
+          alert(`Failed to archive ${itemType}. Please try again.`);
+        }
+      });
+    },
+    createUserAndRefreshList: function (brandId) {
+      // The first and last name are used to create the full name
+      const firstName = $("#user-first-name").val();
+      const lastName = $("#user-last-name").val();
+      
+      let newUserData = {
+        fieldData: {
+          name: `${firstName} ${lastName}`.trim(), // Combine first and last name
+          "first-name": firstName,
+          "last-name": lastName,
+          title: $("#user-title").val(),
+          email: $("#user-email").val(),
+          phone: $("#user-phone").val(),
+          bio: $("#user-bio").val(),
+          "url-facebook": $("#user-url-facebook").val(),
+          "url-instagram": $("#user-url-instagram").val(),
+          "url-x": $("#user-url-x").val(),
+          "url-youtube": $("#user-url-youtube").val(),
+          "url-linkedin": $("#user-url-linkedin").val(),
+          "url-tiktok": $("#user-url-tiktok").val(),
+          "facebook-pixel-id": $("#user-facebook-pixel-id").val(),
+          "google-analytics-id": $("#user-google-analytics-id").val(),
+          // Set the brand relationship
+          "brand-s": [brandId]
+        }
+      };
+      
+      // Add profile picture if available
+      if ($("#user-profile-pic").val()) {
+        newUserData.fieldData["profile-picture"] = {
+          url: $("#user-profile-pic").val()
+        };
+      }
+      
+      // Add full picture if available
+      if ($("#user-full-pic").val()) {
+        newUserData.fieldData["full-picture"] = {
+          url: $("#user-full-pic").val()
+        };
+      }
+    
+      $.ajax({
+        url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${USERS_COLLECTION_ID}/items/live`,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+        data: JSON.stringify(newUserData),
+        success: function (response) {
+          alert("New user created successfully!");
+          // Refresh list
+          rpLib.api.fetchBrandUsersAndRender(brandId);
+        },
+        error: function (error) {
+          console.error("Error creating user:", error);
+          alert("Failed to create user. Please check the console for details.");
+          // Re-enable the save button even on error
+          $('#save-user').text('Save');
+          $('#save-user').prop('disabled', false);
+        },
+      });
+    },
+    createPartnerAndRefreshList: function (brandId) {
+      let newPartnerData = {
+        fieldData: {
+          name: $("#partner-name").val(),
+          company: $("#partner-company").val(),
+          "company-type": $("#partner-title").val(),
+          phone: $("#partner-phone").val(),
+          email: $("#partner-email").val(),
+          website: $("#partner-website").val(),
+          "license-number": $("#partner-license").val(),
+          "url-facebook": $("#partner-facebook").val(),
+          "url-instagram": $("#partner-instagram").val(),
+          "url-x": $("#partner-x").val(),
+          "url-youtube": $("#partner-youtube").val(),
+          "url-linkedin": $("#partner-linkedin").val(),
+          "url-tiktok": $("#partner-tiktok").val(),
+          description: $("#partner-description").val(),
+          "preview-text": $("#partner-preview-text").val(),
+          address: $("#partner-address").val(),
+          "city-state-zip": $("#partner-city").val(),
+          // Set the brand relationship
+          "brand": brandId,
+          city: [brandId]
+        }
+      };
+      
+      // Add categories if selected
+      const selectedCategories = $("#partner-categories").val();
+      if (selectedCategories && selectedCategories.length > 0) {
+        newPartnerData.fieldData.categories = selectedCategories.map(id => ({ id }));
+      }
+    
+      $.ajax({
+        url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNERS_COLLECTION_ID}/items/live`,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+        data: JSON.stringify(newPartnerData),
+        success: function (response) {
+          alert("New partner created successfully!");
+          // Refresh list
+          rpLib.api.fetchPartnersAndRender(brandId);
+        },
+        error: function (error) {
+          console.error("Error creating partner:", error);
+          alert("Failed to create partner. Please check the console for details.");
+        },
+      });
+    },
+    createEventAndRefreshList: function (brandId) {
+      // Gather gallery image data
+      let gallery1Images = $('#gallery-1-preview').data('uploaded-images') || [];
+      let gallery2Images = $('#gallery-2-preview').data('uploaded-images') || [];
+      let gallery3Images = $('#gallery-3-preview').data('uploaded-images') || [];
+      
+      let newEventData = {
+        fieldData: {
+          name: $("#event-name").val(),
+          date: $("#event-date").val(),
+          "location-name": $("#event-location-name").val(),
+          "location-address": $("#event-location-address").val(),
+          "button-url": $("#button-url").val(),
+          "button-text": $("#button-text").val(),
+          "event-flyer": $("#event-flyer").val(),
+          "youtube-video-id": $("#youtube-video-id").val(),
+          "youtube-video-id-2": $("#youtube-video-id-2").val(),
+          description: $("#event-description").val(),
+          "sponsor-event-button-url": $("#sponsor-event-button-url").val(),
+          "sponsor-event-button-text": $("#sponsor-event-button-text").val(),
+          // Set the brand relationship
+          "brand": brandId
+        }
+      };
+      
+      // Add main image if available
+      if ($("#event-main-image").val()) {
+        newEventData.fieldData["main-image"] = {
+          url: $("#event-main-image").val()
+        };
+      }
+      
+      // Add gallery images
+      if (gallery1Images.length > 0) {
+        newEventData.fieldData["image-gallery-1"] = gallery1Images;
+      }
+      
+      if (gallery2Images.length > 0) {
+        newEventData.fieldData["image-gallery-2"] = gallery2Images;
+      }
+      
+      if (gallery3Images.length > 0) {
+        newEventData.fieldData["image-gallery-3"] = gallery3Images;
+      }
+    
+      $.ajax({
+        url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${EVENTS_COLLECTION_ID}/items/live`,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+        data: JSON.stringify(newEventData),
+        success: function (response) {
+          alert("New event created successfully!");
+          // Refresh list
+          rpLib.api.fetchEventsAndRender(brandId);
+        },
+        error: function (error) {
+          console.error("Error creating event:", error);
+          alert("Failed to create event. Please check the console for details.");
+        },
+      });
     },
   },
 };
