@@ -113,10 +113,10 @@ var rpLib = {
       $("body").on("click", ".lib-create-item-btn", function (event) {
         // Clear modal data attribute to indicate this is a new item
         $("#collection-item-modal").removeAttr("data-user-id");
-        
+
         // Update modal title for creation
         $("#collection-item-modal").find("h3").text("Create New User");
-        
+
         // Clear all form fields
         $("#user-first-name").val("");
         $("#user-last-name").val("");
@@ -134,13 +134,13 @@ var rpLib = {
         $("#user-url-tiktok").val("");
         $("#user-facebook-pixel-id").val("");
         $("#user-google-analytics-id").val("");
-        
+
         // Clear image previews
         $("#profile-pic-preview").attr("src", "");
         $("#full-pic-preview").attr("src", "");
         $("#profile-pic-upload-status").text("");
         $("#full-pic-upload-status").text("");
-        
+
         // Show the modal
         $("#collection-item-modal").removeClass("hidden");
       });
@@ -149,13 +149,13 @@ var rpLib = {
       $("body").on("click", ".item-edit-btn", function (event) {
         let userId = $(this).closest(".collection-item").data("user-id");
         let slug = $(this).closest(".collection-item").data("slug");
-        
+
         // Update modal title for editing
         $("#collection-item-modal").find("h3").text("Edit User");
-        
+
         // Set the user ID for editing
         $("#collection-item-modal").attr("data-user-id", userId);
-        
+
         // Fetch and populate user details
         rpLib.api.fetchUserDetailsAndOpenModal(slug);
       });
@@ -165,76 +165,69 @@ var rpLib = {
         $("#collection-item-modal").addClass("hidden");
       });
 
-    // Store file references
-    let profilePicFile = null;
-    let fullPicFile = null;
-    
-    // Handler for profile picture selection (just preview, don't upload yet)
-    $('#profile-pic-upload').on('change', function(e) {
+      // Store file references
+      let profilePicFile = null;
+      let fullPicFile = null;
+
+      // Handler for profile picture selection (just preview, don't upload yet)
+      $("#profile-pic-upload").on("change", function (e) {
         profilePicFile = e.target.files[0];
         if (!profilePicFile) return;
-        
+
         // Show preview without uploading
         const reader = new FileReader();
-        reader.onload = function(e) {
-            $('#profile-pic-preview').attr('src', e.target.result);
-            $('#profile-pic-upload-status').text('Image selected (will upload when saved)');
-        }
+        reader.onload = function (e) {
+          $("#profile-pic-preview").attr("src", e.target.result);
+          $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
+        };
         reader.readAsDataURL(profilePicFile);
-    });
-    
-    // Handler for full picture selection (just preview, don't upload yet)
-    $('#full-pic-upload').on('change', function(e) {
+      });
+
+      // Handler for full picture selection (just preview, don't upload yet)
+      $("#full-pic-upload").on("change", function (e) {
         fullPicFile = e.target.files[0];
         if (!fullPicFile) return;
-        
+
         // Show preview without uploading
         const reader = new FileReader();
-        reader.onload = function(e) {
-            $('#full-pic-preview').attr('src', e.target.result);
-            $('#full-pic-upload-status').text('Image selected (will upload when saved)');
-        }
+        reader.onload = function (e) {
+          $("#full-pic-preview").attr("src", e.target.result);
+          $("#full-pic-upload-status").text("Image selected (will upload when saved)");
+        };
         reader.readAsDataURL(fullPicFile);
-
-    });
-
-    // Update preview when URL is manually entered
-        $('#user-profile-pic').on('change input', function() {
-          if ($(this).val()) {
-              $('#profile-pic-preview').attr('src', $(this).val());
-              // If URL is entered manually, clear the file selection
-              profilePicFile = null;
-              $('#profile-pic-upload').val('');
-          }
       });
-      
-      $('#user-full-pic').on('change input', function() {
-          if ($(this).val()) {
-              $('#full-pic-preview').attr('src', $(this).val());
-              // If URL is entered manually, clear the file selection
-              fullPicFile = null;
-              $('#full-pic-upload').val('');
-          }
+
+      // Update preview when URL is manually entered
+      $("#user-profile-pic").on("change input", function () {
+        if ($(this).val()) {
+          $("#profile-pic-preview").attr("src", $(this).val());
+          // If URL is entered manually, clear the file selection
+          profilePicFile = null;
+          $("#profile-pic-upload").val("");
+        }
+      });
+
+      $("#user-full-pic").on("change input", function () {
+        if ($(this).val()) {
+          $("#full-pic-preview").attr("src", $(this).val());
+          // If URL is entered manually, clear the file selection
+          fullPicFile = null;
+          $("#full-pic-upload").val("");
+        }
       });
 
       // Event listener for delete button click
-      $("body").on("click", ".item-delete-btn", function(event) {
+      $("body").on("click", ".item-delete-btn", function (event) {
         const userId = $(this).closest(".collection-item").data("user-id");
         const userName = $(this).closest(".collection-item").find(".user-name").text();
-        
+
         if (confirm(`Are you sure you want to delete user "${userName}"?`)) {
-          rpLib.api.archiveItem(
-            USERS_COLLECTION_ID, 
-            userId, 
-            "User", 
-            function() {
-              // Refresh the list after successful archive
-              rpLib.api.fetchBrandUsersAndRender($("#city-select").val());
-            }
-          );
+          rpLib.api.archiveItem(USERS_COLLECTION_ID, userId, "User", function () {
+            // Refresh the list after successful archive
+            rpLib.api.fetchBrandUsersAndRender($("#city-select").val());
+          });
         }
       });
-
 
       // Save user details
       $("#save-user").on("click", function () {
@@ -244,65 +237,65 @@ var rpLib = {
         let uploadPromises = [];
 
         // Show saving status
-        $('#save-user').text('Uploading images...');
-        $('#save-user').prop('disabled', true);
+        $("#save-user").text("Uploading images...");
+        $("#save-user").prop("disabled", true);
 
         // Upload profile pic if needed
         if (profilePicFile) {
-            $('#profile-pic-upload-status').text('Uploading...');
-            let profilePicPromise = new Promise((resolve) => {
-                rpLib.api.uploadImage(profilePicFile, 
-                    function(result) {
-                        $('#profile-pic-upload-status').text('Upload complete!');
-                        $('#user-profile-pic').val(result.url);
-                        resolve(); // Resolve when upload succeeds
-                    },
-                    function(error) {
-                        $('#profile-pic-upload-status').text('Upload failed: ' + error.statusText);
-                        resolve(); // Resolve even if upload fails
-                    }
-                );
-            });
-            uploadPromises.push(profilePicPromise);
+          $("#profile-pic-upload-status").text("Uploading...");
+          let profilePicPromise = new Promise((resolve) => {
+            rpLib.api.uploadImage(
+              profilePicFile,
+              function (result) {
+                $("#profile-pic-upload-status").text("Upload complete!");
+                $("#user-profile-pic").val(result.url);
+                resolve(); // Resolve when upload succeeds
+              },
+              function (error) {
+                $("#profile-pic-upload-status").text("Upload failed: " + error.statusText);
+                resolve(); // Resolve even if upload fails
+              }
+            );
+          });
+          uploadPromises.push(profilePicPromise);
         }
 
         // Upload full pic if needed
         if (fullPicFile) {
-            $('#full-pic-upload-status').text('Uploading...');
-            let fullPicPromise = new Promise((resolve) => {
-                rpLib.api.uploadImage(fullPicFile, 
-                    function(result) {
-                        $('#full-pic-upload-status').text('Upload complete!');
-                        $('#user-full-pic').val(result.url);
-                        resolve();
-                    },
-                    function(error) {
-                        $('#full-pic-upload-status').text('Upload failed: ' + error.statusText);
-                        resolve();
-                    }
-                );
-            });
-            uploadPromises.push(fullPicPromise);
+          $("#full-pic-upload-status").text("Uploading...");
+          let fullPicPromise = new Promise((resolve) => {
+            rpLib.api.uploadImage(
+              fullPicFile,
+              function (result) {
+                $("#full-pic-upload-status").text("Upload complete!");
+                $("#user-full-pic").val(result.url);
+                resolve();
+              },
+              function (error) {
+                $("#full-pic-upload-status").text("Upload failed: " + error.statusText);
+                resolve();
+              }
+            );
+          });
+          uploadPromises.push(fullPicPromise);
         }
 
         // Wait for all uploads to finish before saving and closing modal
         Promise.all(uploadPromises).then(() => {
-            if (isCreatingNewUser) {
-              rpLib.api.createUserAndRefreshList($("#city-select").val());
-            } else {
-              rpLib.api.updateUserAndRefreshList(userId);
-            }
-            
-            // Reset button text and re-enable it
-            $('#save-user').text('Save');
-            $('#save-user').prop('disabled', false);
-            
-            // Close the modal
-            $("#collection-item-modal").addClass("hidden");
+          if (isCreatingNewUser) {
+            rpLib.api.createUserAndRefreshList($("#city-select").val());
+          } else {
+            rpLib.api.updateUserAndRefreshList(userId);
+          }
+
+          // Reset button text and re-enable it
+          $("#save-user").text("Save");
+          $("#save-user").prop("disabled", false);
+
+          // Close the modal
+          $("#collection-item-modal").addClass("hidden");
         });
       });
-
-
     },
     renderUser: function (user) {
       const templateRowItem = $(".collection-item-row-template").clone();
@@ -363,26 +356,26 @@ var rpLib = {
       $("body").on("click", ".item-edit-btn", function (event) {
         let partnerId = $(this).closest(".collection-item").data("partner-id");
         let slug = $(this).closest(".collection-item").data("slug");
-        
+
         // Update modal title for editing
         $("#collection-item-modal").find("h3").text("Edit Partner");
-        
+
         // Set the partner ID for editing
         $("#collection-item-modal").attr("data-partner-id", partnerId);
-        
+
         rpLib.api.fetchPartnerDetailsAndOpenModal(slug);
       });
 
       $("#save-partner").on("click", function () {
         const partnerId = $("#collection-item-modal").data("partner-id");
         const isCreatingNewPartner = !partnerId; // Check if we're creating a new partner
-  
+
         if (isCreatingNewPartner) {
           rpLib.api.createPartnerAndRefreshList($("#city-select").val());
         } else {
           rpLib.api.updatePartnerAndRefreshList(partnerId);
         }
-        
+
         // Close the modal
         $("#collection-item-modal").addClass("hidden");
       });
@@ -394,10 +387,10 @@ var rpLib = {
       $("body").on("click", ".lib-create-item-btn", function (event) {
         // Clear modal data attribute to indicate this is a new item
         $("#collection-item-modal").removeAttr("data-partner-id");
-        
+
         // Update modal title for creation
         $("#collection-item-modal").find("h3").text("Create New Partner");
-        
+
         // Clear all form fields
         $("#partner-name").val("");
         $("#partner-company").val("");
@@ -417,26 +410,21 @@ var rpLib = {
         $("#partner-address").val("");
         $("#partner-city").val("");
         $("#partner-categories").val([]);
-        
+
         // Show the modal
         $("#collection-item-modal").removeClass("hidden");
       });
 
       // Event listener for delete button click
-      $("body").on("click", ".item-delete-btn", function(event) {
+      $("body").on("click", ".item-delete-btn", function (event) {
         const partnerId = $(this).closest(".collection-item").data("partner-id");
         const partnerName = $(this).closest(".collection-item").find(".partner-name").text();
-        
+
         if (confirm(`Are you sure you want to delete partner "${partnerName}"?`)) {
-          rpLib.api.archiveItem(
-            PARTNERS_COLLECTION_ID, 
-            partnerId, 
-            "Partner", 
-            function() {
-              // Refresh the list after successful archive
-              rpLib.api.fetchPartnersAndRender($("#city-select").val());
-            }
-          );
+          rpLib.api.archiveItem(PARTNERS_COLLECTION_ID, partnerId, "Partner", function () {
+            // Refresh the list after successful archive
+            rpLib.api.fetchPartnersAndRender($("#city-select").val());
+          });
         }
       });
     },
@@ -537,7 +525,7 @@ var rpLib = {
           </div>
         </div>
       `);
-      
+
       // Add CSS for the image upload components
       $("head").append(`
         <style>
@@ -585,134 +573,165 @@ var rpLib = {
           }
         </style>
       `);
-  
+
       // Initialize file storage
       let mainImageFile = null;
       let gallery1Files = [];
       let gallery2Files = [];
       let gallery3Files = [];
-      
+
       // Existing event data storage
       let existingGallery1 = [];
       let existingGallery2 = [];
       let existingGallery3 = [];
-      
+
       // Main Image Preview Handler
-      $('#main-image-upload').on('change', function(e) {
+      $("#main-image-upload").on("change", function (e) {
         mainImageFile = e.target.files[0];
         if (!mainImageFile) return;
-        
+
         // Show preview
         const reader = new FileReader();
-        reader.onload = function(e) {
-            $('#main-image-preview').attr('src', e.target.result);
-            $('#main-image-upload-status').text('Image selected (will upload when saved)');
-        }
+        reader.onload = function (e) {
+          $("#main-image-preview").attr("src", e.target.result);
+          $("#main-image-upload-status").text("Image selected (will upload when saved)");
+        };
         reader.readAsDataURL(mainImageFile);
       });
-      
-      // Update preview when URL is manually entered
-      $('#event-main-image').on('change input', function() {
-        if ($(this).val()) {
-            $('#main-image-preview').attr('src', $(this).val());
-            // If URL is entered manually, clear the file selection
-            mainImageFile = null;
-            $('#main-image-upload').val('');
-        }
-      });
-      
+
+      // Helper function to setup gallery image replacement
+      function setupImageReplacement(galleryId) {
+        $(`#${galleryId}-preview`).on("click", ".thumbnail", function () {
+          // Store the index of the clicked image
+          const clickedIndex = $(this).data("index");
+
+          // Create a temporary file input for replacing this specific image
+          const $tempInput = $('<input type="file" accept="image/*" style="display:none">');
+          $("body").append($tempInput);
+
+          // Trigger click on the temporary input
+          $tempInput.trigger("click");
+
+          // Handle file selection
+          $tempInput.on("change", function (e) {
+            if (!e.target.files || !e.target.files[0]) {
+              $tempInput.remove();
+              return;
+            }
+
+            const newFile = e.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+              // Update the preview
+              $(`#${galleryId}-preview .thumbnail[data-index="${clickedIndex}"]`).attr("src", e.target.result).addClass("replaced");
+
+              // Add to a special mapping for replaced images
+              $(`#${galleryId}-preview`).data(`replaced-${clickedIndex}`, newFile);
+            };
+
+            reader.readAsDataURL(newFile);
+            $tempInput.remove();
+          });
+        });
+      }
+
       // Gallery 1 Preview Handler
-      $('#gallery-1-upload').on('change', function(e) {
+      $("#gallery-1-upload").on("change", function (e) {
         const files = Array.from(e.target.files);
-        gallery1Files = files;
-        
+
         if (files.length === 0) return;
-        
-        // Clear existing preview
-        $('#gallery-1-preview').empty();
-        
+
+        // Get current images count (both existing and newly added)
+        const currentCount = $("#gallery-1-preview img").length;
+
+        // Check if adding these files would exceed the limit
+        if (currentCount + files.length > 25) {
+          const remaining = 25 - currentCount;
+          alert(`You can only add ${remaining} more image${remaining !== 1 ? "s" : ""}. Please select fewer images.`);
+          $(this).val(""); // Reset the input
+          return;
+        }
+
+        // Add new files to the array
+        gallery1Files = [...gallery1Files, ...files];
+
         // Show preview for each file
-        files.forEach(file => {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            const img = $('<img>').addClass('thumbnail').attr('src', e.target.result);
-            $('#gallery-1-preview').append(img);
-          }
-          reader.readAsDataURL(file);
+        files.forEach((file, index) => {
+          rpLib.utils.addImageToGallery("gallery-1", file, index);
         });
-        
-        $('#gallery-1-upload-status').text(`${files.length} images selected (will upload when saved)`);
       });
-      
+
       // Gallery 2 Preview Handler
-      $('#gallery-2-upload').on('change', function(e) {
+      $("#gallery-2-upload").on("change", function (e) {
         const files = Array.from(e.target.files);
-        gallery2Files = files;
-        
+
         if (files.length === 0) return;
-        
-        // Clear existing preview
-        $('#gallery-2-preview').empty();
-        
+
+        // Get current images count
+        const currentCount = $("#gallery-2-preview img").length;
+
+        // Check if adding these files would exceed the limit
+        if (currentCount + files.length > 25) {
+          const remaining = 25 - currentCount;
+          alert(`You can only add ${remaining} more image${remaining !== 1 ? "s" : ""}. Please select fewer images.`);
+          $(this).val(""); // Reset the input
+          return;
+        }
+
+        // Add new files to the array
+        gallery2Files = [...gallery2Files, ...files];
+
         // Show preview for each file
-        files.forEach(file => {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            const img = $('<img>').addClass('thumbnail').attr('src', e.target.result);
-            $('#gallery-2-preview').append(img);
-          }
-          reader.readAsDataURL(file);
+        files.forEach((file, index) => {
+          rpLib.utils.addImageToGallery("gallery-2", file, index);
         });
-        
-        $('#gallery-2-upload-status').text(`${files.length} images selected (will upload when saved)`);
       });
-      
+
       // Gallery 3 Preview Handler
-      $('#gallery-3-upload').on('change', function(e) {
+      $("#gallery-3-upload").on("change", function (e) {
         const files = Array.from(e.target.files);
-        gallery3Files = files;
-        
+
         if (files.length === 0) return;
-        
-        // Clear existing preview
-        $('#gallery-3-preview').empty();
-        
+
+        // Get current images count
+        const currentCount = $("#gallery-3-preview img").length;
+
+        // Check if adding these files would exceed the limit
+        if (currentCount + files.length > 25) {
+          const remaining = 25 - currentCount;
+          alert(`You can only add ${remaining} more image${remaining !== 1 ? "s" : ""}. Please select fewer images.`);
+          $(this).val(""); // Reset the input
+          return;
+        }
+
+        // Add new files to the array
+        gallery3Files = [...gallery3Files, ...files];
+
         // Show preview for each file
-        files.forEach(file => {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            const img = $('<img>').addClass('thumbnail').attr('src', e.target.result);
-            $('#gallery-3-preview').append(img);
-          }
-          reader.readAsDataURL(file);
+        files.forEach((file, index) => {
+          rpLib.utils.addImageToGallery("gallery-3", file, index);
         });
-        
-        $('#gallery-3-upload-status').text(`${files.length} images selected (will upload when saved)`);
       });
+
+      // Setup the image replacement for all galleries
+      setupImageReplacement("gallery-1");
+      setupImageReplacement("gallery-2");
+      setupImageReplacement("gallery-3");
 
       // Event listener for create button click
       $("body").on("click", ".lib-create-item-btn", function (event) {
         // Clear modal data attribute to indicate this is a new item
         $("#collection-item-modal").removeAttr("data-event-id");
-        
+
         // Update modal title for creation
         $("#collection-item-modal").find("h3").text("Create New Event");
-        
+
         // Clear all form fields
         $("#event-name").val("");
         $("#event-date").val("");
-        $("#event-location-name").val("");
-        $("#event-location-address").val("");
-        $("#button-url").val("");
-        $("#button-text").val("");
-        $("#event-main-image").val("");
-        $("#event-flyer").val("");
-        $("#youtube-video-id").val("");
-        $("#youtube-video-id-2").val("");
-        $("#event-description").val("");
-        $("#sponsor-event-button-url").val("");
-        $("#sponsor-event-button-text").val("");
-        
+        // ... keep other field clearing code ...
+
         // Clear image previews
         $("#main-image-preview").attr("src", "");
         $("#main-image-upload-status").text("");
@@ -722,157 +741,95 @@ var rpLib = {
         $("#gallery-2-upload-status").text("");
         $("#gallery-3-preview").empty();
         $("#gallery-3-upload-status").text("");
-        
+
         // Reset file variables
         mainImageFile = null;
         gallery1Files = [];
         gallery2Files = [];
         gallery3Files = [];
-        
+
         // Reset existing gallery data
         existingGallery1 = [];
         existingGallery2 = [];
         existingGallery3 = [];
-        
+
+        // Enable upload inputs
+        $("#gallery-1-upload").prop("disabled", false);
+        $("#gallery-2-upload").prop("disabled", false);
+        $("#gallery-3-upload").prop("disabled", false);
+
         // Show the modal
         $("#collection-item-modal").removeClass("hidden");
       });
-  
+
       // Save event with image uploads
-      $("#save-event").on("click", function() {
+      $("#save-event").on("click", function () {
         const eventId = $("#collection-item-modal").data("event-id");
         const isCreatingNewEvent = !eventId; // Check if we're creating a new event
-        
+
         // Show saving status
-        $('#save-event').text('Uploading images...');
-        $('#save-event').prop('disabled', true);
-        
+        $("#save-event").text("Uploading images...");
+        $("#save-event").prop("disabled", true);
+
         let uploadPromises = [];
-        
+
         // Upload main image if selected
         if (mainImageFile) {
-          $('#main-image-upload-status').text('Uploading...');
+          $("#main-image-upload-status").text("Uploading...");
           let mainImagePromise = new Promise((resolve) => {
-            rpLib.api.uploadImage(mainImageFile, 
-              function(result) {
-                $('#main-image-upload-status').text('Upload complete!');
-                $('#event-main-image').val(result.url);
+            rpLib.api.uploadImage(
+              mainImageFile,
+              function (result) {
+                $("#main-image-upload-status").text("Upload complete!");
+                $("#event-main-image").val(result.url);
                 resolve();
               },
-              function(error) {
-                $('#main-image-upload-status').text('Upload failed: ' + error.statusText);
+              function (error) {
+                $("#main-image-upload-status").text("Upload failed: " + error.statusText);
                 resolve(); // Resolve even if upload fails
               }
             );
           });
           uploadPromises.push(mainImagePromise);
         }
-        
-        // Upload gallery 1 images if selected
-        if (gallery1Files.length > 0) {
-          $('#gallery-1-upload-status').text('Uploading...');
-          let gallery1Promise = new Promise((resolve) => {
-            rpLib.api.uploadMultipleImages(
-              gallery1Files,
-              function(progress, total) {
-                $('#gallery-1-upload-status').text(`Uploading ${progress}/${total}...`);
-              },
-              function(results) {
-                // Store the results to be saved
-                const gallery1Results = results.map(result => ({ id: result.id, url: result.url }));
-                
-                // Store these to be used in the final save call
-                $('#gallery-1-upload-status').text('Upload complete!');
-                
-                // Store in a data attribute to retrieve when saving
-                $('#gallery-1-preview').data('uploaded-images', gallery1Results);
-                resolve();
-              },
-              function(error) {
-                $('#gallery-1-upload-status').text('Upload failed: ' + error.statusText);
-                resolve(); // Resolve even if upload fails
-              }
-            );
-          });
-          uploadPromises.push(gallery1Promise);
-        }
-        
-        // Upload gallery 2 images if selected
-        if (gallery2Files.length > 0) {
-          $('#gallery-2-upload-status').text('Uploading...');
-          let gallery2Promise = new Promise((resolve) => {
-            rpLib.api.uploadMultipleImages(
-              gallery2Files,
-              function(progress, total) {
-                $('#gallery-2-upload-status').text(`Uploading ${progress}/${total}...`);
-              },
-              function(results) {
-                // Store the results to be saved
-                const gallery2Results = results.map(result => ({ id: result.id, url: result.url }));
-                
-                // Store these to be used in the final save call
-                $('#gallery-2-upload-status').text('Upload complete!');
-                
-                // Store in a data attribute to retrieve when saving
-                $('#gallery-2-preview').data('uploaded-images', gallery2Results);
-                resolve();
-              },
-              function(error) {
-                $('#gallery-2-upload-status').text('Upload failed: ' + error.statusText);
-                resolve(); // Resolve even if upload fails
-              }
-            );
-          });
-          uploadPromises.push(gallery2Promise);
-        }
-        
-        // Upload gallery 3 images if selected
-        if (gallery3Files.length > 0) {
-          $('#gallery-3-upload-status').text('Uploading...');
-          let gallery3Promise = new Promise((resolve) => {
-            rpLib.api.uploadMultipleImages(
-              gallery3Files,
-              function(progress, total) {
-                $('#gallery-3-upload-status').text(`Uploading ${progress}/${total}...`);
-              },
-              function(results) {
-                // Store the results to be saved
-                const gallery3Results = results.map(result => ({ id: result.id, url: result.url }));
-                
-                // Store these to be used in the final save call
-                $('#gallery-3-upload-status').text('Upload complete!');
-                
-                // Store in a data attribute to retrieve when saving
-                $('#gallery-3-preview').data('uploaded-images', gallery3Results);
-                resolve();
-              },
-              function(error) {
-                $('#gallery-3-upload-status').text('Upload failed: ' + error.statusText);
-                resolve(); // Resolve even if upload fails
-              }
-            );
-          });
-          uploadPromises.push(gallery3Promise);
-        }
-        
+
+        // Handle each gallery upload
+        let gallery1Promise = rpLib.utils.handleGalleryUpload("gallery-1", gallery1Files);
+        let gallery2Promise = rpLib.utils.handleGalleryUpload("gallery-2", gallery2Files);
+        let gallery3Promise = rpLib.utils.handleGalleryUpload("gallery-3", gallery3Files);
+
+        uploadPromises.push(gallery1Promise, gallery2Promise, gallery3Promise);
+
         // Wait for all uploads to finish before saving
-        Promise.all(uploadPromises).then(() => {
+        Promise.all(uploadPromises).then((results) => {
+          // Store the uploaded gallery data
+          if (results.length >= 4) {
+            // There are 4 promises now (main image + 3 galleries)
+            $("#gallery-1-preview").data("uploaded-images", results[1]); // Offset by 1 due to main image
+            $("#gallery-2-preview").data("uploaded-images", results[2]);
+            $("#gallery-3-preview").data("uploaded-images", results[3]);
+          } else if (results.length >= 3) {
+            $("#gallery-1-preview").data("uploaded-images", results[0]);
+            $("#gallery-2-preview").data("uploaded-images", results[1]);
+            $("#gallery-3-preview").data("uploaded-images", results[2]);
+          }
+
           // Once all uploads are complete, call the appropriate function
           if (isCreatingNewEvent) {
             rpLib.api.createEventAndRefreshList($("#city-select").val());
           } else {
             rpLib.api.updateEventAndRefreshList(eventId);
           }
-          
+
           // Reset button text and re-enable it
-          $('#save-event').text('Save');
-          $('#save-event').prop('disabled', false);
-          
+          $("#save-event").text("Save");
+          $("#save-event").prop("disabled", false);
+
           // Close the modal
           $("#collection-item-modal").addClass("hidden");
         });
       });
-  
+
       // Remaining event bindings
       rpLib.api.fetchUserBrands();
       $("#city-select").on("change", function () {
@@ -881,13 +838,13 @@ var rpLib = {
       $("#collection-list").on("click", ".item-edit-btn", function () {
         let eventId = $(this).closest(".collection-item").data("event-id");
         let slug = $(this).closest(".collection-item").data("slug");
-        
+
         // Update modal title for editing
         $("#collection-item-modal").find("h3").text("Edit Event");
-        
+
         // Set the event ID for editing
         $("#collection-item-modal").attr("data-event-id", eventId);
-        
+
         rpLib.api.fetchEventDetailsAndOpenModal(slug);
       });
       $("#close-modal").on("click", function () {
@@ -895,45 +852,39 @@ var rpLib = {
       });
 
       // Event listener for delete button click
-      $("body").on("click", ".item-delete-btn", function(event) {
+      $("body").on("click", ".item-delete-btn", function (event) {
         const eventId = $(this).closest(".collection-item").data("event-id");
         const eventName = $(this).closest(".collection-item").find(".event-name").text();
-        
+
         if (confirm(`Are you sure you want to delete event "${eventName}"?`)) {
-          rpLib.api.archiveItem(
-            EVENTS_COLLECTION_ID, 
-            eventId, 
-            "Event", 
-            function() {
-              // Refresh the list after successful archive
-              rpLib.api.fetchEventsAndRender($("#city-select").val());
-            }
-          );
+          rpLib.api.archiveItem(EVENTS_COLLECTION_ID, eventId, "Event", function () {
+            // Refresh the list after successful archive
+            rpLib.api.fetchEventsAndRender($("#city-select").val());
+          });
         }
       });
     },
-    
+
     renderEvent: function (event) {
       const templateRowItem = $(".collection-item-row-template").clone();
       templateRowItem.removeClass("collection-item-row-template");
       templateRowItem.attr("data-slug", event.fieldData.slug);
       templateRowItem.attr("data-event-id", event.id);
-  
+
       templateRowItem.find(".event-pic").attr("src", event.fieldData["main-image"]?.url || "");
       templateRowItem.find(".event-name").text(event.fieldData.name || "");
       templateRowItem.find(".event-date").text(event.fieldData.date || "");
       templateRowItem.find(".event-location").text(event.fieldData["location-name"] || "");
       templateRowItem.find(".item-view-btn").attr("href", event.id || "");
-  
+
       $("#collection-list").append(templateRowItem);
-    }
+    },
   },
-  
 
   utils: {
     injectDependencies: function () {
       // SparkMD5
-      const scriptTagForSparkMD5 = '<script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>'
+      const scriptTagForSparkMD5 = '<script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>';
       $("head").append(scriptTagForSparkMD5);
     },
     injectCSS: function () {
@@ -956,6 +907,155 @@ var rpLib = {
           </div>`;
         previewContainer.append(imgElement);
       });
+    },
+
+    // Add this new function to handle image tracking with file indices
+    addImageToGallery: function (galleryId, file, fileIndex) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const index = $(`#${galleryId}-preview img`).length;
+        const img = $("<img>")
+          .addClass("thumbnail")
+          .attr("src", e.target.result)
+          .attr("data-index", index)
+          .attr("data-file-index", fileIndex)
+          .attr("title", "Click to replace this image");
+        $(`#${galleryId}-preview`).append(img);
+
+        // Update limits display
+        rpLib.utils.updateGalleryLimits(galleryId, index + 1);
+      };
+      reader.readAsDataURL(file);
+    },
+    // Modified gallery upload to preserve order
+    handleGalleryUpload: function (galleryId, galleryFiles) {
+      return new Promise((resolve) => {
+        const $preview = $(`#${galleryId}-preview`);
+        const $status = $(`#${galleryId}-upload-status`);
+        const existingImages = $preview.find("img");
+
+        // If there are no images to upload
+        if (existingImages.length === 0 && galleryFiles.length === 0) {
+          resolve([]);
+          return;
+        }
+
+        // If we only have existing images that weren't changed
+        if (galleryFiles.length === 0 && !$preview.find(".replaced").length) {
+          // Just use the existing gallery data
+          const galleryNum = galleryId.split("-")[1];
+          if (galleryNum === "1") resolve(existingGallery1);
+          else if (galleryNum === "2") resolve(existingGallery2);
+          else if (galleryNum === "3") resolve(existingGallery3);
+          return;
+        }
+
+        // We need to upload images
+        $status.text("Preparing upload...");
+
+        // Collect all images that need uploading (new or replaced)
+        let filesToUpload = [];
+        let imageMap = []; // To maintain order
+
+        // Process each image in the preview area to maintain order
+        existingImages.each(function () {
+          const $img = $(this);
+          const index = $img.data("index");
+          const isReplaced = $img.hasClass("replaced");
+
+          if (isReplaced) {
+            // This image was replaced, get the replacement file
+            const replacementFile = $preview.data(`replaced-${index}`);
+            if (replacementFile) {
+              filesToUpload.push(replacementFile);
+              imageMap.push({
+                originalIndex: index,
+                uploadIndex: filesToUpload.length - 1,
+                isNew: true,
+              });
+            }
+          } else if ($img.data("existing")) {
+            // This is an existing image that wasn't changed
+            imageMap.push({
+              originalIndex: index,
+              existingId: $img.data("image-id"),
+              existingUrl: $img.attr("src"),
+              isNew: false,
+            });
+          } else {
+            // This is a completely new image
+            const fileIndex = $img.data("file-index");
+            if (typeof fileIndex !== "undefined" && galleryFiles[fileIndex]) {
+              filesToUpload.push(galleryFiles[fileIndex]);
+              imageMap.push({
+                originalIndex: index,
+                uploadIndex: filesToUpload.length - 1,
+                isNew: true,
+              });
+            }
+          }
+        });
+
+        // If there are no files to upload, just use the existing data
+        if (filesToUpload.length === 0) {
+          const galleryResults = imageMap
+            .map((item) => {
+              if (!item.isNew) {
+                return { id: item.existingId, url: item.existingUrl };
+              }
+              return null;
+            })
+            .filter(Boolean);
+
+          $status.text("No new images to upload");
+          resolve(galleryResults);
+          return;
+        }
+
+        // Upload the files
+        $status.text("Uploading...");
+        rpLib.api.uploadMultipleImages(
+          filesToUpload,
+          function (progress, total) {
+            $status.text(`Uploading ${progress}/${total}...`);
+          },
+          function (results) {
+            // Now rebuild the gallery in the correct order
+            const galleryResults = imageMap.map((item) => {
+              if (item.isNew) {
+                // Use the uploaded file result
+                return results[item.uploadIndex];
+              } else {
+                // Use the existing image data
+                return { id: item.existingId, url: item.existingUrl };
+              }
+            });
+
+            $status.text("Upload complete!");
+            resolve(galleryResults);
+          },
+          function (error) {
+            $status.text("Upload failed: " + error.statusText);
+            resolve([]); // Resolve with empty array on failure
+          }
+        );
+      });
+    },
+    // Helper function to check gallery size and update UI
+    updateGalleryLimits: function (galleryId, count) {
+      const maxImages = 25;
+      const $uploadInput = $(`#${galleryId}-upload`);
+      const $statusEl = $(`#${galleryId}-upload-status`);
+
+      if (count >= maxImages) {
+        $uploadInput.prop("disabled", true);
+        $statusEl.text(`Maximum limit of ${maxImages} images reached`);
+        $statusEl.css("color", "red");
+      } else {
+        $uploadInput.prop("disabled", false);
+        $statusEl.text(`${count} images (${maxImages - count} more allowed)`);
+        $statusEl.css("color", "#666");
+      }
     },
   },
 
@@ -1012,7 +1112,12 @@ var rpLib = {
       rpLib.api.fetchAllPaginated(url, (items) => {
         items.forEach((user) => {
           // Check if the user has brands and if the specified brandId exists in the user's brand-s array
-          if (user.isArchived === false && user.fieldData["brand-s"] && user.fieldData["brand-s"].length > 0 && user.fieldData["brand-s"].includes(brandId)) {
+          if (
+            user.isArchived === false &&
+            user.fieldData["brand-s"] &&
+            user.fieldData["brand-s"].length > 0 &&
+            user.fieldData["brand-s"].includes(brandId)
+          ) {
             rpLib.usersPage.renderUser(user);
           }
         });
@@ -1133,7 +1238,7 @@ var rpLib = {
         success: function (response) {
           if (response.items.length > 0) {
             let event = response.items[0];
-            
+
             // Populate form fields with event data
             $("#event-name").val(event.fieldData.name || "");
             $("#event-date").val(event.fieldData.date || "");
@@ -1147,52 +1252,83 @@ var rpLib = {
             $("#event-description").val(event.fieldData.description || "");
             $("#sponsor-event-button-url").val(event.fieldData["sponsor-event-button-url"] || "");
             $("#sponsor-event-button-text").val(event.fieldData["sponsor-event-button-text"] || "");
-            
+
             // Populate main image
             $("#event-main-image").val(event.fieldData["main-image"]?.url || "");
             $("#main-image-preview").attr("src", event.fieldData["main-image"]?.url || "");
-            
+
             // Store existing galleries to handle partial updates
             existingGallery1 = event.fieldData["image-gallery"] || [];
             existingGallery2 = event.fieldData["image-gallery-2"] || [];
             existingGallery3 = event.fieldData["image-gallery-3"] || [];
-            
+
+            // Reset the gallery previews
+            $("#gallery-1-preview").empty();
+            $("#gallery-2-preview").empty();
+            $("#gallery-3-preview").empty();
+
+            // Reset the file arrays for new uploads
+            gallery1Files = [];
+            gallery2Files = [];
+            gallery3Files = [];
+
             // Display existing gallery 1 images
-            $('#gallery-1-preview').empty();
             if (existingGallery1.length > 0) {
-              existingGallery1.forEach(img => {
+              existingGallery1.forEach((img, index) => {
                 if (img && img.url) {
-                  const imgEl = $('<img>').addClass('thumbnail').attr('src', img.url);
-                  $('#gallery-1-preview').append(imgEl);
+                  const imgEl = $("<img>")
+                    .addClass("thumbnail")
+                    .attr("src", img.url)
+                    .attr("data-index", index)
+                    .attr("data-image-id", img.id)
+                    .attr("data-existing", true)
+                    .attr("title", "Click to replace this image");
+                  $("#gallery-1-preview").append(imgEl);
                 }
               });
-              $('#gallery-1-upload-status').text(`${existingGallery1.length} existing images`);
+
+              // Update limits display
+              rpLib.utils.updateGalleryLimits("gallery-1", existingGallery1.length);
             }
-            
+
             // Display existing gallery 2 images
-            $('#gallery-2-preview').empty();
             if (existingGallery2.length > 0) {
-              existingGallery2.forEach(img => {
+              existingGallery2.forEach((img, index) => {
                 if (img && img.url) {
-                  const imgEl = $('<img>').addClass('thumbnail').attr('src', img.url);
-                  $('#gallery-2-preview').append(imgEl);
+                  const imgEl = $("<img>")
+                    .addClass("thumbnail")
+                    .attr("src", img.url)
+                    .attr("data-index", index)
+                    .attr("data-image-id", img.id)
+                    .attr("data-existing", true)
+                    .attr("title", "Click to replace this image");
+                  $("#gallery-2-preview").append(imgEl);
                 }
               });
-              $('#gallery-2-upload-status').text(`${existingGallery2.length} existing images`);
+
+              // Update limits display
+              rpLib.utils.updateGalleryLimits("gallery-2", existingGallery2.length);
             }
-            
+
             // Display existing gallery 3 images
-            $('#gallery-3-preview').empty();
             if (existingGallery3.length > 0) {
-              existingGallery3.forEach(img => {
+              existingGallery3.forEach((img, index) => {
                 if (img && img.url) {
-                  const imgEl = $('<img>').addClass('thumbnail').attr('src', img.url);
-                  $('#gallery-3-preview').append(imgEl);
+                  const imgEl = $("<img>")
+                    .addClass("thumbnail")
+                    .attr("src", img.url)
+                    .attr("data-index", index)
+                    .attr("data-image-id", img.id)
+                    .attr("data-existing", true)
+                    .attr("title", "Click to replace this image");
+                  $("#gallery-3-preview").append(imgEl);
                 }
               });
-              $('#gallery-3-upload-status').text(`${existingGallery3.length} existing images`);
+
+              // Update limits display
+              rpLib.utils.updateGalleryLimits("gallery-3", existingGallery3.length);
             }
-            
+
             // Show the modal
             $("#collection-item-modal").removeClass("hidden");
           }
@@ -1201,7 +1337,7 @@ var rpLib = {
           console.error("Error fetching event details:", error);
         },
       });
-    },  
+    },
     updateEventAndRefreshList: function (eventId) {
       const eventData = {
         fieldData: {
@@ -1216,80 +1352,57 @@ var rpLib = {
           "youtube-video-id-2": $("#youtube-video-id-2").val(),
           description: $("#event-description").val(),
           "sponsor-event-button-url": $("#sponsor-event-button-url").val(),
-          "sponsor-event-button-text": $("#sponsor-event-button-text").val()
-        }
+          "sponsor-event-button-text": $("#sponsor-event-button-text").val(),
+        },
       };
-      
+
       // Add main image if there's a URL (either uploaded or existing)
       if ($("#event-main-image").val()) {
         eventData.fieldData["main-image"] = {
-          url: $("#event-main-image").val()
+          url: $("#event-main-image").val(),
         };
       }
-      
-      // Handle image galleries - merge existing with new if needed
-      
-      // Gallery 1
-      let gallery1Data = [...existingGallery1]; // Start with existing
-      
-      // Add newly uploaded images if any
-      const newGallery1Images = $('#gallery-1-preview').data('uploaded-images');
+
+      // Get the gallery data that was uploaded and processed
+      const newGallery1Images = $("#gallery-1-preview").data("uploaded-images");
+      const newGallery2Images = $("#gallery-2-preview").data("uploaded-images");
+      const newGallery3Images = $("#gallery-3-preview").data("uploaded-images");
+
+      // Add galleries to the event data if they have images
       if (newGallery1Images && newGallery1Images.length > 0) {
-        gallery1Data = newGallery1Images; // Replace with new images
+        eventData.fieldData["image-gallery"] = newGallery1Images;
       }
-      
-      if (gallery1Data.length > 0) {
-        eventData.fieldData["image-gallery"] = gallery1Data;
-      }
-      
-      // Gallery 2
-      let gallery2Data = [...existingGallery2]; // Start with existing
-      
-      // Add newly uploaded images if any
-      const newGallery2Images = $('#gallery-2-preview').data('uploaded-images');
+
       if (newGallery2Images && newGallery2Images.length > 0) {
-        gallery2Data = newGallery2Images; // Replace with new images
+        eventData.fieldData["image-gallery-2"] = newGallery2Images;
       }
-      
-      if (gallery2Data.length > 0) {
-        eventData.fieldData["image-gallery-2"] = gallery2Data;
-      }
-      
-      // Gallery 3
-      let gallery3Data = [...existingGallery3]; // Start with existing
-      
-      // Add newly uploaded images if any
-      const newGallery3Images = $('#gallery-3-preview').data('uploaded-images');
+
       if (newGallery3Images && newGallery3Images.length > 0) {
-        gallery3Data = newGallery3Images; // Replace with new images
+        eventData.fieldData["image-gallery-3"] = newGallery3Images;
       }
-      
-      if (gallery3Data.length > 0) {
-        eventData.fieldData["image-gallery-3"] = gallery3Data;
-      }
-      
+
       // Save the event data through the API
       $.ajax({
         url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${EVENTS_COLLECTION_ID}/items/${eventId}/live`,
         method: "PATCH",
         data: JSON.stringify(eventData),
         contentType: "application/json",
-        success: function() {
+        success: function () {
           // Close modal
           $("#collection-item-modal").addClass("hidden");
-          
+
           // Reset button text and re-enable
-          $('#save-event').text('Save');
-          $('#save-event').prop('disabled', false);
-          
+          $("#save-event").text("Save");
+          $("#save-event").prop("disabled", false);
+
           // Refresh the event list
           rpLib.api.fetchEventsAndRender($("#city-select").val());
         },
-        error: function(error) {
+        error: function (error) {
           console.error("Error updating event:", error);
-          $('#save-event').text('Save');
-          $('#save-event').prop('disabled', false);
-        }
+          $("#save-event").text("Save");
+          $("#save-event").prop("disabled", false);
+        },
       });
     },
     fetchUserDetailsAndOpenModal: function (slug) {
@@ -1370,44 +1483,44 @@ var rpLib = {
         },
       });
     },
-    uploadImage: function(file, onSuccess, onError) {
+    uploadImage: function (file, onSuccess, onError) {
       const generateMD5Hash = (file) => {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.readAsBinaryString(file);
-          reader.onload = function() {
+          reader.onload = function () {
             const md5Hash = SparkMD5.hashBinary(reader.result);
             resolve(md5Hash);
           };
           reader.onerror = (error) => reject(error);
         });
       };
-    
+
       generateMD5Hash(file)
         .then((md5Hash) => {
           $.ajax({
             url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/sites/${SITE_ID}/assets`,
             method: "POST",
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
             },
             data: JSON.stringify({
               fileHash: md5Hash,
               fileName: file.name,
-              contentType: file.type
+              contentType: file.type,
             }),
-            success: function(response) {
+            success: function (response) {
               // Step 2: Upload to S3 using the details provided
               const formData = new FormData();
-    
+
               // Add all the upload details from Webflow to the form
-              Object.keys(response.uploadDetails).forEach(key => {
+              Object.keys(response.uploadDetails).forEach((key) => {
                 formData.append(key, response.uploadDetails[key]);
               });
-    
+
               // Append the actual file
-              formData.append('file', file);
-    
+              formData.append("file", file);
+
               // Upload to S3
               $.ajax({
                 url: response.uploadUrl,
@@ -1415,23 +1528,23 @@ var rpLib = {
                 data: formData,
                 processData: false,
                 contentType: false,
-                success: function() {
+                success: function () {
                   // Return the asset details from the original response
                   onSuccess({
                     id: response.id,
-                    url: response.assetUrl || response.hostedUrl
+                    url: response.assetUrl || response.hostedUrl,
                   });
                 },
-                error: function(error) {
+                error: function (error) {
                   console.error("Error uploading to S3:", error);
                   if (onError) onError(error);
-                }
+                },
               });
             },
-            error: function(error) {
+            error: function (error) {
               console.error("Error getting upload details:", error);
               if (onError) onError(error);
-            }
+            },
           });
         })
         .catch((error) => {
@@ -1439,12 +1552,12 @@ var rpLib = {
           if (onError) onError(error);
         });
     },
-    
-    uploadMultipleImages: function(files, onProgress, onComplete, onError) {
+
+    uploadMultipleImages: function (files, onProgress, onComplete, onError) {
       const totalFiles = files.length;
       let uploadedCount = 0;
       const results = [];
-      
+
       // Function to upload a single file and manage the queue
       function uploadNext(index) {
         if (index >= totalFiles) {
@@ -1452,22 +1565,23 @@ var rpLib = {
           onComplete(results);
           return;
         }
-        
-        rpLib.api.uploadImage(files[index], 
-          function(result) {
+
+        rpLib.api.uploadImage(
+          files[index],
+          function (result) {
             // Success for this file
             results.push(result);
             uploadedCount++;
-            
+
             // Report progress
             if (onProgress) {
               onProgress(uploadedCount, totalFiles);
             }
-            
+
             // Upload next file
             uploadNext(index + 1);
           },
-          function(error) {
+          function (error) {
             console.error(`Error uploading file ${files[index].name}:`, error);
             if (onError) {
               onError(error, files[index], index);
@@ -1477,37 +1591,37 @@ var rpLib = {
           }
         );
       }
-      
+
       // Start the upload process
       uploadNext(0);
     },
-    archiveItem: function(collectionId, itemId, itemType, successCallback) {
+    archiveItem: function (collectionId, itemId, itemType, successCallback) {
       const archiveData = {
-        isArchived: true
+        isArchived: true,
       };
-      
+
       $.ajax({
         url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${collectionId}/items/${itemId}/live`,
         method: "PATCH",
         data: JSON.stringify(archiveData),
         contentType: "application/json",
-        success: function() {
+        success: function () {
           alert(`${itemType} archived successfully!`);
-          if (typeof successCallback === 'function') {
+          if (typeof successCallback === "function") {
             successCallback();
           }
         },
-        error: function(error) {
+        error: function (error) {
           console.error(`Error archiving ${itemType}:`, error);
           alert(`Failed to archive ${itemType}. Please try again.`);
-        }
+        },
       });
     },
     createUserAndRefreshList: function (brandId) {
       // The first and last name are used to create the full name
       const firstName = $("#user-first-name").val();
       const lastName = $("#user-last-name").val();
-      
+
       let newUserData = {
         fieldData: {
           name: `${firstName} ${lastName}`.trim(), // Combine first and last name
@@ -1526,24 +1640,24 @@ var rpLib = {
           "facebook-pixel-id": $("#user-facebook-pixel-id").val(),
           "google-analytics-id": $("#user-google-analytics-id").val(),
           // Set the brand relationship
-          "brand-s": [brandId]
-        }
+          "brand-s": [brandId],
+        },
       };
-      
+
       // Add profile picture if available
       if ($("#user-profile-pic").val()) {
         newUserData.fieldData["profile-picture"] = {
-          url: $("#user-profile-pic").val()
+          url: $("#user-profile-pic").val(),
         };
       }
-      
+
       // Add full picture if available
       if ($("#user-full-pic").val()) {
         newUserData.fieldData["full-picture"] = {
-          url: $("#user-full-pic").val()
+          url: $("#user-full-pic").val(),
         };
       }
-    
+
       $.ajax({
         url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${USERS_COLLECTION_ID}/items/live`,
         headers: {
@@ -1560,8 +1674,8 @@ var rpLib = {
           console.error("Error creating user:", error);
           alert("Failed to create user. Please check the console for details.");
           // Re-enable the save button even on error
-          $('#save-user').text('Save');
-          $('#save-user').prop('disabled', false);
+          $("#save-user").text("Save");
+          $("#save-user").prop("disabled", false);
         },
       });
     },
@@ -1586,17 +1700,17 @@ var rpLib = {
           address: $("#partner-address").val(),
           "city-state-zip": $("#partner-city").val(),
           // Set the brand relationship
-          "brand": brandId,
-          city: [brandId]
-        }
+          brand: brandId,
+          city: [brandId],
+        },
       };
-      
+
       // Add categories if selected
       const selectedCategories = $("#partner-categories").val();
       if (selectedCategories && selectedCategories.length > 0) {
-        newPartnerData.fieldData.categories = selectedCategories.map(id => ({ id }));
+        newPartnerData.fieldData.categories = selectedCategories.map((id) => ({ id }));
       }
-    
+
       $.ajax({
         url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNERS_COLLECTION_ID}/items/live`,
         headers: {
@@ -1617,10 +1731,10 @@ var rpLib = {
     },
     createEventAndRefreshList: function (brandId) {
       // Gather gallery image data
-      let gallery1Images = $('#gallery-1-preview').data('uploaded-images') || [];
-      let gallery2Images = $('#gallery-2-preview').data('uploaded-images') || [];
-      let gallery3Images = $('#gallery-3-preview').data('uploaded-images') || [];
-      
+      let gallery1Images = $("#gallery-1-preview").data("uploaded-images") || [];
+      let gallery2Images = $("#gallery-2-preview").data("uploaded-images") || [];
+      let gallery3Images = $("#gallery-3-preview").data("uploaded-images") || [];
+
       let newEventData = {
         fieldData: {
           name: $("#event-name").val(),
@@ -1636,30 +1750,30 @@ var rpLib = {
           "sponsor-event-button-url": $("#sponsor-event-button-url").val(),
           "sponsor-event-button-text": $("#sponsor-event-button-text").val(),
           // Set the brand relationship
-          "brand": brandId
-        }
+          brand: brandId,
+        },
       };
-      
+
       // Add main image if available
       if ($("#event-main-image").val()) {
         newEventData.fieldData["main-image"] = {
-          url: $("#event-main-image").val()
+          url: $("#event-main-image").val(),
         };
       }
-      
+
       // Add gallery images
       if (gallery1Images.length > 0) {
         newEventData.fieldData["image-gallery-1"] = gallery1Images;
       }
-      
+
       if (gallery2Images.length > 0) {
         newEventData.fieldData["image-gallery-2"] = gallery2Images;
       }
-      
+
       if (gallery3Images.length > 0) {
         newEventData.fieldData["image-gallery-3"] = gallery3Images;
       }
-    
+
       $.ajax({
         url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${EVENTS_COLLECTION_ID}/items/live`,
         headers: {
