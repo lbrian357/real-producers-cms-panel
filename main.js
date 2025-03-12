@@ -4,6 +4,7 @@ BRANDS_COLLECTION_ID = "658f30a87b1a52ef8ad0b77b";
 PARTNERS_COLLECTION_ID = "65e7ff7b313c5cd8cd924886";
 SITE_ID = "658f30a87b1a52ef8ad0b732";
 
+
 $(document).ready(function () {
   rpLib.utils.injectCSS();
   rpLib.utils.injectDependencies();
