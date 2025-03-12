@@ -1117,7 +1117,14 @@ var rpLib = {
   },
 
   api: {
-    fetchAllPaginated: function (url, processData, offset = 0, onComplete) {
+    fetchAllPaginated: function (url, processData, offset = 0) {
+      // Disable the dropdown when pagination starts (only for the first call)
+      if (offset === 0) {
+        $("#city-select").attr("disabled", true);
+        // Add a <progress></progress> to #city-select to indicate loading
+        $("#city-select").after("<progress></progress>");
+      }
+
       $.ajax({
         url: `${url}&offset=${offset}`,
         method: "GET",
@@ -1130,14 +1137,17 @@ var rpLib = {
           if (offset + response.pagination.limit < response.pagination.total) {
             rpLib.api.fetchAllPaginated(url, processData, offset + response.pagination.limit);
           } else {
-            // all pages fetched
-            if (typeof onComplete === "function") {
-              // onComplete();
-            }
+            // All pages fetched, re-enable dropdown
+            $("#city-select").attr("disabled", false);
+            $("#city-select").next("progress").remove();
           }
         },
         error: function (error) {
           console.error("Error fetching paginated data:", error);
+
+          // Re-enable dropdown in case of an error
+          $("#city-select").attr("disabled", false);
+          $("#city-select").next("progress").remove();
         },
       });
     },
@@ -1200,9 +1210,6 @@ var rpLib = {
     fetchPartnersAndRender: function (brandId) {
       const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNERS_COLLECTION_ID}/items/live?sortBy=lastPublished&sortOrder=desc`;
 
-      // Disable the dropdown when fetching starts
-      $("#city-select").attr("disabled", true);
-
       // Clear existing providers in list
       $("#collection-list .collection-item").not(".collection-item-row-template").remove();
 
@@ -1213,9 +1220,6 @@ var rpLib = {
           .forEach((partner) => {
             rpLib.partnersPage.renderPartner(partner);
           });
-      }, () => {
-        // Re-enable the dropdown after fetching is complete
-        $("#city-select").attr("disabled", false);
       });
     },
     fetchPartnerDetailsAndOpenModal: function (slug) {
