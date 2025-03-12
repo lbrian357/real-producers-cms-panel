@@ -1122,7 +1122,7 @@ var rpLib = {
       if (offset === 0) {
         $("#city-select").attr("disabled", true);
         // Add a <progress></progress> to #city-select to indicate loading
-        $("#city-select").after("<progress></progress>");
+        $("#city-select").after('<progress style="background-attachment: revert !important;"></progress>');
       }
 
       $.ajax({
