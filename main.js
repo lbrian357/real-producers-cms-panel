@@ -1117,7 +1117,7 @@ var rpLib = {
   },
 
   api: {
-    fetchAllPaginated: function (url, processData, offset = 0) {
+    fetchAllPaginated: function (url, processData, offset = 0, onComplete) {
       $.ajax({
         url: `${url}&offset=${offset}`,
         method: "GET",
@@ -1129,6 +1129,11 @@ var rpLib = {
 
           if (offset + response.pagination.limit < response.pagination.total) {
             rpLib.api.fetchAllPaginated(url, processData, offset + response.pagination.limit);
+          } else {
+            // all pages fetched
+            if (typeof onComplete === "function") {
+              // onComplete();
+            }
           }
         },
         error: function (error) {
@@ -1195,6 +1200,9 @@ var rpLib = {
     fetchPartnersAndRender: function (brandId) {
       const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNERS_COLLECTION_ID}/items/live?sortBy=lastPublished&sortOrder=desc`;
 
+      // Disable the dropdown when fetching starts
+      $("#city-select").attr("disabled", true);
+
       // Clear existing providers in list
       $("#collection-list .collection-item").not(".collection-item-row-template").remove();
 
@@ -1205,6 +1213,9 @@ var rpLib = {
           .forEach((partner) => {
             rpLib.partnersPage.renderPartner(partner);
           });
+      }, () => {
+        // Re-enable the dropdown after fetching is complete
+        $("#city-select").attr("disabled", false);
       });
     },
     fetchPartnerDetailsAndOpenModal: function (slug) {
