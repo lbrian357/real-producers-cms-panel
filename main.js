@@ -1,8 +1,9 @@
-EVENTS_COLLECTION_ID = "658f30a87b1a52ef8ad0b8e4";
-USERS_COLLECTION_ID = "658f30a87b1a52ef8ad0b74b";
-BRANDS_COLLECTION_ID = "658f30a87b1a52ef8ad0b77b";
-PARTNERS_COLLECTION_ID = "65e7ff7b313c5cd8cd924886";
-SITE_ID = "658f30a87b1a52ef8ad0b732";
+const EVENTS_COLLECTION_ID = "658f30a87b1a52ef8ad0b8e4";
+const USERS_COLLECTION_ID = "658f30a87b1a52ef8ad0b74b";
+const BRANDS_COLLECTION_ID = "658f30a87b1a52ef8ad0b77b";
+const PARTNERS_COLLECTION_ID = "65e7ff7b313c5cd8cd924886";
+const PARTNER_CATEGORIES_COLLECTION_ID = "65e7fc8199c534cfe2cba083";
+const SITE_ID = "658f30a87b1a52ef8ad0b732";
 
 
 $(document).ready(function () {
@@ -359,13 +360,29 @@ var rpLib = {
             </div>
         `);
 
-      // Fetch all brands for city selection
-      rpLib.api.fetchUserBrands(() => {
-        // Set the last selected city if available
-        const lastSelectedCity = sessionStorage.getItem("selectedCity");
-        if (lastSelectedCity) {
-          $("#city-select").val(lastSelectedCity).trigger("change");
-        }
+      // Load list of partner categories and populate the dropdown
+      rpLib.api.fetchAllPartnerCategories(function(categories) {
+        // Clear existing options
+        $("#partner-categories").empty();
+        
+        // Add options for all categories
+        categories.forEach(function(category) {
+          $("#partner-categories").append(
+            $("<option>", {
+              value: category.id,
+              text: category.fieldData.name || "Unnamed Category"
+            })
+          );
+        });
+        
+        // Fetch brands
+        rpLib.api.fetchUserBrands(() => {
+          // Set the last selected city if available
+          const lastSelectedCity = sessionStorage.getItem("selectedCity");
+          if (lastSelectedCity) {
+            $("#city-select").val(lastSelectedCity).trigger("change");
+          }
+        });
       });
 
       // Fetch all users after city selection
@@ -393,7 +410,7 @@ var rpLib = {
 
       $("#save-partner").on("click", function () {
         const partnerId = $("#collection-item-modal").data("partner-id");
-        const isCreatingNewPartner = !partnerId; // Check if we're creating a new partner
+        const isCreatingNewPartner = !partnerId;
 
         if (isCreatingNewPartner) {
           rpLib.api.createPartnerAndRefreshList($("#city-select").val());
@@ -404,6 +421,7 @@ var rpLib = {
         // Close the modal
         $("#collection-item-modal").addClass("hidden");
       });
+
       $("#close-modal").on("click", function () {
         $("#collection-item-modal").addClass("hidden");
       });
@@ -1218,7 +1236,12 @@ var rpLib = {
             $("#partner-show").prop("checked", partner.fieldData["show-partner"]);
 
             // Populate multi-reference fields (dropdown with multiple selections)
-            $("#partner-categories").val(partner.fieldData["partner-categories"]);
+            if (partner.fieldData["partner-categories"] && 
+                Array.isArray(partner.fieldData["partner-categories"])) {
+              $("#partner-categories").val(partner.fieldData["partner-categories"]);
+            } else {
+              $("#partner-categories").val([]);
+            }
 
             $("#collection-item-modal").removeClass("hidden");
           }
@@ -1846,6 +1869,34 @@ var rpLib = {
           alert("Failed to create event. Please check the console for details.");
         },
       });
+    },
+    fetchAllPartnerCategories: function (callback) {
+      const allCategories = [];
+      
+      // URL for the categories endpoint
+      const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNER_CATEGORIES_COLLECTION_ID}/items?limit=100&sortBy=name&sortOrder=asc`;
+      
+      // Process function to collect all categories
+      const processCategories = function(items) {
+        allCategories.push(...items);
+        
+        // If this is the last batch, sort and call the callback
+        if (items.length < 100 || !callback) {
+          // Sort categories alphabetically by name
+          allCategories.sort((a, b) => {
+            const nameA = (a.fieldData.name || "").toLowerCase();
+            const nameB = (b.fieldData.name || "").toLowerCase();
+            return nameA.localeCompare(nameB);
+          });
+          
+          if (typeof callback === "function") {
+            callback(allCategories);
+          }
+        }
+      };
+      
+      // Use the existing fetchAllPaginated function
+      rpLib.api.fetchAllPaginated(url, processCategories);
     },
   },
 };
