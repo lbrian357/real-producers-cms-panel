@@ -1152,7 +1152,7 @@ var rpLib = {
       });
     },
     fetchUserBrands: function (callback) {
-      const USER_SLUG = $("div").find(`[data-ms-member='wf-users-slug']`).text();
+      const USER_SLUG = $("[data-ms-member='wf-users-slug']").text();
       const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${USERS_COLLECTION_ID}/items/live?slug=${USER_SLUG}&sortBy=lastPublished&sortOrder=desc`;
 
       rpLib.api.fetchAllPaginated(url, (items) => {
