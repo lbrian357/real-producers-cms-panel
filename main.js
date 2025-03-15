@@ -12,12 +12,24 @@ $(document).ready(function () {
   //
   // Run the scripts on relevant pages
   //
+  if (window.location.pathname === "/account/get-started") rpLib.getStartedPage.init();
+  if (window.location.pathname === "/account/dashboard") rpLib.dashboardPage.init();
   if (window.location.pathname === "/account/partners") rpLib.partnersPage.init();
   if (window.location.pathname === "/account/events") rpLib.eventsPage.init();
   if (window.location.pathname === "/account/users") rpLib.usersPage.init();
 });
 
 var rpLib = {
+  getStartedPage: {
+    init: function () {
+      rpLib.utils.initCitySelection();
+    },
+  },
+  dashboardPage: {
+    init: function () {
+      rpLib.utils.initCitySelection();
+    },
+  },
   usersPage: {
     init: function () {
       // Append modal dynamically for editing user details until frontend components are available
@@ -32,7 +44,6 @@ var rpLib = {
                 <div>
                     <label>Profile Picture:</label>
                     <div class="image-upload-container">
-                        <input type="text" id="user-profile-pic" placeholder="Image URL">
                         <div class="upload-section">
                             <input type="file" id="profile-pic-upload" accept="image/*">
                             <span id="profile-pic-upload-status"></span>
@@ -46,7 +57,6 @@ var rpLib = {
                 <div>
                     <label>Full Picture:</label>
                     <div class="image-upload-container">
-                        <input type="text" id="user-full-pic" placeholder="Image URL">
                         <div class="upload-section">
                             <input type="file" id="full-pic-upload" accept="image/*">
                             <span id="full-pic-upload-status"></span>
@@ -102,24 +112,9 @@ var rpLib = {
       </style>
       `);
 
-      // Fetch all brands for city selection
-      rpLib.api.fetchUserBrands(() => {
-        // Set the last selected city if available
-        const lastSelectedCity = sessionStorage.getItem("selectedCity");
-        if (lastSelectedCity) {
-          $("#city-select").val(lastSelectedCity).trigger("change");
-        }
-      });
-
-      // Fetch all users after city selection
-      $("#city-select").on("change", function () {
-        let brandId = $(this).val();
-        if (brandId) {
-          // Store the selected city in sessionStorage
-          sessionStorage.setItem("selectedCity", brandId);
-          rpLib.api.fetchBrandUsersAndRender(brandId);
-        } 
-      });
+      rpLib.utils.initCitySelection(
+        rpLib.api.fetchBrandUsersAndRender
+      );
 
       // Event listener for create button click
       $("body").on("click", ".lib-create-item-btn", function (event) {
@@ -209,25 +204,6 @@ var rpLib = {
         reader.readAsDataURL(fullPicFile);
       });
 
-      // Update preview when URL is manually entered
-      $("#user-profile-pic").on("change input", function () {
-        if ($(this).val()) {
-          $("#profile-pic-preview").attr("src", $(this).val());
-          // If URL is entered manually, clear the file selection
-          profilePicFile = null;
-          $("#profile-pic-upload").val("");
-        }
-      });
-
-      $("#user-full-pic").on("change input", function () {
-        if ($(this).val()) {
-          $("#full-pic-preview").attr("src", $(this).val());
-          // If URL is entered manually, clear the file selection
-          fullPicFile = null;
-          $("#full-pic-upload").val("");
-        }
-      });
-
       // Event listener for delete button click
       $("body").on("click", ".item-delete-btn", function (event) {
         const userId = $(this).closest(".collection-item").data("user-id");
@@ -260,8 +236,8 @@ var rpLib = {
               profilePicFile,
               function (result) {
                 $("#profile-pic-upload-status").text("Upload complete!");
-                $("#user-profile-pic").val(result.url);
-                resolve(); // Resolve when upload succeeds
+                $("#profile-pic-preview").attr("src", result.url);
+                resolve(result); // Resolve when upload succeeds
               },
               function (error) {
                 $("#profile-pic-upload-status").text("Upload failed: " + error.statusText);
@@ -280,8 +256,8 @@ var rpLib = {
               fullPicFile,
               function (result) {
                 $("#full-pic-upload-status").text("Upload complete!");
-                $("#user-full-pic").val(result.url);
-                resolve();
+                $("#full-pic-preview").attr("src", result.url);
+                resolve(result);
               },
               function (error) {
                 $("#full-pic-upload-status").text("Upload failed: " + error.statusText);
@@ -293,7 +269,15 @@ var rpLib = {
         }
 
         // Wait for all uploads to finish before saving and closing modal
-        Promise.all(uploadPromises).then(() => {
+        Promise.all(uploadPromises).then((results) => {
+          // Store the uploaded image URLs in the preview fields data attribute
+          if (profilePicFile) {
+            $("#profile-pic-preview").data("uploaded-image", results[0]);
+          }
+          if (fullPicFile) {
+            $("#full-pic-preview").data("uploaded-image", results[1]);
+          }
+
           if (isCreatingNewUser) {
             rpLib.api.createUserAndRefreshList($("#city-select").val());
           } else {
@@ -328,43 +312,84 @@ var rpLib = {
     init: function () {
       // Append modal dynamically for now until frontend components are available
       $("body").append(`
-            <div id="collection-item-modal" class="hidden collection-item-modal">
-                <div class="collection-item-modal-content">
-                <h3>Edit Partner</h3>
-                <label>Name:</label><input type="text" id="partner-name">
-                <label>Company:</label><input type="text" id="partner-company">
-                <label>Title:</label><input type="text" id="partner-title">
-                <label>Phone:</label><input type="text" id="partner-phone">
-                <label>Email:</label><input type="email" id="partner-email">
-                <label>Website:</label><input type="text" id="partner-website">
-                <label>License Number:</label><input type="text" id="partner-license">
-                <label>Facebook:</label><input type="text" id="partner-facebook">
-                <label>Instagram:</label><input type="text" id="partner-instagram">
-                <label>X (Twitter):</label><input type="text" id="partner-x">
-                <label>YouTube:</label><input type="text" id="partner-youtube">
-                <label>LinkedIn:</label><input type="text" id="partner-linkedin">
-                <label>TikTok:</label><input type="text" id="partner-tiktok">
-                <label>Description:</label><textarea id="partner-description"></textarea>
-                <label>Preview Text:</label><input type="text" id="partner-preview-text">
-                <label>Address:</label><input type="text" id="partner-address">
-                <label>City, State Zip:</label><input type="text" id="partner-city">
-                <label>Show on Website:</label><input type="checkbox" id="partner-show">
-                <label>Partner Categories:</label>
-                <select id="partner-categories" multiple>
-                    <option value="65e96b6acdfd2898d9dc2be8">Category 1</option>
-                    <option value="some-other-id">Category 2</option>
-                </select>
-                <button id="save-partner">Save</button>
-                <button id="close-modal">Close</button>
-                </div>
-            </div>
-        `);
+          <div id="collection-item-modal" class="hidden collection-item-modal">
+              <div class="collection-item-modal-content">
+              <h3>Edit Partner</h3>
+              <label>Name:</label><input type="text" id="partner-name">
+              <label>Company:</label><input type="text" id="partner-company">
 
-      // Load list of partner categories and populate the dropdown
+              <!-- Profile Picture -->
+              <div>
+                  <label>Profile Picture:</label>
+                  <div class="image-upload-container">
+                      <div class="upload-section">
+                          <input type="file" id="profile-pic-upload" accept="image/*">
+                          <span id="profile-pic-upload-status"></span>
+                      </div>
+                      <div class="image-preview">
+                          <img id="profile-pic-preview" src="" alt="Profile Picture Preview">
+                      </div>
+                  </div>
+              </div>
+
+              <!-- Logo -->
+              <div>
+                  <label>Logo:</label>
+                  <div class="image-upload-container">
+                      <div class="upload-section">
+                          <input type="file" id="logo-upload" accept="image/*">
+                          <span id="logo-upload-status"></span>
+                      </div>
+                      <div class="image-preview">
+                          <img id="logo-preview" src="" alt="Logo Preview">
+                      </div>
+                  </div>
+              </div>
+
+              <!-- Advertisement Image -->
+              <div>
+                  <label>Advertisement Image:</label>
+                  <div class="image-upload-container">
+                      <div class="upload-section">
+                          <input type="file" id="ad-image-upload" accept="image/*">
+                          <span id="ad-image-upload-status"></span>
+                      </div>
+                      <div class="image-preview">
+                          <img id="ad-image-preview" src="" alt="Advertisement Image Preview">
+                      </div>
+                  </div>
+              </div>
+
+              <label>Title:</label><input type="text" id="partner-title">
+              <label>Phone:</label><input type="text" id="partner-phone">
+              <label>Email:</label><input type="email" id="partner-email">
+              <label>Website:</label><input type="text" id="partner-website">
+              <label>License Number:</label><input type="text" id="partner-license">
+              <label>Facebook:</label><input type="text" id="partner-facebook">
+              <label>Instagram:</label><input type="text" id="partner-instagram">
+              <label>X (Twitter):</label><input type="text" id="partner-x">
+              <label>YouTube:</label><input type="text" id="partner-youtube">
+              <label>LinkedIn:</label><input type="text" id="partner-linkedin">
+              <label>TikTok:</label><input type="text" id="partner-tiktok">
+              <label>Description:</label><textarea id="partner-description"></textarea>
+              <label>Preview Text:</label><input type="text" id="partner-preview-text">
+              <label>Address:</label><input type="text" id="partner-address">
+              <label>City, State Zip:</label><input type="text" id="partner-city">
+              <label>Show on Website:</label><input type="checkbox" id="partner-show">
+              <label>Partner Categories:</label>
+              <select id="partner-categories" multiple>
+                  <option value="65e96b6acdfd2898d9dc2be8">Category 1</option>
+                  <option value="some-other-id">Category 2</option>
+              </select>
+              <button id="save-partner">Save</button>
+              <button id="close-modal">Close</button>
+              </div>
+          </div>
+      `);
+
+      // Load list of partner categories first so it's available to populate the dropdown in the edit modal
       rpLib.api.fetchAllPartnerCategories(function(categories) {
-        // Clear existing options
-        $("#partner-categories").empty();
-        
+        $("#partner-categories").empty(); // Clear existing options
         // Add options for all categories
         categories.forEach(function(category) {
           $("#partner-categories").append(
@@ -375,24 +400,53 @@ var rpLib = {
           );
         });
         
-        // Fetch brands
-        rpLib.api.fetchUserBrands(() => {
-          // Set the last selected city if available
-          const lastSelectedCity = sessionStorage.getItem("selectedCity");
-          if (lastSelectedCity) {
-            $("#city-select").val(lastSelectedCity).trigger("change");
-          }
-        });
+        rpLib.utils.initCitySelection(
+          rpLib.api.fetchPartnersAndRender
+        );
       });
 
-      // Fetch all users after city selection
-      $("#city-select").on("change", function () {
-        let brandId = $(this).val();
-        if (brandId) {
-          // Store the selected city in sessionStorage
-          sessionStorage.setItem("selectedCity", brandId);
-          rpLib.api.fetchPartnersAndRender(brandId);
-        } 
+      // Store file references for image uploads
+      let profilePicFile = null;
+      let logoFile = null;
+      let adImageFile = null;
+      // Profile Picture Preview Handler (just preview, don't upload yet)
+      $("#profile-pic-upload").on("change", function (e) {
+        profilePicFile = e.target.files[0];
+        if (!profilePicFile) return;
+
+        // Show preview without uploading
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          $("#profile-pic-preview").attr("src", e.target.result);
+          $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
+        };
+        reader.readAsDataURL(profilePicFile);
+      });
+      // Logo Preview Handler (just preview, don't upload yet)
+      $("#logo-upload").on("change", function (e) {
+        logoFile = e.target.files[0];
+        if (!logoFile) return;
+
+        // Show preview without uploading
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          $("#logo-preview").attr("src", e.target.result);
+          $("#logo-upload-status").text("Image selected (will upload when saved)");
+        };
+        reader.readAsDataURL(logoFile);
+      });
+      // Advertisement Image Preview Handler (just preview, don't upload yet)
+      $("#ad-image-upload").on("change", function (e) {
+        adImageFile = e.target.files[0];
+        if (!adImageFile) return;
+
+        // Show preview without uploading
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          $("#ad-image-preview").attr("src", e.target.result);
+          $("#ad-image-upload-status").text("Image selected (will upload when saved)");
+        };
+        reader.readAsDataURL(adImageFile);
       });
 
       $("body").on("click", ".item-edit-btn", function (event) {
@@ -412,14 +466,96 @@ var rpLib = {
         const partnerId = $("#collection-item-modal").data("partner-id");
         const isCreatingNewPartner = !partnerId;
 
-        if (isCreatingNewPartner) {
-          rpLib.api.createPartnerAndRefreshList($("#city-select").val());
-        } else {
-          rpLib.api.updatePartnerAndRefreshList(partnerId);
+        let uploadPromises = [];
+
+        // Show saving status
+        $("#save-partner").text("Uploading images...");
+        $("#save-partner").prop("disabled", true);
+
+        // Upload profile pic if new file selected
+        if (profilePicFile) {
+          $("#profile-pic-upload-status").text("Uploading...");
+          let profilePicPromise = new Promise((resolve) => {
+            rpLib.api.uploadImage(
+              profilePicFile,
+              function (result) {
+                $("#profile-pic-upload-status").text("Upload complete!");
+                $("#profile-pic-preview").attr("src", result.url);
+                resolve(result);
+              },
+              function (error) {
+                $("#profile-pic-upload-status").text("Upload failed: " + error.statusText);
+                resolve();
+              }
+            );
+          });
+          uploadPromises.push(profilePicPromise);
+        }
+        // Upload logo if new file selected
+        if (logoFile) {
+          $("#logo-upload-status").text("Uploading...");
+          let logoPromise = new Promise((resolve) => {
+            rpLib.api.uploadImage(
+              logoFile,
+              function (result) {
+                $("#logo-upload-status").text("Upload complete!");
+                $("#logo-preview").attr("src", result.url);
+                resolve(result);
+              },
+              function (error) {
+                $("#logo-upload-status").text("Upload failed: " + error.statusText);
+                resolve();
+              }
+            );
+          });
+          uploadPromises.push(logoPromise);
+        }
+        // Upload ad image if new file selected
+        if (adImageFile) {
+          $("#ad-image-upload-status").text("Uploading...");
+          let adImagePromise = new Promise((resolve) => {
+            rpLib.api.uploadImage(
+              adImageFile,
+              function (result) {
+                $("#ad-image-upload-status").text("Upload complete!");
+                $("#ad-image-preview").attr("src", result.url);
+                resolve(result);
+              },
+              function (error) {
+                $("#ad-image-upload-status").text("Upload failed: " + error.statusText);
+                resolve();
+              }
+            );
+          });
+          uploadPromises.push(adImagePromise);
         }
 
-        // Close the modal
-        $("#collection-item-modal").addClass("hidden");
+        // Wait for all uploads to finish before saving and closing modal
+        Promise.all(uploadPromises).then((results) => {
+          // Store the uploaded image URLs in the preview fields data attribute
+          if (profilePicFile) {
+            $("#profile-pic-preview").data("uploaded-image", results[0]);
+          }
+          if (logoFile) {
+            $("#logo-preview").data("uploaded-image", results[1]);
+          }
+          if (adImageFile) {
+            $("#ad-image-preview").data("uploaded-image", results[2]);
+          }
+
+          if (isCreatingNewPartner) {
+            rpLib.api.createPartnerAndRefreshList($("#city-select").val());
+          } else {
+            rpLib.api.updatePartnerAndRefreshList(partnerId);
+          }
+
+          // Reset button text and re-enable it
+          $("#save-partner").text("Save");
+          $("#save-partner").prop("disabled", false);
+
+          // Close the modal
+          $("#collection-item-modal").addClass("hidden");
+        });
       });
 
       $("#close-modal").on("click", function () {
@@ -505,7 +641,6 @@ var rpLib = {
               <div>
                   <label>Main Image:</label>
                   <div class="image-upload-container">
-                      <input type="text" id="event-main-image" placeholder="Image URL">
                       <div class="upload-section">
                           <input type="file" id="main-image-upload" accept="image/*">
                           <span id="main-image-upload-status"></span>
@@ -825,8 +960,8 @@ var rpLib = {
               mainImageFile,
               function (result) {
                 $("#main-image-upload-status").text("Upload complete!");
-                $("#event-main-image").val(result.url);
-                resolve();
+                $("#main-image-preview").attr("src", result.url);
+                resolve(result);
               },
               function (error) {
                 $("#main-image-upload-status").text("Upload failed: " + error.statusText);
@@ -849,6 +984,7 @@ var rpLib = {
           // Store the uploaded gallery data
           if (results.length >= 4) {
             // There are 4 promises now (main image + 3 galleries)
+            $("#main-image-preview").data("uploaded-image", results[0]);
             $("#gallery-1-preview").data("uploaded-images", results[1]); // Offset by 1 due to main image
             $("#gallery-2-preview").data("uploaded-images", results[2]);
             $("#gallery-3-preview").data("uploaded-images", results[3]);
@@ -874,24 +1010,10 @@ var rpLib = {
         });
       });
 
-      // Fetch all brands for city selection
-      rpLib.api.fetchUserBrands(() => {
-        // Set the last selected city if available
-        const lastSelectedCity = sessionStorage.getItem("selectedCity");
-        if (lastSelectedCity) {
-          $("#city-select").val(lastSelectedCity).trigger("change");
-        }
-      });
+      rpLib.utils.initCitySelection(
+        rpLib.api.fetchEventsAndRender
+      );
 
-      // Fetch all users after city selection
-      $("#city-select").on("change", function () {
-        let brandId = $(this).val();
-        if (brandId) {
-          // Store the selected city in sessionStorage
-          sessionStorage.setItem("selectedCity", brandId);
-          rpLib.api.fetchEventsAndRender($(this).val());
-        } 
-      });
       $("#collection-list").on("click", ".item-edit-btn", function () {
         let eventId = $(this).closest(".collection-item").data("event-id");
         let slug = $(this).closest(".collection-item").data("slug");
@@ -1114,6 +1236,28 @@ var rpLib = {
         $statusEl.css("color", "#666");
       }
     },
+    initCitySelection: function (callback) {
+      // Fetch all brands for city selection
+      rpLib.api.fetchUserBrands(() => {
+        // Set the last selected city if available
+        const lastSelectedCity = sessionStorage.getItem("selectedCity");
+        if (lastSelectedCity) {
+          $("#city-select").val(lastSelectedCity).trigger("change");
+        }
+      });
+
+      // Fetch all users after city selection
+      $("#city-select").on("change", function () {
+        let brandId = $(this).val();
+        if (brandId) {
+          // Store the selected city in sessionStorage
+          sessionStorage.setItem("selectedCity", brandId);
+          if (typeof callback === "function") {
+            callback(brandId);
+          }
+        } 
+      });
+    },
   },
 
   api: {
@@ -1233,6 +1377,9 @@ var rpLib = {
             // Populate all form fields
             $("#partner-name").val(partner.fieldData.name);
             $("#partner-company").val(partner.fieldData.company);
+            $("#profile-pic-preview").attr("src", partner.fieldData["profile-pic"]?.url || "");
+            $("#logo-preview").attr("src", partner.fieldData["logo"]?.url || "");
+            $("#ad-image-preview").attr("src", partner.fieldData["advertisement"]?.url || "");
             $("#partner-title").val(partner.fieldData["company-type"]);
             $("#partner-phone").val(partner.fieldData.phone);
             $("#partner-email").val(partner.fieldData.email);
@@ -1290,6 +1437,25 @@ var rpLib = {
           "partner-categories": $("#partner-categories").val(), // Multi-reference
         },
       };
+
+      // Add profile picture if available
+      let newProfilePic = $("#profile-pic-preview").data("uploaded-image");
+      if (newProfilePic && newProfilePic.url) {
+        updatedData.fieldData["profile-pic"] = newProfilePic;
+      }
+      
+      // Add logo if available
+      let newLogo = $("#logo-preview").data("uploaded-image");
+      if (newLogo && newLogo.url) {
+        updatedData.fieldData["logo"] = newLogo;
+      }
+
+      // Add advertisement image if available
+      let newAdImage = $("#ad-image-preview").data("uploaded-image");
+      if (newAdImage && newAdImage.url) {
+        updatedData.fieldData["advertisement"] = newAdImage;
+      }
+
       $.ajax({
         url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNERS_COLLECTION_ID}/items/${partnerId}/live`,
         headers: {
@@ -1449,11 +1615,10 @@ var rpLib = {
         },
       };
 
-      // Add main image if there's a URL (either uploaded or existing)
-      if ($("#event-main-image").val()) {
-        eventData.fieldData["main-image"] = {
-          url: $("#event-main-image").val(),
-        };
+      // Add main image if there's one uploaded
+      const newMainImage = $("#main-image-preview").data("uploaded-image");
+      if (newMainImage && newMainImage.url) {
+        eventData.fieldData["main-image"] = newMainImage;
       }
 
       // Get the gallery data that was uploaded and processed
@@ -1540,12 +1705,9 @@ var rpLib = {
           "first-name": $("#user-first-name").val(),
           "last-name": $("#user-last-name").val(),
           title: $("#user-title").val(),
-          "profile-picture": {
-            url: $("#user-profile-pic").val(),
-          },
-          "full-picture": {
-            url: $("#user-full-pic").val(),
-          },
+          // get profile picture from data attribute in preview
+          "profile-picture": $("#profile-pic-preview").attr("uploaded-image"),
+          "full-picture": $("#full-pic-preview").attr("uploaded-image"),
           email: $("#user-email").val(),
           phone: $("#user-phone").val(),
           bio: $("#user-bio").val(),
@@ -1559,6 +1721,19 @@ var rpLib = {
           "google-analytics-id": $("#user-google-analytics-id").val(),
         },
       };
+
+      // Add profile picture if available
+      let newProfilePic = $("#profile-pic-preview").data("uploaded-image");
+      if (newProfilePic && newProfilePic.url) {
+        updatedData.fieldData["profile-picture"] = newProfilePic;
+      }
+
+      // Add full picture if available
+      let newFullPic = $("#full-pic-preview").data("uploaded-image");
+      if (newFullPic && newFullPic.url) {
+        updatedData.fieldData["full-picture"] = newFullPic;
+      }
+
       $.ajax({
         url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${USERS_COLLECTION_ID}/items/${userId}/live`,
         headers: {
@@ -1738,17 +1913,15 @@ var rpLib = {
       };
 
       // Add profile picture if available
-      if ($("#user-profile-pic").val()) {
-        newUserData.fieldData["profile-picture"] = {
-          url: $("#user-profile-pic").val(),
-        };
+      let newProfilePic = $("#profile-pic-preview").data("uploaded-image");
+      if (newProfilePic && newProfilePic.url) {
+        newUserData.fieldData["profile-picture"] = newProfilePic;
       }
 
       // Add full picture if available
-      if ($("#user-full-pic").val()) {
-        newUserData.fieldData["full-picture"] = {
-          url: $("#user-full-pic").val(),
-        };
+      let newFullPic = $("#full-pic-preview").data("uploaded-image");
+      if (newFullPic && newFullPic.url) {
+        newUserData.fieldData["full-picture"] = newFullPic;
       }
 
       $.ajax({
@@ -1797,6 +1970,24 @@ var rpLib = {
           city: [brandId],
         },
       };
+
+      // Add profile picture if available
+      let newProfilePic = $("#profile-pic-preview").data("uploaded-image");
+      if (newProfilePic && newProfilePic.url) {
+        newPartnerData.fieldData["profile-pic"] = newProfile
+      }
+      
+      // Add logo if available
+      let newLogo = $("#logo-preview").data("uploaded-image");
+      if (newLogo && newLogo.url) {
+        newPartnerData.fieldData["logo"] = newLogo;
+      }
+
+      // Add advertisement image if available
+      let newAdImage = $("#ad-image-preview").data("uploaded-image");
+      if (newAdImage && newAdImage.url) {
+        newPartnerData.fieldData["advertisement"] = newAdImage;
+      }
 
       // Add categories if selected
       const selectedCategories = $("#partner-categories").val();
@@ -1848,10 +2039,9 @@ var rpLib = {
       };
 
       // Add main image if available
-      if ($("#event-main-image").val()) {
-        newEventData.fieldData["main-image"] = {
-          url: $("#event-main-image").val(),
-        };
+      let mainImage = $("#main-image-preview").data("uploaded-image");
+      if (mainImage && mainImage.url) {
+        newEventData.fieldData["main-image"] = mainImage;
       }
 
       // Add gallery images
