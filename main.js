@@ -310,82 +310,79 @@ var rpLib = {
   },
   partnersPage: {
     init: function () {
-      // Append modal dynamically for now until frontend components are available
-      $("body").append(`
-          <div id="collection-item-modal" class="hidden collection-item-modal">
-              <div class="collection-item-modal-content">
-              <h3>Edit Partner</h3>
-              <label>Name:</label><input type="text" id="partner-name">
-              <label>Company:</label><input type="text" id="partner-company">
+      // // Append modal dynamically for now until frontend components are available
+      // $("body").append(`
+      //     <div id="collection-item-modal" class="hidden collection-item-modal">
+      //         <div class="collection-item-modal-content">
+      //             <h3>Edit Partner</h3>
+      //             <label>Name:</label><input type="text" id="partner-name">
+      //             <label>Company:</label><input type="text" id="partner-company">
 
-              <!-- Profile Picture -->
-              <div>
-                  <label>Profile Picture:</label>
-                  <div class="image-upload-container">
-                      <div class="upload-section">
-                          <input type="file" id="profile-pic-upload" accept="image/*">
-                          <span id="profile-pic-upload-status"></span>
-                      </div>
-                      <div class="image-preview">
-                          <img id="profile-pic-preview" src="" alt="Profile Picture Preview">
-                      </div>
-                  </div>
-              </div>
+      //             <!-- Profile Picture -->
+      //             <div>
+      //                 <label>Profile Picture:</label>
+      //                 <div class="image-upload-container">
+      //                     <div class="upload-section">
+      //                         <span id="profile-pic-upload-status"></span>
+      //                     </div>
+      //                     <div class="image-preview">
+      //                         <img id="profile-pic-preview" src="" alt="Profile Picture Preview">
+      //                     </div>
+      //                 </div>
+      //             </div>
 
-              <!-- Logo -->
-              <div>
-                  <label>Logo:</label>
-                  <div class="image-upload-container">
-                      <div class="upload-section">
-                          <input type="file" id="logo-upload" accept="image/*">
-                          <span id="logo-upload-status"></span>
-                      </div>
-                      <div class="image-preview">
-                          <img id="logo-preview" src="" alt="Logo Preview">
-                      </div>
-                  </div>
-              </div>
+      //             <!-- Logo -->
+      //             <div>
+      //                 <label>Logo:</label>
+      //                 <div class="image-upload-container">
+      //                     <div class="upload-section">
+      //                         <span id="logo-upload-status"></span>
+      //                     </div>
+      //                     <div class="image-preview">
+      //                         <img id="logo-preview" src="" alt="Logo Preview">
+      //                     </div>
+      //                 </div>
+      //             </div>
 
-              <!-- Advertisement Image -->
-              <div>
-                  <label>Advertisement Image:</label>
-                  <div class="image-upload-container">
-                      <div class="upload-section">
-                          <input type="file" id="ad-image-upload" accept="image/*">
-                          <span id="ad-image-upload-status"></span>
-                      </div>
-                      <div class="image-preview">
-                          <img id="ad-image-preview" src="" alt="Advertisement Image Preview">
-                      </div>
-                  </div>
-              </div>
+      //             <!-- Advertisement Image -->
+      //             <div>
+      //                 <label>Advertisement Image:</label>
+      //                 <div class="image-upload-container">
+      //                     <div class="upload-section">
+      //                         <span id="ad-image-upload-status"></span>
+      //                     </div>
+      //                     <div class="image-preview">
+      //                         <img id="ad-image-preview" src="" alt="Advertisement Image Preview">
+      //                     </div>
+      //                 </div>
+      //             </div>
 
-              <label>Title:</label><input type="text" id="partner-title">
-              <label>Phone:</label><input type="text" id="partner-phone">
-              <label>Email:</label><input type="email" id="partner-email">
-              <label>Website:</label><input type="text" id="partner-website">
-              <label>License Number:</label><input type="text" id="partner-license">
-              <label>Facebook:</label><input type="text" id="partner-facebook">
-              <label>Instagram:</label><input type="text" id="partner-instagram">
-              <label>X (Twitter):</label><input type="text" id="partner-x">
-              <label>YouTube:</label><input type="text" id="partner-youtube">
-              <label>LinkedIn:</label><input type="text" id="partner-linkedin">
-              <label>TikTok:</label><input type="text" id="partner-tiktok">
-              <label>Description:</label><textarea id="partner-description"></textarea>
-              <label>Preview Text:</label><input type="text" id="partner-preview-text">
-              <label>Address:</label><input type="text" id="partner-address">
-              <label>City, State Zip:</label><input type="text" id="partner-city">
-              <label>Show on Website:</label><input type="checkbox" id="partner-show">
-              <label>Partner Categories:</label>
-              <select id="partner-categories" multiple>
-                  <option value="65e96b6acdfd2898d9dc2be8">Category 1</option>
-                  <option value="some-other-id">Category 2</option>
-              </select>
-              <button id="save-partner">Save</button>
-              <button id="close-modal">Close</button>
-              </div>
-          </div>
-      `);
+      //             <label>Title:</label><input type="text" id="partner-title">
+      //             <label>Phone:</label><input type="text" id="partner-phone">
+      //             <label>Email:</label><input type="email" id="partner-email">
+      //             <label>Website:</label><input type="text" id="partner-website">
+      //             <label>License Number:</label><input type="text" id="partner-license">
+      //             <label>Facebook:</label><input type="text" id="partner-facebook">
+      //             <label>Instagram:</label><input type="text" id="partner-instagram">
+      //             <label>X (Twitter):</label><input type="text" id="partner-x">
+      //             <label>YouTube:</label><input type="text" id="partner-youtube">
+      //             <label>LinkedIn:</label><input type="text" id="partner-linkedin">
+      //             <label>TikTok:</label><input type="text" id="partner-tiktok">
+      //             <label>Description:</label><textarea id="partner-description"></textarea>
+      //             <label>Preview Text:</label><input type="text" id="partner-preview-text">
+      //             <label>Address:</label><input type="text" id="partner-address">
+      //             <label>City, State Zip:</label><input type="text" id="partner-city">
+      //             <label>Show on Website:</label><input type="checkbox" id="partner-show">
+      //             <label>Partner Categories:</label>
+      //             <select id="partner-categories" multiple>
+      //                 <option value="65e96b6acdfd2898d9dc2be8">Category 1</option>
+      //                 <option value="some-other-id">Category 2</option>
+      //             </select>
+      //             <button id="save-partner">Save</button>
+      //             <button id="close-modal">Close</button>
+      //         </div>
+      //     </div>
+      // `);
 
       // Load list of partner categories first so it's available to populate the dropdown in the edit modal
       rpLib.api.fetchAllPartnerCategories(function(categories) {
@@ -405,65 +402,84 @@ var rpLib = {
         );
       });
 
+      // Helper function to setup image preview replacement
       // Store file references for image uploads
       let profilePicFile = null;
       let logoFile = null;
       let adImageFile = null;
-      // Profile Picture Preview Handler (just preview, don't upload yet)
-      $("#profile-pic-upload").on("change", function (e) {
-        profilePicFile = e.target.files[0];
-        if (!profilePicFile) return;
+      // Setup image preview replacements
+      rpLib.utils.setupSingleImgPreviewReplacement("profile-pic-preview", function(newFile) {
+        // Update the status text after selecting a new image
+        $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
 
-        // Show preview without uploading
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          $("#profile-pic-preview").attr("src", e.target.result);
-          $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
-        };
-        reader.readAsDataURL(profilePicFile);
+        // Update the variable to indicate a new file was selected
+        profilePicFile = newFile;
       });
-      // Logo Preview Handler (just preview, don't upload yet)
-      $("#logo-upload").on("change", function (e) {
-        logoFile = e.target.files[0];
-        if (!logoFile) return;
+      rpLib.utils.setupSingleImgPreviewReplacement("logo-preview", function(newFile) {
+        $("#logo-upload-status").text("Image selected (will upload when saved)");
+        logoFile = newFile;
+      });
+      rpLib.utils.setupSingleImgPreviewReplacement("ad-image-preview", function(newFile) {
+        $("#ad-image-upload-status").text("Image selected (will upload when saved)");
+        adImageFile = newFile;
+      });
 
-        // Show preview without uploading
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          $("#logo-preview").attr("src", e.target.result);
-          $("#logo-upload-status").text("Image selected (will upload when saved)");
-        };
-        reader.readAsDataURL(logoFile);
-      });
-      // Advertisement Image Preview Handler (just preview, don't upload yet)
-      $("#ad-image-upload").on("change", function (e) {
-        adImageFile = e.target.files[0];
-        if (!adImageFile) return;
+      // // Profile Picture Preview Handler (just preview, don't upload yet)
+      // $("#profile-pic-upload").on("change", function (e) {
+      //   profilePicFile = e.target.files[0];
+      //   if (!profilePicFile) return;
 
-        // Show preview without uploading
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          $("#ad-image-preview").attr("src", e.target.result);
-          $("#ad-image-upload-status").text("Image selected (will upload when saved)");
-        };
-        reader.readAsDataURL(adImageFile);
-      });
+      //   // Show preview without uploading
+      //   const reader = new FileReader();
+      //   reader.onload = function (e) {
+      //     $("#profile-pic-preview").attr("src", e.target.result);
+      //     $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
+      //   };
+      //   reader.readAsDataURL(profilePicFile);
+      // });
+
+      // // Logo Preview Handler (just preview, don't upload yet)
+      // $("#logo-upload").on("change", function (e) {
+      //   logoFile = e.target.files[0];
+      //   if (!logoFile) return;
+
+      //   // Show preview without uploading
+      //   const reader = new FileReader();
+      //   reader.onload = function (e) {
+      //     $("#logo-preview").attr("src", e.target.result);
+      //     $("#logo-upload-status").text("Image selected (will upload when saved)");
+      //   };
+      //   reader.readAsDataURL(logoFile);
+      // });
+      // // Advertisement Image Preview Handler (just preview, don't upload yet)
+      // $("#ad-image-upload").on("change", function (e) {
+      //   adImageFile = e.target.files[0];
+      //   if (!adImageFile) return;
+
+      //   // Show preview without uploading
+      //   const reader = new FileReader();
+      //   reader.onload = function (e) {
+      //     $("#ad-image-preview").attr("src", e.target.result);
+      //     $("#ad-image-upload-status").text("Image selected (will upload when saved)");
+      //   };
+      //   reader.readAsDataURL(adImageFile);
+      // });
 
       $("body").on("click", ".item-edit-btn", function (event) {
         let partnerId = $(this).closest(".collection-item").data("partner-id");
         let slug = $(this).closest(".collection-item").data("slug");
 
         // Update modal title for editing
-        $("#collection-item-modal").find("h3").text("Edit Partner");
+        $(".collection-item-modal").find("h3").text("Edit Partner");
 
         // Set the partner ID for editing
-        $("#collection-item-modal").attr("data-partner-id", partnerId);
+        $(".collection-item-modal").attr("data-partner-id", partnerId);
 
         rpLib.api.fetchPartnerDetailsAndOpenModal(slug);
       });
 
       $("#save-partner").on("click", function () {
-        const partnerId = $("#collection-item-modal").data("partner-id");
+        const partnerId = $(".collection-item-modal").data("partner-id");
         const isCreatingNewPartner = !partnerId;
 
         let uploadPromises = [];
@@ -554,21 +570,21 @@ var rpLib = {
           $("#save-partner").prop("disabled", false);
 
           // Close the modal
-          $("#collection-item-modal").addClass("hidden");
+          $(".collection-item-modal").addClass("hidden");
         });
       });
 
       $("#close-modal").on("click", function () {
-        $("#collection-item-modal").addClass("hidden");
+        $(".collection-item-modal").addClass("hidden");
       });
 
       // Event listener for create button click
       $("body").on("click", ".lib-create-item-btn", function (event) {
         // Clear modal data attribute to indicate this is a new item
-        $("#collection-item-modal").removeAttr("data-partner-id");
+        $(".collection-item-modal").removeAttr("data-partner-id");
 
         // Update modal title for creation
-        $("#collection-item-modal").find("h3").text("Create New Partner");
+        $(".collection-item-modal").find("h3").text("Create New Partner");
 
         // Clear all form fields
         $("#partner-name").val("");
@@ -591,7 +607,7 @@ var rpLib = {
         $("#partner-categories").val([]);
 
         // Show the modal
-        $("#collection-item-modal").removeClass("hidden");
+        $(".collection-item-modal").removeClass("hidden");
       });
 
       // Event listener for delete button click
@@ -1258,6 +1274,45 @@ var rpLib = {
         } 
       });
     },
+    setupSingleImgPreviewReplacement: function (imgPreviewId, afterImgSelectedCallback) {
+      $(`#${imgPreviewId}`).on("click", function (e) {
+        // Create a temporary file input for replacing the image
+        const $tempInput = $('<input type="file" accept="image/*" style="display:none">');
+        $("body").append($tempInput);
+
+        // Trigger click on the temporary input
+        $tempInput.trigger("click");
+
+        // Handle file selection
+        $tempInput.on("change", function (e) {
+          if (!e.target.files || !e.target.files[0]) {
+            $tempInput.remove();
+            return;
+          }
+
+          const newFile = e.target.files[0];
+          const reader = new FileReader();
+
+          reader.onload = function (e) {
+            // Update the preview
+            $(`#${imgPreviewId}`).attr("src", e.target.result);
+
+            // Remove srcset if it exists (it prevents src from showing)
+            $(`#${imgPreviewId}`).removeAttr("srcset");
+
+            // Store the new file for upload
+            $(`#${imgPreviewId}`).data("uploaded-image", newFile);
+          };
+
+          reader.readAsDataURL(newFile);
+          $tempInput.remove();
+
+          // Callback after selecting image
+          if (afterImgSelectedCallback) afterImgSelectedCallback(newFile);
+        });
+
+      });
+    },
   },
 
   api: {
@@ -1374,12 +1429,24 @@ var rpLib = {
           if (response.items.length > 0) {
             let partner = response.items[0];
 
+
+
             // Populate all form fields
             $("#partner-name").val(partner.fieldData.name);
             $("#partner-company").val(partner.fieldData.company);
-            $("#profile-pic-preview").attr("src", partner.fieldData["profile-pic"]?.url || "");
-            $("#logo-preview").attr("src", partner.fieldData["logo"]?.url || "");
-            $("#ad-image-preview").attr("src", partner.fieldData["advertisement"]?.url || "");
+
+            if (partner.fieldData["profile-pic"]?.url) {
+              $("#profile-pic-preview").attr("src", partner.fieldData["profile-pic"].url);
+              $("#profile-pic-preview").removeAttr("srcset");
+            }
+            if (partner.fieldData["logo"]?.url) {
+              $("#logo-preview").attr("src", partner.fieldData["logo"]?.url || "");
+              $("#logo-preview").removeAttr("srcset");
+            }
+            if (partner.fieldData["advertisement"]?.url) {
+              $("#ad-image-preview").attr("src", partner.fieldData["advertisement"]?.url || "");
+              $("#ad-image-preview").removeAttr("srcset");
+            }
             $("#partner-title").val(partner.fieldData["company-type"]);
             $("#partner-phone").val(partner.fieldData.phone);
             $("#partner-email").val(partner.fieldData.email);
@@ -1405,7 +1472,7 @@ var rpLib = {
               $("#partner-categories").val([]);
             }
 
-            $("#collection-item-modal").removeClass("hidden");
+            $(".collection-item-modal").removeClass("hidden");
           }
         },
         error: function (error) {
