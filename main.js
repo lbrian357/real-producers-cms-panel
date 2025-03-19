@@ -575,7 +575,11 @@ var rpLib = {
       });
 
       $("#close-modal").on("click", function () {
-        $(".collection-item-modal").addClass("hidden");
+        // Ask for confirmation before closing the modal
+        if (confirm("Are you sure you want to close the modal? Any unsaved changes will be lost.")) {
+          $(".collection-item-modal").addClass("hidden");
+        }
+        // $(".collection-item-modal").addClass("hidden");
       });
 
       // Event listener for create button click
@@ -587,6 +591,10 @@ var rpLib = {
         $(".collection-item-modal").find("h3").text("Create New Partner");
 
         // Clear all form fields
+        $("#profile-pic-preview").attr("src", "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/66a4a5fa00aa346e11374944_user-profile-place-holder.jpg");
+        $("#logo-preview").attr("src", "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/67d3e49e496d302f371805d7_logo-placeholder.jpg");
+        $("#ad-image-preview").attr("src", "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/67d3e6f9e85351033700473f_ad-image-placeholder.jpg");
+
         $("#partner-name").val("");
         $("#partner-company").val("");
         $("#partner-title").val("");
