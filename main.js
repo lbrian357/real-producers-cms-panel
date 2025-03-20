@@ -9,9 +9,8 @@ const SITE_ID = "658f30a87b1a52ef8ad0b732";
 $(document).ready(function () {
   rpLib.utils.injectCSS();
   rpLib.utils.injectDependencies();
-  //
+
   // Run the scripts on relevant pages
-  //
   if (window.location.pathname === "/account/get-started") rpLib.getStartedPage.init();
   if (window.location.pathname === "/account/dashboard") rpLib.dashboardPage.init();
   if (window.location.pathname === "/account/partners") rpLib.partnersPage.init();
@@ -387,6 +386,10 @@ var rpLib = {
       // Load list of partner categories first so it's available to populate the dropdown in the edit modal
       rpLib.api.fetchAllPartnerCategories(function(categories) {
         $("#partner-categories").empty(); // Clear existing options
+        $("#partner-categories").multiselect({
+          maxHeight: 200,
+        });
+        
         // Add options for all categories
         categories.forEach(function(category) {
           $("#partner-categories").append(
@@ -395,19 +398,21 @@ var rpLib = {
               text: category.fieldData.name || "Unnamed Category"
             })
           );
+          $("#partner-categories").multiselect('reload');
         });
         
+        // Initialize city selection and fetch partners
         rpLib.utils.initCitySelection(
           rpLib.api.fetchPartnersAndRender
         );
       });
 
-      // Helper function to setup image preview replacement
       // Store file references for image uploads
       let profilePicFile = null;
       let logoFile = null;
       let adImageFile = null;
-      // Setup image preview replacements
+
+      // On image preview replacement click, open file dialog
       rpLib.utils.setupSingleImgPreviewReplacement("profile-pic-preview", function(newFile) {
         // Update the status text after selecting a new image
         $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
@@ -424,60 +429,68 @@ var rpLib = {
         adImageFile = newFile;
       });
 
-      // // Profile Picture Preview Handler (just preview, don't upload yet)
-      // $("#profile-pic-upload").on("change", function (e) {
-      //   profilePicFile = e.target.files[0];
-      //   if (!profilePicFile) return;
-
-      //   // Show preview without uploading
-      //   const reader = new FileReader();
-      //   reader.onload = function (e) {
-      //     $("#profile-pic-preview").attr("src", e.target.result);
-      //     $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
-      //   };
-      //   reader.readAsDataURL(profilePicFile);
-      // });
-
-      // // Logo Preview Handler (just preview, don't upload yet)
-      // $("#logo-upload").on("change", function (e) {
-      //   logoFile = e.target.files[0];
-      //   if (!logoFile) return;
-
-      //   // Show preview without uploading
-      //   const reader = new FileReader();
-      //   reader.onload = function (e) {
-      //     $("#logo-preview").attr("src", e.target.result);
-      //     $("#logo-upload-status").text("Image selected (will upload when saved)");
-      //   };
-      //   reader.readAsDataURL(logoFile);
-      // });
-      // // Advertisement Image Preview Handler (just preview, don't upload yet)
-      // $("#ad-image-upload").on("change", function (e) {
-      //   adImageFile = e.target.files[0];
-      //   if (!adImageFile) return;
-
-      //   // Show preview without uploading
-      //   const reader = new FileReader();
-      //   reader.onload = function (e) {
-      //     $("#ad-image-preview").attr("src", e.target.result);
-      //     $("#ad-image-upload-status").text("Image selected (will upload when saved)");
-      //   };
-      //   reader.readAsDataURL(adImageFile);
-      // });
-
+      // On edit button click open modal
       $("body").on("click", ".item-edit-btn", function (event) {
         let partnerId = $(this).closest(".collection-item").data("partner-id");
         let slug = $(this).closest(".collection-item").data("slug");
 
-        // Update modal title for editing
-        $(".collection-item-modal").find("h3").text("Edit Partner");
-
-        // Set the partner ID for editing
+        // Set the modal partner ID for editing
         $(".collection-item-modal").attr("data-partner-id", partnerId);
 
         rpLib.api.fetchPartnerDetailsAndOpenModal(slug);
       });
 
+      // Event listener on url inputs to add "http://" to website URL if not present
+      $(document).on('blur', '.collection-item-modal input[type="url"]', function() {
+        let url = $(this).val().trim();
+    
+        if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+            $(this).val('http://' + url);
+        }
+      });
+
+      // On save
+      this.handleSavePartnerClick(profilePicFile, logoFile, adImageFile);
+
+      // On close modal
+      $("#close-modal").on("click", function () {
+        // Ask for confirmation before closing the modal
+        if (confirm("Are you sure you want to close the modal? Any unsaved changes will be lost.")) {
+          $(".collection-item-modal").addClass("hidden");
+        }
+      });
+
+      // On create new partner
+      this.handleCreatePartnerClick(profilePicFile, logoFile, adImageFile);
+
+      // On delete button click
+      $("body").on("click", ".item-delete-btn", function (event) {
+        const partnerId = $(this).closest(".collection-item").data("partner-id");
+        const partnerName = $(this).closest(".collection-item").find(".partner-name").text();
+
+        if (confirm(`Are you sure you want to delete partner "${partnerName}"?`)) {
+          rpLib.api.archiveItem(PARTNERS_COLLECTION_ID, partnerId, "Partner", function () {
+            // Refresh the list after successful archive
+            rpLib.api.fetchPartnersAndRender($("#city-select").val());
+          });
+        }
+      });
+    },
+    renderPartner: function (partner) {
+      const templateRowItem = $(".collection-item-row-template").clone();
+      templateRowItem.removeClass("collection-item-row-template");
+      templateRowItem.attr("data-slug", partner.fieldData.slug);
+      templateRowItem.attr("data-partner-id", partner.id);
+
+      templateRowItem.find(".partner-pic").attr("src", partner.fieldData.logo?.url || "");
+      templateRowItem.find(".partner-name").text(partner.fieldData.name || "");
+      templateRowItem.find(".partner-number").text(partner.fieldData.phone || "");
+      templateRowItem.find(".partner-email").text(partner.fieldData.email || "");
+      templateRowItem.find(".item-view-btn").attr("href", `http://www.realproducersmagazine.com/partner/${partner.fieldData.slug}` || "");
+
+      $("#collection-list").append(templateRowItem);
+    },
+    handleSavePartnerClick: function (profilePicFile, logoFile, adImageFile) {
       $("#save-partner").on("click", function () {
         const partnerId = $(".collection-item-modal").data("partner-id");
         const isCreatingNewPartner = !partnerId;
@@ -573,15 +586,8 @@ var rpLib = {
           $(".collection-item-modal").addClass("hidden");
         });
       });
-
-      $("#close-modal").on("click", function () {
-        // Ask for confirmation before closing the modal
-        if (confirm("Are you sure you want to close the modal? Any unsaved changes will be lost.")) {
-          $(".collection-item-modal").addClass("hidden");
-        }
-        // $(".collection-item-modal").addClass("hidden");
-      });
-
+    },
+    handleCreatePartnerClick: function (profilePicFile, logoFile, adImageFile) {
       // Event listener for create button click
       $("body").on("click", ".lib-create-item-btn", function (event) {
         // Clear modal data attribute to indicate this is a new item
@@ -617,34 +623,7 @@ var rpLib = {
         // Show the modal
         $(".collection-item-modal").removeClass("hidden");
       });
-
-      // Event listener for delete button click
-      $("body").on("click", ".item-delete-btn", function (event) {
-        const partnerId = $(this).closest(".collection-item").data("partner-id");
-        const partnerName = $(this).closest(".collection-item").find(".partner-name").text();
-
-        if (confirm(`Are you sure you want to delete partner "${partnerName}"?`)) {
-          rpLib.api.archiveItem(PARTNERS_COLLECTION_ID, partnerId, "Partner", function () {
-            // Refresh the list after successful archive
-            rpLib.api.fetchPartnersAndRender($("#city-select").val());
-          });
-        }
-      });
-    },
-    renderPartner: function (partner) {
-      const templateRowItem = $(".collection-item-row-template").clone();
-      templateRowItem.removeClass("collection-item-row-template");
-      templateRowItem.attr("data-slug", partner.fieldData.slug);
-      templateRowItem.attr("data-partner-id", partner.id);
-
-      templateRowItem.find(".partner-pic").attr("src", partner.fieldData.logo?.url || "");
-      templateRowItem.find(".partner-name").text(partner.fieldData.name || "");
-      templateRowItem.find(".partner-number").text(partner.fieldData.phone || "");
-      templateRowItem.find(".partner-email").text(partner.fieldData.email || "");
-      templateRowItem.find(".item-view-btn").attr("href", `http://www.realproducersmagazine.com/partner/${partner.fieldData.slug}` || "");
-
-      $("#collection-list").append(templateRowItem);
-    },
+    }
   },
   eventsPage: {
     init: function () {
@@ -654,7 +633,7 @@ var rpLib = {
           <div class="collection-item-modal-content">
               <h3>Edit Event</h3>
               <label>Name:</label><input type="text" id="event-name">
-              <label>Date:</label><input type="date" id="event-date">
+              <label>Date:</label><input type="datetime-local" id="event-date">
               <label>Location Name:</label><input type="text" id="event-location-name">
               <label>Location Address:</label><input type="text" id="event-location-address">
               <label>Button URL:</label><input type="text" id="button-url">
@@ -1076,7 +1055,11 @@ var rpLib = {
 
       templateRowItem.find(".event-pic").attr("src", event.fieldData["main-image"]?.url || "");
       templateRowItem.find(".event-name").text(event.fieldData.name || "");
-      templateRowItem.find(".event-date").text(event.fieldData.date || "");
+      if (event.fieldData.date) {
+        templateRowItem.find(".event-date").text(rpLib.utils.formatWfDate(event.fieldData.date));
+      } else {
+        templateRowItem.find(".event-date").text("");
+      }
       templateRowItem.find(".event-location").text(event.fieldData["location-name"] || "");
       templateRowItem.find(".item-view-btn").attr("href", `https://www.realproducersmagazine.com/event/${event.fieldData.slug}` || "");
 
@@ -1089,6 +1072,12 @@ var rpLib = {
       // SparkMD5
       const scriptTagForSparkMD5 = '<script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>';
       $("head").append(scriptTagForSparkMD5);
+
+      // @nobleclem/jquery-multiselect
+      const scriptTagForMultiselect = '<script src="https://cdn.jsdelivr.net/npm/@nobleclem/jquery-multiselect@2.4.24/jquery.multiselect.min.js"></script>';
+      const cssLinkForMultiselect = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@nobleclem/jquery-multiselect@2.4.24/jquery.multiselect.min.css">';
+      $("head").append(scriptTagForMultiselect);
+      $("head").append(cssLinkForMultiselect);
     },
     injectCSS: function () {
       $("head").append(`
@@ -1096,6 +1085,15 @@ var rpLib = {
               .collection-item-row-template {
                   display: none;
               }
+
+              .collection-item-modal-content .grid-modal-form {
+                  display: inherit !important;
+              }
+
+              .collection-item-modal-content .w-form-done {
+                  display: none !important;
+              }
+
             </style>
         `);
     },
@@ -1321,6 +1319,36 @@ var rpLib = {
 
       });
     },
+    formatWfDate: function (utcDatetimeStr) {
+      date = new Date(utcDatetimeStr);
+
+      const monthsShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+      const month = monthsShort[date.getMonth()];
+      const day = date.getDate();
+      const year = date.getFullYear();
+      const hours = date.getHours();
+      const period = hours >= 12 ? "pm" : "am";
+      const hourFormatted = hours % 12 === 0 ? 12 : hours % 12;
+      
+      return `${month}, ${day}${rpLib.utils.getOrdinalSuffix(day)} ${year} ${hourFormatted}${period}`;
+    },
+    getOrdinalSuffix: function (day) {
+      if (day >= 11 && day <= 13) return "th";
+      switch (day % 10) {
+          case 1: return "st";
+          case 2: return "nd";
+          case 3: return "rd";
+          default: return "th";
+      }
+    },
+
+    formatWfDateForInputEl: function (utcDatetimeStr) {
+      return new Date(utcDatetimeStr).toISOString().slice(0, 16);
+    },
+    localeDatetimeStrToUtcStr: function (localeDatetimeStr) {
+      return new Date(localeDatetimeStr).toISOString();
+    },
   },
 
   api: {
@@ -1329,7 +1357,7 @@ var rpLib = {
       if (offset === 0) {
         $("#city-select").attr("disabled", true);
         // Add a <progress></progress> to #city-select to indicate loading
-        $("#city-select").after('<progress style="background-attachment: revert !important;"></progress>');
+        $("#city-select").after('<progress style="background-attachment: revert !important; position: absolute;"></progress>');
       }
 
       $.ajax({
@@ -1437,24 +1465,9 @@ var rpLib = {
           if (response.items.length > 0) {
             let partner = response.items[0];
 
-
-
             // Populate all form fields
             $("#partner-name").val(partner.fieldData.name);
             $("#partner-company").val(partner.fieldData.company);
-
-            if (partner.fieldData["profile-pic"]?.url) {
-              $("#profile-pic-preview").attr("src", partner.fieldData["profile-pic"].url);
-              $("#profile-pic-preview").removeAttr("srcset");
-            }
-            if (partner.fieldData["logo"]?.url) {
-              $("#logo-preview").attr("src", partner.fieldData["logo"]?.url || "");
-              $("#logo-preview").removeAttr("srcset");
-            }
-            if (partner.fieldData["advertisement"]?.url) {
-              $("#ad-image-preview").attr("src", partner.fieldData["advertisement"]?.url || "");
-              $("#ad-image-preview").removeAttr("srcset");
-            }
             $("#partner-title").val(partner.fieldData["company-type"]);
             $("#partner-phone").val(partner.fieldData.phone);
             $("#partner-email").val(partner.fieldData.email);
@@ -1471,6 +1484,18 @@ var rpLib = {
             $("#partner-address").val(partner.fieldData["address"]);
             $("#partner-city").val(partner.fieldData["city-state-zip"]);
             $("#partner-show").prop("checked", partner.fieldData["show-partner"]);
+            if (partner.fieldData["profile-pic"]?.url) {
+              $("#profile-pic-preview").attr("src", partner.fieldData["profile-pic"].url);
+              $("#profile-pic-preview").removeAttr("srcset");
+            }
+            if (partner.fieldData["logo"]?.url) {
+              $("#logo-preview").attr("src", partner.fieldData["logo"]?.url || "");
+              $("#logo-preview").removeAttr("srcset");
+            }
+            if (partner.fieldData["advertisement"]?.url) {
+              $("#ad-image-preview").attr("src", partner.fieldData["advertisement"]?.url || "");
+              $("#ad-image-preview").removeAttr("srcset");
+            }
 
             // Populate multi-reference fields (dropdown with multiple selections)
             if (partner.fieldData["partner-categories"] && 
@@ -1479,7 +1504,9 @@ var rpLib = {
             } else {
               $("#partner-categories").val([]);
             }
+            $("#partner-categories").multiselect('reload');
 
+            // Show the modal
             $(".collection-item-modal").removeClass("hidden");
           }
         },
@@ -1573,7 +1600,12 @@ var rpLib = {
 
             // Populate form fields with event data
             $("#event-name").val(event.fieldData.name || "");
-            $("#event-date").val(event.fieldData.date || "");
+            if (event.fieldData.date) {
+              const localDatetime = rpLib.utils.formatWfDateForInputEl(event.fieldData.date);
+              $("#event-date").val(localDatetime);
+            } else {
+              $("#event-date").val("");
+            }
             $("#event-location-name").val(event.fieldData["location-name"] || "");
             $("#event-location-address").val(event.fieldData["location-address"] || "");
             $("#button-url").val(event.fieldData["button-url"] || "");
