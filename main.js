@@ -1722,6 +1722,14 @@ var rpLib = {
         },
       };
 
+      // Construct youtube video URLs if that exists
+      if (eventData.fieldData["youtube-video-id"]) {
+        eventData.fieldData["video"] = {"url": `https://youtu.be/${eventData.fieldData["youtube-video-id"]}`};
+      }
+      if (eventData.fieldData["youtube-video-id-2"]) {
+        eventData.fieldData["video-2"] = {"url": `https://youtu.be/${eventData.fieldData["youtube-video-id-2"]}`};
+      }
+
       // Add main image if there's one uploaded
       const newMainImage = $("#main-image-preview").data("uploaded-image");
       if (newMainImage && newMainImage.url) {
