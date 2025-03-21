@@ -44,7 +44,6 @@ var rpLib = {
                     <label>Profile Picture:</label>
                     <div class="image-upload-container">
                         <div class="upload-section">
-                            <input type="file" id="profile-pic-upload" accept="image/*">
                             <span id="profile-pic-upload-status"></span>
                         </div>
                         <div class="image-preview">
@@ -57,7 +56,6 @@ var rpLib = {
                     <label>Full Picture:</label>
                     <div class="image-upload-container">
                         <div class="upload-section">
-                            <input type="file" id="full-pic-upload" accept="image/*">
                             <span id="full-pic-upload-status"></span>
                         </div>
                         <div class="image-preview">
@@ -175,32 +173,16 @@ var rpLib = {
       let profilePicFile = null;
       let fullPicFile = null;
 
-      // Handler for profile picture selection (just preview, don't upload yet)
-      $("#profile-pic-upload").on("change", function (e) {
-        profilePicFile = e.target.files[0];
-        if (!profilePicFile) return;
-
-        // Show preview without uploading
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          $("#profile-pic-preview").attr("src", e.target.result);
-          $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
-        };
-        reader.readAsDataURL(profilePicFile);
+      // On profile pic preview replacement click, open file dialog
+      rpLib.utils.setupSingleImgPreviewReplacement("profile-pic-preview", function(newFile) {
+        $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
+        profilePicFile = newFile;
       });
 
-      // Handler for full picture selection (just preview, don't upload yet)
-      $("#full-pic-upload").on("change", function (e) {
-        fullPicFile = e.target.files[0];
-        if (!fullPicFile) return;
-
-        // Show preview without uploading
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          $("#full-pic-preview").attr("src", e.target.result);
-          $("#full-pic-upload-status").text("Image selected (will upload when saved)");
-        };
-        reader.readAsDataURL(fullPicFile);
+      // On full pic preview replacement click, open file dialog
+      rpLib.utils.setupSingleImgPreviewReplacement("full-pic-preview", function(newFile) {
+        $("#full-pic-upload-status").text("Image selected (will upload when saved)");
+        fullPicFile = newFile;
       });
 
       // Event listener for delete button click
