@@ -4,9 +4,9 @@ const BRANDS_COLLECTION_ID = "658f30a87b1a52ef8ad0b77b";
 const PARTNERS_COLLECTION_ID = "65e7ff7b313c5cd8cd924886";
 const PARTNER_CATEGORIES_COLLECTION_ID = "65e7fc8199c534cfe2cba083";
 const SITE_ID = "658f30a87b1a52ef8ad0b732";
-const profilePicPlaceholderImg = "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/66a4a5fa00aa346e11374944_user-profile-place-holder.jpg"
-const logoPlaceholderImg"https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/67d3e49e496d302f371805d7_logo-placeholder.jpg"
-const adPlaceholderImg"https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/67d3e6f9e85351033700473f_ad-image-placeholder.jpg"
+const profilePicPlaceholderImg = "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/66a4a5fa00aa346e11374944_user-profile-place-holder.jpg";
+const logoPlaceholderImg = "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/67d3e49e496d302f371805d7_logo-placeholder.jpg";
+const adPlaceholderImg = "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/67d3e6f9e85351033700473f_ad-image-placeholder.jpg";
 
 
 
