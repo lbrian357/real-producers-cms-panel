@@ -1485,7 +1485,7 @@ var rpLib = {
               $("#ad-image-preview").attr("src", partner.fieldData["advertisement"]?.url);
               $("#ad-image-preview").removeAttr("srcset");
             } else {
-              $("#ad-image-preview").attr("src", adPlaceholder);
+              $("#ad-image-preview").attr("src", adPlaceholderImg);
             }
 
             // Populate multi-reference fields (dropdown with multiple selections)
