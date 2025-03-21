@@ -1470,16 +1470,22 @@ var rpLib = {
             $("#partner-city").val(partner.fieldData["city-state-zip"]);
             $("#partner-show").prop("checked", partner.fieldData["show-partner"]);
             if (partner.fieldData["profile-pic"]?.url) {
-              $("#profile-pic-preview").attr("src", partner.fieldData["profile-pic"].url || profilePicPlaceholderImg);
+              $("#profile-pic-preview").attr("src", partner.fieldData["profile-pic"].url);
               $("#profile-pic-preview").removeAttr("srcset");
+            } else {
+              $("#profile-pic-preview").attr("src", profilePicPlaceholderImg);
             }
             if (partner.fieldData["logo"]?.url) {
-              $("#logo-preview").attr("src", partner.fieldData["logo"]?.url || logoPlaceholderImg);
+              $("#logo-preview").attr("src", partner.fieldData["logo"]?.url);
               $("#logo-preview").removeAttr("srcset");
+            } else {
+              $("#logo-preview").attr("src", logoPlaceholderImg);
             }
             if (partner.fieldData["advertisement"]?.url) {
-              $("#ad-image-preview").attr("src", partner.fieldData["advertisement"]?.url || adPlaceholderImg);
+              $("#ad-image-preview").attr("src", partner.fieldData["advertisement"]?.url);
               $("#ad-image-preview").removeAttr("srcset");
+            } else {
+              $("#ad-image-preview").attr("src", adPlaceholder);
             }
 
             // Populate multi-reference fields (dropdown with multiple selections)
