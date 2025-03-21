@@ -4,6 +4,10 @@ const BRANDS_COLLECTION_ID = "658f30a87b1a52ef8ad0b77b";
 const PARTNERS_COLLECTION_ID = "65e7ff7b313c5cd8cd924886";
 const PARTNER_CATEGORIES_COLLECTION_ID = "65e7fc8199c534cfe2cba083";
 const SITE_ID = "658f30a87b1a52ef8ad0b732";
+const profilePicPlaceholderImg = "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/66a4a5fa00aa346e11374944_user-profile-place-holder.jpg"
+const logoPlaceholderImg"https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/67d3e49e496d302f371805d7_logo-placeholder.jpg"
+const adPlaceholderImg"https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/67d3e6f9e85351033700473f_ad-image-placeholder.jpg"
+
 
 
 $(document).ready(function () {
@@ -579,9 +583,9 @@ var rpLib = {
         $(".collection-item-modal").find("h3").text("Create New Partner");
 
         // Clear all form fields
-        $("#profile-pic-preview").attr("src", "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/66a4a5fa00aa346e11374944_user-profile-place-holder.jpg");
-        $("#logo-preview").attr("src", "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/67d3e49e496d302f371805d7_logo-placeholder.jpg");
-        $("#ad-image-preview").attr("src", "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/67d3e6f9e85351033700473f_ad-image-placeholder.jpg");
+        $("#profile-pic-preview").attr("src", profilePicPlaceholderImg);
+        $("#logo-preview").attr("src", logoPlaceholderImg);
+        $("#ad-image-preview").attr("src", adPlaceholderImg);
 
         $("#partner-name").val("");
         $("#partner-company").val("");
@@ -1466,15 +1470,15 @@ var rpLib = {
             $("#partner-city").val(partner.fieldData["city-state-zip"]);
             $("#partner-show").prop("checked", partner.fieldData["show-partner"]);
             if (partner.fieldData["profile-pic"]?.url) {
-              $("#profile-pic-preview").attr("src", partner.fieldData["profile-pic"].url);
+              $("#profile-pic-preview").attr("src", partner.fieldData["profile-pic"].url || profilePicPlaceholderImg);
               $("#profile-pic-preview").removeAttr("srcset");
             }
             if (partner.fieldData["logo"]?.url) {
-              $("#logo-preview").attr("src", partner.fieldData["logo"]?.url || "");
+              $("#logo-preview").attr("src", partner.fieldData["logo"]?.url || logoPlaceholderImg);
               $("#logo-preview").removeAttr("srcset");
             }
             if (partner.fieldData["advertisement"]?.url) {
-              $("#ad-image-preview").attr("src", partner.fieldData["advertisement"]?.url || "");
+              $("#ad-image-preview").attr("src", partner.fieldData["advertisement"]?.url || adPlaceholderImg);
               $("#ad-image-preview").removeAttr("srcset");
             }
 
