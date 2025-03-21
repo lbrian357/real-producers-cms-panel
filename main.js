@@ -449,7 +449,7 @@ var rpLib = {
         }
       });
 
-      // On save
+      // On modal save click
       this.handleSavePartnerClick(profilePicFile, logoFile, adImageFile);
 
       // On close modal
@@ -460,7 +460,7 @@ var rpLib = {
         }
       });
 
-      // On create new partner
+      // On create new partner click
       this.handleCreatePartnerClick(profilePicFile, logoFile, adImageFile);
 
       // On delete button click
@@ -645,7 +645,6 @@ var rpLib = {
                   <label>Main Image:</label>
                   <div class="image-upload-container">
                       <div class="upload-section">
-                          <input type="file" id="main-image-upload" accept="image/*">
                           <span id="main-image-upload-status"></span>
                       </div>
                       <div class="image-preview">
@@ -767,56 +766,14 @@ var rpLib = {
       let existingGallery2 = [];
       let existingGallery3 = [];
 
-      // Main Image Preview Handler
-      $("#main-image-upload").on("change", function (e) {
-        mainImageFile = e.target.files[0];
-        if (!mainImageFile) return;
+      // On main image preview replacement click, open file dialog
+      rpLib.utils.setupSingleImgPreviewReplacement("main-image-preview", function(newFile) {
+        // Update the status text after selecting a new image
+        $("#main-image-upload-status").text("Image selected (will upload when saved)");
 
-        // Show preview
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          $("#main-image-preview").attr("src", e.target.result);
-          $("#main-image-upload-status").text("Image selected (will upload when saved)");
-        };
-        reader.readAsDataURL(mainImageFile);
+        // Update the variable to indicate a new file was selected
+        mainImageFile = newFile;
       });
-
-      // Helper function to setup gallery image replacement
-      function setupImageReplacement(galleryId) {
-        $(`#${galleryId}-preview`).on("click", ".thumbnail", function () {
-          // Store the index of the clicked image
-          const clickedIndex = $(this).data("index");
-
-          // Create a temporary file input for replacing this specific image
-          const $tempInput = $('<input type="file" accept="image/*" style="display:none">');
-          $("body").append($tempInput);
-
-          // Trigger click on the temporary input
-          $tempInput.trigger("click");
-
-          // Handle file selection
-          $tempInput.on("change", function (e) {
-            if (!e.target.files || !e.target.files[0]) {
-              $tempInput.remove();
-              return;
-            }
-
-            const newFile = e.target.files[0];
-            const reader = new FileReader();
-
-            reader.onload = function (e) {
-              // Update the preview
-              $(`#${galleryId}-preview .thumbnail[data-index="${clickedIndex}"]`).attr("src", e.target.result).addClass("replaced");
-
-              // Add to a special mapping for replaced images
-              $(`#${galleryId}-preview`).data(`replaced-${clickedIndex}`, newFile);
-            };
-
-            reader.readAsDataURL(newFile);
-            $tempInput.remove();
-          });
-        });
-      }
 
       // Gallery 1 Preview Handler
       $("#gallery-1-upload").on("change", function (e) {
@@ -897,9 +854,9 @@ var rpLib = {
       });
 
       // Setup the image replacement for all galleries
-      setupImageReplacement("gallery-1");
-      setupImageReplacement("gallery-2");
-      setupImageReplacement("gallery-3");
+      rpLib.utils.setupGalleryImageReplacement("gallery-1-preview");
+      rpLib.utils.setupGalleryImageReplacement("gallery-2-preview");
+      rpLib.utils.setupGalleryImageReplacement("gallery-3-preview");
 
       // Event listener for create button click
       $("body").on("click", ".lib-create-item-btn", function (event) {
@@ -912,7 +869,17 @@ var rpLib = {
         // Clear all form fields
         $("#event-name").val("");
         $("#event-date").val("");
-        // ... keep other field clearing code ...
+        $("#event-location-name").val("");
+        $("#event-location-address").val("");
+        $("#button-url").val("");
+        $("#button-text").val("");
+        $("#event-show").prop("checked", false);
+        $("#event-flyer").val("");
+        $("#youtube-video-id").val("");
+        $("#youtube-video-id-2").val("");
+        $("#event-description").val("");
+        $("#sponsor-event-button-url").val("");
+        $("#sponsor-event-button-text").val("");
 
         // Clear image previews
         $("#main-image-preview").attr("src", "");
@@ -1109,8 +1076,6 @@ var rpLib = {
         previewContainer.append(imgElement);
       });
     },
-
-    // Add this new function to handle image tracking with file indices
     addImageToGallery: function (galleryId, file, fileIndex) {
       const reader = new FileReader();
       reader.onload = function (e) {
@@ -1128,7 +1093,6 @@ var rpLib = {
       };
       reader.readAsDataURL(file);
     },
-    // Modified gallery upload to preserve order
     handleGalleryUpload: function (galleryId, galleryFiles) {
       return new Promise((resolve) => {
         const $preview = $(`#${galleryId}-preview`);
@@ -1348,6 +1312,41 @@ var rpLib = {
     },
     localeDatetimeStrToUtcStr: function (localeDatetimeStr) {
       return new Date(localeDatetimeStr).toISOString();
+    },
+    setupGalleryImageReplacement: function (galleryPreviewId) {
+      $(`#${galleryPreviewId}`).on("click", ".thumbnail", function () {
+        // Store the index of the clicked image
+        const clickedIndex = $(this).data("index");
+
+        // Create a temporary file input for replacing this specific image
+        const $tempInput = $('<input type="file" accept="image/*" style="display:none">');
+        $("body").append($tempInput);
+
+        // Trigger click on the temporary input
+        $tempInput.trigger("click");
+
+        // Handle file selection
+        $tempInput.on("change", function (e) {
+          if (!e.target.files || !e.target.files[0]) {
+            $tempInput.remove();
+            return;
+          }
+
+          const newFile = e.target.files[0];
+          const reader = new FileReader();
+
+          reader.onload = function (e) {
+            // Update the preview
+            $(`#${galleryPreviewId} .thumbnail[data-index="${clickedIndex}"]`).attr("src", e.target.result).addClass("replaced");
+
+            // Add to a special mapping for replaced images
+            $(`#${galleryPreviewId}`).data(`replaced-${clickedIndex}`, newFile);
+          };
+
+          reader.readAsDataURL(newFile);
+          $tempInput.remove();
+        });
+      });
     },
   },
 
