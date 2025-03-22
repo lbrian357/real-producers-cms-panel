@@ -607,6 +607,8 @@ var rpLib = {
         $("#partner-address").val("");
         $("#partner-city").val("");
         $("#partner-categories").val([]);
+        // Reset the multiselect
+        $("#partner-categories").multiselect('reload');
 
         // Show the modal
         $(".collection-item-modal").removeClass("hidden");
