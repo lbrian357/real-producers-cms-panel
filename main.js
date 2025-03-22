@@ -1229,6 +1229,11 @@ var rpLib = {
         if (brandId) {
           // Store the selected city in sessionStorage
           sessionStorage.setItem("selectedCity", brandId);
+
+          // Set View All link
+          const citySlug = $("#city-select option:selected").data("slug");
+          $('a#view-all').attr('href', `http://www.realproducersmagazine.com/partners/${citySlug}`);
+
           if (typeof callback === "function") {
             callback(brandId);
           }
@@ -1401,7 +1406,7 @@ var rpLib = {
           url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${BRANDS_COLLECTION_ID}/items/${brandId}/live`,
           method: "GET",
           success: function (response) {
-            $("#city-select").append(`<option value="${response.id}">${response.fieldData.name}</option>`);
+            $("#city-select").append(`<option value="${response.id}" data-slug="${response.fieldData.slug}">${response.fieldData.name}</option>`);
             resolve();
           },
           error: function (error) {
