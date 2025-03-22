@@ -1213,18 +1213,19 @@ var rpLib = {
       }
     },
     initCitySelection: function (callback) {
-      // If no city is selected (ie. first default option is selected) then show the notification that no city is selected
-      if ($("#city-select").val() === "") {
-        $('#select-city-notification').removeClass("hidden");
-      }
-
-      // Fetch all brands for city selection
+      // Fetch all brands for city selection dropdown and populate the dropdown
       rpLib.api.fetchUserBrands(() => {
         // Set the last selected city if available
         const lastSelectedCity = sessionStorage.getItem("selectedCity");
+
         if (lastSelectedCity) {
           $("#city-select").val(lastSelectedCity).trigger("change");
         }
+        // If no city is selected (ie. first default option is selected) then show the notification that no city is selected
+        if ($("#city-select").val() === "") {
+          $('#select-city-notification').removeClass("hidden");
+        }
+
       });
 
       // Fetch all users after city selection
@@ -1397,6 +1398,7 @@ var rpLib = {
         },
       });
     },
+
     fetchUserBrands: function (callback) {
       const USER_SLUG = $("[data-ms-member='wf-users-slug']").text();
       const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${USERS_COLLECTION_ID}/items/live?slug=${USER_SLUG}&sortBy=lastPublished&sortOrder=desc`;
