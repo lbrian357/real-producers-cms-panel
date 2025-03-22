@@ -1436,6 +1436,8 @@ var rpLib = {
       // Clear existing providers in list
       $("#collection-list .collection-item").not(".collection-item-row-template").remove();
 
+      $("select option:first").attr("disabled", "disabled");
+
       rpLib.api.fetchAllPaginated(url, (items) => {
         items
           .filter((item) => item.isArchived === false)
