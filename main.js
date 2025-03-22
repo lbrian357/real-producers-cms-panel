@@ -1213,6 +1213,11 @@ var rpLib = {
       }
     },
     initCitySelection: function (callback) {
+      // If no city is selected (ie. first default option is selected) then show the notification that no city is selected
+      if ($("#city-select").val() === "") {
+        $('#select-city-notification').removeClass("hidden");
+      }
+
       // Fetch all brands for city selection
       rpLib.api.fetchUserBrands(() => {
         // Set the last selected city if available
@@ -1224,9 +1229,6 @@ var rpLib = {
 
       // Fetch all users after city selection
       $("#city-select").on("change", function () {
-        // Hide the message that tells users to select a city
-        $('#select-city-notification').hide();
-
         let brandId = $(this).val();
         if (brandId) {
           // Store the selected city in sessionStorage
@@ -1349,7 +1351,7 @@ var rpLib = {
   },
 
   api: {
-    fetchAllPaginated: function (url, processData, offset = 0) {
+    fetchAllPaginated: function (url, processData, offset = 0, callback = null) {
       // Disable the dropdown when pagination starts (only for the first call)
       if (offset === 0) {
         $("#city-select").attr("disabled", true);
@@ -1367,11 +1369,17 @@ var rpLib = {
           processData(items);
 
           if (offset + response.pagination.limit < response.pagination.total) {
-            rpLib.api.fetchAllPaginated(url, processData, offset + response.pagination.limit);
+            rpLib.api.fetchAllPaginated(url, processData, offset + response.pagination.limit, callback);
           } else {
             // All pages fetched, re-enable dropdown
             $("#city-select").attr("disabled", false);
+            // Remove the loading/progress element
             $("#city-select").closest('#wf-form-city-select-form').next('progress').remove();
+
+            // Invoke the callback if provided
+            if (typeof callback === "function") {
+              callback();
+            }
           }
         },
         error: function (error) {
@@ -1380,6 +1388,11 @@ var rpLib = {
           // Re-enable dropdown in case of an error
           $("#city-select").attr("disabled", false);
           $("#city-select").closest('#wf-form-city-select-form').next('progress').remove();
+
+          // Invoke the callback even on error
+          if (typeof callback === "function") {
+            callback();
+          }
         },
       });
     },
@@ -1448,13 +1461,19 @@ var rpLib = {
       $("select option:first").attr("disabled", "disabled");
 
       rpLib.api.fetchAllPaginated(url, (items) => {
-        items
+        const filteredItems = items
           .filter((item) => item.isArchived === false)
-          .filter((item) => item.fieldData.city.includes(brandId))
-          .forEach((partner) => {
-            rpLib.partnersPage.renderPartner(partner);
-          });
-      });
+          .filter((item) => item.fieldData.city.includes(brandId));
+
+        filteredItems.forEach((partner) => {
+          rpLib.partnersPage.renderPartner(partner);
+          $('.no-collection-items-noti').addClass('hidden');
+        });
+      }, 0, function () {
+        if ($('.collection-item').not('.collection-item-row-template').length === 0) {
+          $('.no-collection-items-noti').removeClass('hidden');
+        }
+      }); // this is an ugly function call, the 0 represents the offset which should be 0 cause it's the start of the recursion
     },
     fetchPartnerDetailsAndOpenModal: function (slug) {
       $.ajax({
