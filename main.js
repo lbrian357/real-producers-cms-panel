@@ -1372,7 +1372,7 @@ var rpLib = {
 
           // Re-enable dropdown in case of an error
           $("#city-select").attr("disabled", false);
-          $("#city-select").next("progress").remove();
+          $("#city-select").closest('#wf-form-city-select-form').find('progress').remove();
         },
       });
     },
