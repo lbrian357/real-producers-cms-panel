@@ -1347,7 +1347,7 @@ var rpLib = {
       if (offset === 0) {
         $("#city-select").attr("disabled", true);
         // Add a <progress></progress> element to indicate loading
-        $("#city-select").closest('#wf-form-city-select-form').after('<progress style="background-attachment: revert !important; position: absolute;"></progress>');
+        $("#city-select").closest('#wf-form-city-select-form').after('<progress style="background-attachment: revert !important; position: absolute; margin-top: -10px;"></progress>');
       }
 
       $.ajax({
