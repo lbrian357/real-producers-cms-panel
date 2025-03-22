@@ -468,7 +468,9 @@ var rpLib = {
       templateRowItem.attr("data-slug", partner.fieldData.slug);
       templateRowItem.attr("data-partner-id", partner.id);
 
-      templateRowItem.find(".partner-pic").attr("src", partner.fieldData["profile-pic"]?.url || "");
+      if (partner.fieldData["profile-pic"]?.url) {
+        templateRowItem.find(".partner-pic").attr("src", partner.fieldData["profile-pic"]?.url || "");
+      }
       templateRowItem.find(".partner-name").text(partner.fieldData.name || "");
       templateRowItem.find(".partner-number").text(partner.fieldData.phone || "");
       templateRowItem.find(".partner-email").text(partner.fieldData.email || "");
