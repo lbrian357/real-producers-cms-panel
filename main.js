@@ -386,7 +386,7 @@ var rpLib = {
           );
           $("#partner-categories").multiselect('reload');
         });
-        
+
         // Initialize city selection and fetch partners
         rpLib.utils.initCitySelection(
           rpLib.api.fetchPartnersAndRender
@@ -1220,6 +1220,9 @@ var rpLib = {
 
       // Fetch all users after city selection
       $("#city-select").on("change", function () {
+        // Hide the message that tells users to select a city
+        $('#select-city-notification').hide();
+
         let brandId = $(this).val();
         if (brandId) {
           // Store the selected city in sessionStorage
