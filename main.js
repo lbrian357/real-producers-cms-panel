@@ -1346,7 +1346,7 @@ var rpLib = {
       // Disable the dropdown when pagination starts (only for the first call)
       if (offset === 0) {
         $("#city-select").attr("disabled", true);
-        // Add a <progress></progress> to #city-select to indicate loading
+        // Add a <progress></progress> element to indicate loading
         $("#city-select").closest('#wf-form-city-select-form').after('<progress style="background-attachment: revert !important; position: absolute;"></progress>');
       }
 
@@ -1364,7 +1364,7 @@ var rpLib = {
           } else {
             // All pages fetched, re-enable dropdown
             $("#city-select").attr("disabled", false);
-            $("#city-select").next("progress").remove();
+            $("#city-select").closest('#wf-form-city-select-form').next('progress').remove();
           }
         },
         error: function (error) {
@@ -1372,7 +1372,7 @@ var rpLib = {
 
           // Re-enable dropdown in case of an error
           $("#city-select").attr("disabled", false);
-          $("#city-select").closest('#wf-form-city-select-form').find('progress').remove();
+          $("#city-select").closest('#wf-form-city-select-form').next('progress').remove();
         },
       });
     },
