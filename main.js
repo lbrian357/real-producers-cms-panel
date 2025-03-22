@@ -1229,6 +1229,7 @@ var rpLib = {
 
       // Fetch all users after city selection
       $("#city-select").on("change", function () {
+        $('#select-city-notification').addClass("hidden");
         let brandId = $(this).val();
         if (brandId) {
           // Store the selected city in sessionStorage
