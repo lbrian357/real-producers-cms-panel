@@ -1051,6 +1051,14 @@ var rpLib = {
                   display: none !important;
               }
 
+              body .ms-options-wrap > button, body .ms-options-wrap>button:focus {
+                  color: black;
+                  font-size: 16px;
+                  font-family: "Museosans 300", sans-serif;
+                  border-radius: 10px;
+                  padding: 8px 12px;
+              }
+
             </style>
         `);
     },
