@@ -1007,7 +1007,9 @@ var rpLib = {
       templateRowItem.attr("data-slug", event.fieldData.slug);
       templateRowItem.attr("data-event-id", event.id);
 
-      templateRowItem.find(".event-pic").attr("src", event.fieldData["main-image"]?.url || "");
+      if (event.fieldData["main-image"]?.url) {
+        templateRowItem.find(".event-pic").attr("src", event.fieldData["main-image"]?.url || "").removeAttr("srcset");
+      }
       templateRowItem.find(".event-name").text(event.fieldData.name || "");
       if (event.fieldData.date) {
         templateRowItem.find(".event-date").text(rpLib.utils.formatWfDate(event.fieldData.date));
