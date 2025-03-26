@@ -908,7 +908,7 @@ var rpLib = {
       });
 
       // Save event with image uploads
-      $("#save-event").on("click", function () {
+      $("body #save-event").on("click", function () {
         const eventId = $(".collection-item-modal").attr("data-event-id");
         const isCreatingNewEvent = !eventId; // Check if we're creating a new event
 
@@ -950,14 +950,14 @@ var rpLib = {
           // Store the uploaded gallery data
           if (results.length >= 4) {
             // There are 4 promises now (main image + 3 galleries)
-            $("#main-image-preview").attr("data-uploaded-image", results[0]);
-            $("#gallery-1-preview").attr("data-uploaded-images", results[1]); // Offset by 1 due to main image
-            $("#gallery-2-preview").attr("data-uploaded-images", results[2]);
-            $("#gallery-3-preview").attr("data-uploaded-images", results[3]);
+            $("#main-image-preview").data("uploaded-image", results[0]);
+            $("#gallery-1-preview").data("uploaded-images", results[1]); // Offset by 1 due to main image
+            $("#gallery-2-preview").data("uploaded-images", results[2]);
+            $("#gallery-3-preview").data("uploaded-images", results[3]);
           } else if (results.length >= 3) {
-            $("#gallery-1-preview").attr("data-uploaded-images", results[0]);
-            $("#gallery-2-preview").attr("data-uploaded-images", results[1]);
-            $("#gallery-3-preview").attr("data-uploaded-images", results[2]);
+            $("#gallery-1-preview").data("uploaded-images", results[0]);
+            $("#gallery-2-preview").data("uploaded-images", results[1]);
+            $("#gallery-3-preview").data("uploaded-images", results[2]);
           }
 
           // Once all uploads are complete, call the appropriate function
@@ -996,7 +996,7 @@ var rpLib = {
 
         rpLib.api.fetchEventDetailsAndOpenModal(slug);
       });
-      $("#close-modal").on("click", function () {
+      $("body #close-modal").on("click", function () {
         $(".collection-item-modal").addClass("hidden");
       });
 
@@ -1807,9 +1807,9 @@ var rpLib = {
       }
 
       // Get the gallery data that was uploaded and processed
-      const newGallery1Images = $("#gallery-1-preview").attr("data-uploaded-images");
-      const newGallery2Images = $("#gallery-2-preview").attr("data-uploaded-images");
-      const newGallery3Images = $("#gallery-3-preview").attr("data-uploaded-images");
+      const newGallery1Images = $("#gallery-1-preview").data("uploaded-images");
+      const newGallery2Images = $("#gallery-2-preview").data("uploaded-images");
+      const newGallery3Images = $("#gallery-3-preview").data("uploaded-images");
 
       // Add galleries to the event data if they have images
       if (newGallery1Images && newGallery1Images.length > 0) {
