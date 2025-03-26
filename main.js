@@ -7,6 +7,7 @@ const SITE_ID = "658f30a87b1a52ef8ad0b732";
 const profilePicPlaceholderImg = "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/66a4a5fa00aa346e11374944_user-profile-place-holder.jpg";
 const logoPlaceholderImg = "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/67d3e49e496d302f371805d7_logo-placeholder.jpg";
 const adPlaceholderImg = "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/67d3e6f9e85351033700473f_ad-image-placeholder.jpg";
+const eventMainPlaceholderImg = "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/67dfcd6c686c0fa648b21c00_icon-event.png";
 
 
 
@@ -113,9 +114,13 @@ var rpLib = {
       </style>
       `);
 
-      rpLib.utils.initCitySelection(
-        rpLib.api.fetchBrandUsersAndRender
-      );
+      rpLib.utils.initCitySelection( function(brandId) {
+          rpLib.api.fetchBrandUsersAndRender(brandId);
+
+          // Set View All link
+          const citySlug = $("#city-select option:selected").attr("data-slug");
+          $('a#view-all').attr('href', `http://www.realproducersmagazine.com/users/${citySlug}`);
+      });
 
       // Event listener for create button click
       $("body").on("click", ".lib-create-item-btn", function (event) {
@@ -388,9 +393,13 @@ var rpLib = {
         });
 
         // Initialize city selection and fetch partners
-        rpLib.utils.initCitySelection(
-          rpLib.api.fetchPartnersAndRender
-        );
+        rpLib.utils.initCitySelection(function (brandId) {
+          rpLib.api.fetchPartnersAndRender(brandId);
+
+          // Set View All link
+          const citySlug = $("#city-select option:selected").attr("data-slug");
+          $('a#view-all').attr('href', `http://www.realproducersmagazine.com/partners/${citySlug}`);
+        });
       });
 
       // Store file references for image uploads
@@ -967,9 +976,13 @@ var rpLib = {
         });
       });
 
-      rpLib.utils.initCitySelection(
-        rpLib.api.fetchEventsAndRender
-      );
+      rpLib.utils.initCitySelection(function (brandId) {
+        rpLib.api.fetchEventsAndRender(brandId);
+
+          // Set View All link
+          const citySlug = $("#city-select option:selected").attr("data-slug");
+          $('a#view-all').attr('href', `http://www.realproducersmagazine.com/events/${citySlug}`);
+      });
 
       $("#collection-list").on("click", ".item-edit-btn", function () {
         let eventId = $(this).closest(".collection-item").attr("data-event-id");
@@ -1244,10 +1257,6 @@ var rpLib = {
           // Store the selected city in sessionStorage
           sessionStorage.setItem("selectedCity", brandId);
 
-          // Set View All link
-          const citySlug = $("#city-select option:selected").attr("data-slug");
-          $('a#view-all').attr('href', `http://www.realproducersmagazine.com/partners/${citySlug}`);
-
           if (typeof callback === "function") {
             callback(brandId);
           }
@@ -1363,7 +1372,7 @@ var rpLib = {
       if (offset === 0) {
         $("#city-select").attr("disabled", true);
         // Add a <progress></progress> element to indicate loading
-        $("#city-select").closest('#wf-form-city-select-form').after('<progress style="background-attachment: revert !important; position: absolute; margin-top: -10px;"></progress>');
+        $("#city-select").closest('#wf-form-city-select-form').after('<progress style="background-attachment: revert !important; position: absolute; margin-top: -18px;"></progress>');
       }
 
       $.ajax({
@@ -1457,7 +1466,15 @@ var rpLib = {
           ) {
             rpLib.usersPage.renderUser(user);
           }
+
+          $('.no-collection-items-noti').addClass('hidden');
         });
+      },
+      0, 
+      function () {
+        if ($('.collection-item').not('.collection-item-row-template').length === 0) {
+          $('.no-collection-items-noti').removeClass('hidden');
+        }
       });
     },
     fetchPartnersAndRender: function (brandId) {
@@ -1477,11 +1494,13 @@ var rpLib = {
           rpLib.partnersPage.renderPartner(partner);
           $('.no-collection-items-noti').addClass('hidden');
         });
-      }, 0, function () {
+      },
+      0,
+      function () {
         if ($('.collection-item').not('.collection-item-row-template').length === 0) {
           $('.no-collection-items-noti').removeClass('hidden');
         }
-      }); // this is an ugly function call, the 0 represents the offset which should be 0 cause it's the start of the recursion
+      }); // this is an ugly function call, the 0 represents the offset which should be 0 here cause it's the start of the recursion
     },
     fetchPartnerDetailsAndOpenModal: function (slug) {
       $.ajax({
@@ -1625,12 +1644,20 @@ var rpLib = {
       $("#collection-list .collection-item").not(".collection-item-row-template").remove();
 
       rpLib.api.fetchAllPaginated(url, (items) => {
-        items
+        const filteredItems = items
           .filter((item) => item.isArchived === false)
           .filter((item) => item.fieldData.brand === brandId)
-          .forEach((event) => {
-            rpLib.eventsPage.renderEvent(event);
-          });
+
+        filteredItems.forEach((event) => {
+          rpLib.eventsPage.renderEvent(event);
+          $('.no-collection-items-noti').addClass('hidden');
+        });
+      },
+      0, 
+      function () {
+        if ($('.collection-item').not('.collection-item-row-template').length === 0) {
+          $('.no-collection-items-noti').removeClass('hidden');
+        }
       });
     },
     fetchEventDetailsAndOpenModal: function (slug) {
