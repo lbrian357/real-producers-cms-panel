@@ -638,7 +638,6 @@ var rpLib = {
         "partner-description",
         "Share partner bio or info here..."
       );
-    
 
       $("#partner-preview-text").val("");
       $("#partner-address").val("");
@@ -1691,7 +1690,7 @@ var rpLib = {
         method: "PATCH",
         data: JSON.stringify(updatedData),
         success: function () {
-          alert("Partner updated!");
+          alert("Success! Partner profile updated. \n\n Click the eyeball icon to view your updates.");
           $(".collection-item-modal").addClass("hidden");
           rpLib.api.fetchPartnersAndRender($("#city-select").val()); // Refresh list
         },
@@ -2257,7 +2256,7 @@ var rpLib = {
         method: "POST",
         data: JSON.stringify(newPartnerData),
         success: function (response) {
-          alert("New partner created successfully!");
+          alert("Success! Partner profile created. \n\n Click the eyeball icon to view your updates.");
           $(".collection-item-modal").addClass("hidden");
           // Refresh list
           rpLib.api.fetchPartnersAndRender(brandId);
