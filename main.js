@@ -1672,7 +1672,7 @@ var rpLib = {
           console.error("Error updating partner:", errorRes);
 
           // Handle Validation Error and list the fields that failed validation in the alert
-          if (errorRes.responseJSON && errorRes.responseJSON?.code === "validation_error" && errorRes.responseJSON.details ) {
+          if (errorRes.responseJSON && errorRes.responseJSON?.code === "validation_error" && errorRes.responseJSON?.details.length > 0) {
             let failedFields = errorRes.responseJSON.details.map((detail) => (
               `${detail.param}—${detail.description}`
             ));
@@ -2237,7 +2237,7 @@ var rpLib = {
         },
         error: function (errorRes) {
           // Handle Validation Error and list the fields that failed validation in the alert
-          if (errorRes.responseJSON && errorRes.responseJSON?.code === "validation_error" && errorRes.responseJSON.details ) {
+          if (errorRes.responseJSON && errorRes.responseJSON?.code === "validation_error" && errorRes.responseJSON?.details.length > 0) {
             let failedFields = errorRes.responseJSON.details.map((detail) => (
               `${detail.param}—${detail.description}`
             ));
@@ -2245,7 +2245,7 @@ var rpLib = {
           }
           else {
             console.error("Error creating partner:", errorRes);
-            alert("Failed to create partner. Please check the console for details.");
+            alert("Failed to create partner. Please try again. " + errorRes.responseJSON?.message);
           }
         },
       });
