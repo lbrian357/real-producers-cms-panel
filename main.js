@@ -299,6 +299,13 @@ var rpLib = {
     },
   },
   partnersPage: {
+    state: {
+      uploads: {
+        profilePic: null,
+        logo: null,
+        adImage: null,
+      }
+    },
     init: function () {
       // // Append modal dynamically for now until frontend components are available
       // $("body").append(`
@@ -375,7 +382,6 @@ var rpLib = {
       // `);
 
 
-
       // Load list of partner categories first so it's available to populate the dropdown in the edit modal
       rpLib.api.fetchAllPartnerCategories(function(categories) {
         $("#partner-categories").empty(); // Clear existing options
@@ -404,44 +410,36 @@ var rpLib = {
         });
       });
 
-      // Store file references for image uploads
-      let profilePicFile = null;
-      let logoFile = null;
-      let adImageFile = null;
+      this.bindEventListeners();
 
-      // On image preview replacement click, open file dialog
-      rpLib.utils.setupSingleImgPreviewReplacement("profile-pic-preview", function(newFile) {
-        // Update the status text after selecting a new image
-        $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
-
-        // Update the state/variable to indicate a new file was selected
-        profilePicFile = newFile;
-      });
-      rpLib.utils.setupSingleImgPreviewReplacement("logo-preview", function(newFile) {
-        $("#logo-upload-status").text("Image selected (will upload when saved)");
-        logoFile = newFile;
-      });
-      rpLib.utils.setupSingleImgPreviewReplacement("ad-image-preview", function(newFile) {
-        $("#ad-image-upload-status").text("Image selected (will upload when saved)");
-        adImageFile = newFile;
-      });
-
+    },
+    bindEventListeners: function () {
+      this.bindCreatePartnerEvents();
+      this.bindEditPartnerEvents();
+      this.bindDeletePartnerEvents();
+      this.bindModalEvents();
+    },
+    bindCreatePartnerEvents: function () {
       // On create new partner click
       $("body").on("click", ".lib-create-item-btn", function (event) {
-        // Reset image file references
-        profilePicFile = null;
-        logoFile = null;
-        adImageFile = null;
+        rpLib.partnersPage.state.uploads = {
+          profilePic: null,
+          logo: null,
+          adImage: null,
+        }
 
-        rpLib.partnersPage.handleCreatePartnerClick(profilePicFile, logoFile, adImageFile);
+        rpLib.partnersPage.handleCreatePartnerClick();
       });
-
+    },
+    bindEditPartnerEvents: function () {
       // On edit button click open modal
       $("body").on("click", ".item-edit-btn", function (event) {
         // Reset image file references
-        profilePicFile = null;
-        logoFile = null;
-        adImageFile = null;
+        rpLib.partnersPage.state.uploads = {
+          profilePic: null,
+          logo: null,
+          adImage: null,
+        }
 
         const partnerId = $(this).closest(".collection-item").attr("data-partner-id");
         const slug = $(this).closest(".collection-item").attr("data-slug");
@@ -452,28 +450,8 @@ var rpLib = {
         rpLib.api.fetchPartnerDetailsAndOpenModal(slug);
       });
 
-      // Event listener on url inputs to add "http://" to website URL if not present
-      $(document).on('blur', '.collection-item-modal input[type="url"]', function() {
-        let url = $(this).val().trim();
-    
-        if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
-            $(this).val('http://' + url);
-        }
-      });
-
-      // On modal save click
-      $("#save-partner").on("click", function () {
-        rpLib.partnersPage.handleSavePartnerClick(profilePicFile, logoFile, adImageFile);
-      });
-
-      // On close modal
-      $("#close-modal").on("click", function () {
-        // Ask for confirmation before closing the modal
-        if (confirm("Are you sure you want to close the modal? Any unsaved changes will be lost.")) {
-          $(".collection-item-modal").addClass("hidden");
-        }
-      });
-
+    },
+    bindDeletePartnerEvents: function () {
       // On delete button click
       $("body").on("click", ".item-delete-btn", function (event) {
         const partnerId = $(this).closest(".collection-item").attr("data-partner-id");
@@ -485,6 +463,49 @@ var rpLib = {
             rpLib.api.fetchPartnersAndRender($("#city-select").val());
           });
         }
+      });
+    },
+    bindModalEvents: function () {
+      // Event listener on url inputs to add "http://" to website URL if not present
+      $(document).on('blur', '.collection-item-modal input[type="url"]', function() {
+        const url = $(this).val().trim();
+    
+        const urlWithProtocol = rpLib.utils.formatUrlWithProtocol(url);
+        $(this).val(urlWithProtocol);
+      });
+
+      // On modal save click
+      $("#save-partner").on("click", function () {
+        rpLib.partnersPage.handleSavePartnerClick(
+          rpLib.partnersPage.state.uploads.profilePic,
+          rpLib.partnersPage.state.uploads.logo,
+          rpLib.partnersPage.state.uploads.adImage
+        );
+      });
+
+      // On modal close
+      $("#close-modal").on("click", function () {
+        // Ask for confirmation before closing the modal
+        if (confirm("Are you sure you want to close the modal? Any unsaved changes will be lost.")) {
+          $(".collection-item-modal").addClass("hidden");
+        }
+      });
+
+      // On image preview replacement click, open file dialog
+      rpLib.utils.setupSingleImgPreviewReplacement("profile-pic-preview", function(newFile) {
+        // Update the status text after selecting a new image
+        $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
+
+        // Update the state/variable to indicate a new file was selected
+        rpLib.partnersPage.state.uploads.profilePic = newFile;
+      });
+      rpLib.utils.setupSingleImgPreviewReplacement("logo-preview", function(newFile) {
+        $("#logo-upload-status").text("Image selected (will upload when saved)");
+        rpLib.partnersPage.state.uploads.logo = newFile;
+      });
+      rpLib.utils.setupSingleImgPreviewReplacement("ad-image-preview", function(newFile) {
+        $("#ad-image-upload-status").text("Image selected (will upload when saved)");
+        rpLib.partnersPage.state.uploads.adImage = newFile;
       });
     },
     renderPartner: function (partner) {
@@ -586,7 +607,7 @@ var rpLib = {
       });
     },
 
-    handleCreatePartnerClick: function (profilePicFile, logoFile, adImageFile) {
+    handleCreatePartnerClick: function () {
       // Clear modal data attribute to indicate this is a new item
       $(".collection-item-modal").removeAttr("data-partner-id");
 
@@ -1398,6 +1419,12 @@ var rpLib = {
       // Remove the cursor span elements from Quill editor innerHTML
       let cleanedHTML = innerHTML.replace(/<span class="ql-cursor">.*?<\/span>/g, '');
       return cleanedHTML;
+    },
+    formatUrlWithProtocol: function (url) {
+      if (url && !url.startswith('http://') && !url.startswith('https://')) {
+        return 'http://' + url;
+      }
+      return url; 
     }
   },
 
