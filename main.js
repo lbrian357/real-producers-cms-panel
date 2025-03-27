@@ -374,6 +374,8 @@ var rpLib = {
       //     </div>
       // `);
 
+
+
       // Load list of partner categories first so it's available to populate the dropdown in the edit modal
       rpLib.api.fetchAllPartnerCategories(function(categories) {
         $("#partner-categories").empty(); // Clear existing options
@@ -609,7 +611,14 @@ var rpLib = {
       $("#partner-youtube").val("");
       $("#partner-linkedin").val("");
       $("#partner-tiktok").val("");
-      $("#partner-description").val("");
+
+      // Init/Reset rich text editor for partner description
+      rpLib.utils.initRichTextEditor(
+        "partner-description",
+        "Share partner bio or info here..."
+      );
+    
+
       $("#partner-preview-text").val("");
       $("#partner-address").val("");
       $("#partner-city").val("");
@@ -1047,6 +1056,12 @@ var rpLib = {
       const cssLinkForMultiselect = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@nobleclem/jquery-multiselect@2.4.24/jquery.multiselect.min.css">';
       $("head").append(scriptTagForMultiselect);
       $("head").append(cssLinkForMultiselect);
+
+      // Quill rich text editor
+      const quillCssLink = '<link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">';
+      const quillJsScript = '<script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>';
+      $("head").append(quillCssLink);
+      $("head").append(quillJsScript);
     },
     injectCSS: function () {
       $("head").append(`
@@ -1364,6 +1379,26 @@ var rpLib = {
         });
       });
     },
+    initRichTextEditor: function (editorId, placeholderContent = "", existingContent = "") {
+      // Reset editor elements
+      $(`#${editorId}`).prev('.ql-toolbar').remove();
+      $("#partner-description").replaceWith(`<div id="partner-description">${existingContent}</div>`);
+
+      const quill = new Quill(`#${editorId}`, {
+        modules: {
+          toolbar: [
+            ['bold', 'italic', 'underline'],
+          ],
+        },
+        placeholder: placeholderContent,
+        theme: 'snow', // or 'bubble'
+      });
+    },
+    cleanQuillInnerHTMLToWf: function (innerHTML) {
+      // Remove the cursor span elements from Quill editor innerHTML
+      let cleanedHTML = innerHTML.replace(/<span class="ql-cursor">.*?<\/span>/g, '');
+      return cleanedHTML;
+    }
   },
 
   api: {
@@ -1557,6 +1592,13 @@ var rpLib = {
             }
             $("#partner-categories").multiselect('reload');
 
+            // Init rich text editor for partner description
+            rpLib.utils.initRichTextEditor(
+              "partner-description",
+              "Share partner bio or info here...",
+              partner.fieldData["description"]
+            );
+
             // Show the modal
             $(".collection-item-modal").removeClass("hidden");
           }
@@ -1590,6 +1632,11 @@ var rpLib = {
           "partner-categories": $("#partner-categories").val(), // Multi-reference
         },
       };
+
+      // get description from quill editor
+      updatedData.fieldData["description"] = rpLib.utils.cleanQuillInnerHTMLToWf(
+        document.querySelector("#partner-description .ql-editor").innerHTML
+      );
 
       // Add profile picture if available
       if (newProfilePicFile) {
