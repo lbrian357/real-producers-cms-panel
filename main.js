@@ -1277,22 +1277,21 @@ var rpLib = {
     initCitySelection: function (callback) {
       // Fetch all brands for city selection dropdown and populate the dropdown
       rpLib.api.fetchUserBrands(() => {
-        
-        // Set the last selected city if available
         const lastSelectedCity = sessionStorage.getItem("selectedCity");
 
         if (lastSelectedCity) {
+          // Select the last selected city if available
           $("#city-select").val(lastSelectedCity).trigger("change");
+        } else if ($("#city-select option").length === 2) {
+          // If there is only one city, select it by default
+          $("#city-select option:last").prop("selected", true).trigger("change");
         }
+
         // If no city is selected (ie. first default option is selected) then show the notification that no city is selected
         if ($("#city-select").val() === "") {
           $('#select-city-notification').removeClass("hidden");
         }
 
-        // If there is only one city, select it by default
-        if ($("#city-select option").length === 2) {
-          $("#city-select option:last").prop("selected", true).trigger("change");
-        }
       });
 
       // Fetch all users after city selection
