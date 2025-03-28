@@ -402,11 +402,16 @@ var rpLib = {
 
         // Initialize city selection and fetch partners
         rpLib.utils.initCitySelection(function (brandId) {
+          // On city selected
           rpLib.api.fetchPartnersAndRender(brandId);
 
           // Set View All link
           const citySlug = $("#city-select option:selected").attr("data-slug");
           $('a#view-all').attr('href', `http://www.realproducersmagazine.com/partners/${citySlug}`);
+
+          // Show the View All link and the Create New button (link)
+          $("#view-all").removeClass("hidden");
+          $(".lib-create-item-btn").removeClass("hidden");
         });
       });
 
