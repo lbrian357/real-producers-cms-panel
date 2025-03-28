@@ -1,3 +1,4 @@
+const USER_SLUG = $("[data-ms-member='wf-users-slug']").text();
 const EVENTS_COLLECTION_ID = "658f30a87b1a52ef8ad0b8e4";
 const USERS_COLLECTION_ID = "658f30a87b1a52ef8ad0b74b";
 const BRANDS_COLLECTION_ID = "658f30a87b1a52ef8ad0b77b";
@@ -1276,6 +1277,7 @@ var rpLib = {
     initCitySelection: function (callback) {
       // Fetch all brands for city selection dropdown and populate the dropdown
       rpLib.api.fetchUserBrands(() => {
+        
         // Set the last selected city if available
         const lastSelectedCity = sessionStorage.getItem("selectedCity");
 
@@ -1287,6 +1289,10 @@ var rpLib = {
           $('#select-city-notification').removeClass("hidden");
         }
 
+        // If there is only one city, select it by default
+        if ($("#city-select option").length === 2) {
+          $("#city-select option:last").prop("selected", true).trigger("change");
+        }
       });
 
       // Fetch all users after city selection
@@ -1480,7 +1486,6 @@ var rpLib = {
     },
 
     fetchUserBrands: function (callback) {
-      const USER_SLUG = $("[data-ms-member='wf-users-slug']").text();
       const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${USERS_COLLECTION_ID}/items/live?slug=${USER_SLUG}&sortBy=lastPublished&sortOrder=desc`;
 
       rpLib.api.fetchAllPaginated(url, (items) => {
@@ -1488,7 +1493,6 @@ var rpLib = {
           let brands = items[0].fieldData["brand-s"];
           let fetchBrandPromises = brands.map((brandId) => rpLib.api.fetchBrandDetailsAndPopulateDropdown(brandId));
     
-          // Wait for all brand details to be fetched and dropdown to be populated
           Promise.all(fetchBrandPromises).then(() => {
             if (callback) callback();
           });
