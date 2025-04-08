@@ -657,6 +657,17 @@ var rpLib = {
     }
   },
   eventsPage: {
+    state: {
+      uploads: {
+        mainImage: null,
+        gallery1: [],
+        gallery2: [],
+        gallery3: [],
+      },
+      existingGallery1: [],
+      existingGallery2: [],
+      existingGallery3: [],
+    },
     init: function () {
       // Append modal dynamically for now until frontend components are available
       $("body").append(`
@@ -786,109 +797,24 @@ var rpLib = {
         </style>
       `);
 
-      // Initialize file storage
-      let mainImageFile = null;
-      let gallery1Files = [];
-      let gallery2Files = [];
-      let gallery3Files = [];
 
-      // Existing event data storage
-      let existingGallery1 = [];
-      let existingGallery2 = [];
-      let existingGallery3 = [];
+      rpLib.utils.initCitySelection(function (brandId) {
+        rpLib.api.fetchEventsAndRender(brandId);
 
-      // On main image preview replacement click, open file dialog
-      rpLib.utils.setupSingleImgPreviewReplacement("main-image-preview", function(newFile) {
-        // Update the status text after selecting a new image
-        $("#main-image-upload-status").text("Image selected (will upload when saved)");
-
-        // Update the variable to indicate a new file was selected
-        mainImageFile = newFile;
+          // Set View All link
+          const citySlug = $("#city-select option:selected").attr("data-slug");
+          $('a#view-all').attr('href', `http://www.realproducersmagazine.com/events/${citySlug}`);
       });
 
-      // Gallery 1 Preview Handler
-      $("#gallery-1-upload").on("change", function (e) {
-        const files = Array.from(e.target.files);
-
-        if (files.length === 0) return;
-
-        // Get current images count (both existing and newly added)
-        const currentCount = $("#gallery-1-preview img").length;
-
-        // Check if adding these files would exceed the limit
-        if (currentCount + files.length > 25) {
-          const remaining = 25 - currentCount;
-          alert(`You can only add ${remaining} more image${remaining !== 1 ? "s" : ""}. Please select fewer images.`);
-          $(this).val(""); // Reset the input
-          return;
-        }
-
-        // Add new files to the array
-        gallery1Files = [...gallery1Files, ...files];
-
-        // Show preview for each file
-        files.forEach((file, index) => {
-          rpLib.utils.addImageToGallery("gallery-1", file, index);
-        });
-      });
-
-      // Gallery 2 Preview Handler
-      $("#gallery-2-upload").on("change", function (e) {
-        const files = Array.from(e.target.files);
-
-        if (files.length === 0) return;
-
-        // Get current images count
-        const currentCount = $("#gallery-2-preview img").length;
-
-        // Check if adding these files would exceed the limit
-        if (currentCount + files.length > 25) {
-          const remaining = 25 - currentCount;
-          alert(`You can only add ${remaining} more image${remaining !== 1 ? "s" : ""}. Please select fewer images.`);
-          $(this).val(""); // Reset the input
-          return;
-        }
-
-        // Add new files to the array
-        gallery2Files = [...gallery2Files, ...files];
-
-        // Show preview for each file
-        files.forEach((file, index) => {
-          rpLib.utils.addImageToGallery("gallery-2", file, index);
-        });
-      });
-
-      // Gallery 3 Preview Handler
-      $("#gallery-3-upload").on("change", function (e) {
-        const files = Array.from(e.target.files);
-
-        if (files.length === 0) return;
-
-        // Get current images count
-        const currentCount = $("#gallery-3-preview img").length;
-
-        // Check if adding these files would exceed the limit
-        if (currentCount + files.length > 25) {
-          const remaining = 25 - currentCount;
-          alert(`You can only add ${remaining} more image${remaining !== 1 ? "s" : ""}. Please select fewer images.`);
-          $(this).val(""); // Reset the input
-          return;
-        }
-
-        // Add new files to the array
-        gallery3Files = [...gallery3Files, ...files];
-
-        // Show preview for each file
-        files.forEach((file, index) => {
-          rpLib.utils.addImageToGallery("gallery-3", file, index);
-        });
-      });
-
-      // Setup the image replacement for all galleries
-      rpLib.utils.setupGalleryImageReplacement("gallery-1-preview");
-      rpLib.utils.setupGalleryImageReplacement("gallery-2-preview");
-      rpLib.utils.setupGalleryImageReplacement("gallery-3-preview");
-
+      this.bindEventListeners();
+    },
+    bindEventListeners: function () {
+      this.bindCreateEventEvents();
+      this.bindEditEventEvents();
+      this.bindDeleteEventEvents();
+      this.bindModalEvents();
+    },
+    bindCreateEventEvents: function () {
       // Event listener for create button click
       $("body").on("click", ".lib-create-item-btn", function (event) {
         // Clear modal data attribute to indicate this is a new item
@@ -923,15 +849,17 @@ var rpLib = {
         $("#gallery-3-upload-status").text("");
 
         // Reset file variables
-        mainImageFile = null;
-        gallery1Files = [];
-        gallery2Files = [];
-        gallery3Files = [];
+        rpLib.eventsPage.state.uploads = {
+          mainImage: null,
+          gallery1: [],
+          gallery2: [],
+          gallery3: [],
+        }
 
         // Reset existing gallery data
-        existingGallery1 = [];
-        existingGallery2 = [];
-        existingGallery3 = [];
+        rpLib.eventsPage.state.existingGallery1 = [];
+        rpLib.eventsPage.state.existingGallery2 = [];
+        rpLib.eventsPage.state.existingGallery3 = [];
 
         // Enable upload inputs
         $("#gallery-1-upload").prop("disabled", false);
@@ -941,6 +869,127 @@ var rpLib = {
         // Show the modal
         $(".collection-item-modal").removeClass("hidden");
       });
+    },
+    bindEditEventEvents: function () {
+      $("#collection-list").on("click", ".item-edit-btn", function () {
+        let eventId = $(this).closest(".collection-item").attr("data-event-id");
+        let slug = $(this).closest(".collection-item").attr("data-slug");
+
+        // Update modal title for editing
+        $(".collection-item-modal").find("h3").text("Edit Event");
+
+        // Set the event ID for editing
+        $(".collection-item-modal").attr("data-event-id", eventId);
+
+        rpLib.api.fetchEventDetailsAndOpenModal(slug);
+      });
+    },
+    bindDeleteEventEvents: function () {
+      // Event listener for delete button click
+      $("body").on("click", ".item-delete-btn", function (event) {
+        const eventId = $(this).closest(".collection-item").attr("data-event-id");
+        const eventName = $(this).closest(".collection-item").find(".event-name").text();
+
+        if (confirm(`Are you sure you want to delete event "${eventName}"?`)) {
+          rpLib.api.archiveItem(EVENTS_COLLECTION_ID, eventId, "Event", function () {
+            // Refresh the list after successful archive
+            rpLib.api.fetchEventsAndRender($("#city-select").val());
+          });
+        }
+      });
+    },
+    bindModalEvents: function () {
+      // On main image preview replacement click, open file dialog
+      rpLib.utils.setupSingleImgPreviewReplacement("main-image-preview", function(newFile) {
+        // Update the status text after selecting a new image
+        $("#main-image-upload-status").text("Image selected (will upload when saved)");
+
+        // Update uploads state to indicate a new file was selected
+        rpLib.eventsPage.state.uploads.mainImage = newFile;
+      });
+
+      // Gallery 1 Preview Handler
+      $("#gallery-1-upload").on("change", function (e) {
+        const files = Array.from(e.target.files);
+
+        if (files.length === 0) return;
+
+        // Get current images count (both existing and newly added)
+        const currentCount = $("#gallery-1-preview img").length;
+
+        // Check if adding these files would exceed the limit
+        if (currentCount + files.length > 25) {
+          const remaining = 25 - currentCount;
+          alert(`You can only add ${remaining} more image${remaining !== 1 ? "s" : ""}. Please select fewer images.`);
+          $(this).val(""); // Reset the input
+          return;
+        }
+
+        // Add new files to the array
+        rpLib.eventsPage.state.uploads.gallery1 = [...rpLib.eventsPage.state.uploads.gallery1, ...files];
+
+        // Show preview for each file
+        files.forEach((file, index) => {
+          rpLib.utils.addImageToGallery("gallery-1", file, index);
+        });
+      });
+
+      // Gallery 2 Preview Handler
+      $("#gallery-2-upload").on("change", function (e) {
+        const files = Array.from(e.target.files);
+
+        if (files.length === 0) return;
+
+        // Get current images count
+        const currentCount = $("#gallery-2-preview img").length;
+
+        // Check if adding these files would exceed the limit
+        if (currentCount + files.length > 25) {
+          const remaining = 25 - currentCount;
+          alert(`You can only add ${remaining} more image${remaining !== 1 ? "s" : ""}. Please select fewer images.`);
+          $(this).val(""); // Reset the input
+          return;
+        }
+
+        // Add new files to the array
+        rpLib.eventsPage.state.uploads.gallery2 = [...rpLib.eventsPage.state.uploads.gallery2, ...files];
+
+        // Show preview for each file
+        files.forEach((file, index) => {
+          rpLib.utils.addImageToGallery("gallery-2", file, index);
+        });
+      });
+
+      // Gallery 3 Preview Handler
+      $("#gallery-3-upload").on("change", function (e) {
+        const files = Array.from(e.target.files);
+
+        if (files.length === 0) return;
+
+        // Get current images count
+        const currentCount = $("#gallery-3-preview img").length;
+
+        // Check if adding these files would exceed the limit
+        if (currentCount + files.length > 25) {
+          const remaining = 25 - currentCount;
+          alert(`You can only add ${remaining} more image${remaining !== 1 ? "s" : ""}. Please select fewer images.`);
+          $(this).val(""); // Reset the input
+          return;
+        }
+
+        // Add new files to the array
+        rpLib.eventsPage.state.uploads.gallery3 = [...rpLib.eventsPage.state.uploads.gallery3, ...files];
+
+        // Show preview for each file
+        files.forEach((file, index) => {
+          rpLib.utils.addImageToGallery("gallery-3", file, index);
+        });
+      });
+
+      // Setup the image replacement for all galleries
+      rpLib.utils.setupGalleryImageReplacement("gallery-1-preview");
+      rpLib.utils.setupGalleryImageReplacement("gallery-2-preview");
+      rpLib.utils.setupGalleryImageReplacement("gallery-3-preview");
 
       // Save event with image uploads
       $("body #save-event").on("click", function () {
@@ -954,11 +1003,11 @@ var rpLib = {
         let uploadPromises = [];
 
         // Upload main image if selected
-        if (mainImageFile) {
+        if (rpLib.eventsPage.state.uploads.mainImage) {
           $("#main-image-upload-status").text("Uploading...");
           let mainImagePromise = new Promise((resolve) => {
             rpLib.api.uploadImage(
-              mainImageFile,
+              rpLib.eventsPage.state.uploads.mainImage,
               function (result) {
                 $("#main-image-upload-status").text("Upload complete!");
                 $("#main-image-preview").attr("src", result.url);
@@ -974,9 +1023,9 @@ var rpLib = {
         }
 
         // Handle each gallery upload
-        let gallery1Promise = rpLib.utils.handleGalleryUpload("gallery-1", gallery1Files);
-        let gallery2Promise = rpLib.utils.handleGalleryUpload("gallery-2", gallery2Files);
-        let gallery3Promise = rpLib.utils.handleGalleryUpload("gallery-3", gallery3Files);
+        let gallery1Promise = rpLib.utils.handleGalleryUpload("gallery-1", rpLib.eventsPage.state.uploads.gallery1);
+        let gallery2Promise = rpLib.utils.handleGalleryUpload("gallery-2", rpLib.eventsPage.state.uploads.gallery2);
+        let gallery3Promise = rpLib.utils.handleGalleryUpload("gallery-3", rpLib.eventsPage.state.uploads.gallery3);
 
         uploadPromises.push(gallery1Promise, gallery2Promise, gallery3Promise);
 
@@ -984,15 +1033,15 @@ var rpLib = {
         Promise.all(uploadPromises).then((results) => {
           // Store the uploaded gallery data
           if (results.length >= 4) {
-            // There are 4 promises now (main image + 3 galleries)
-            $("#main-image-preview").data("uploaded-image", results[0]);
-            $("#gallery-1-preview").data("uploaded-images", results[1]); // Offset by 1 due to main image
-            $("#gallery-2-preview").data("uploaded-images", results[2]);
-            $("#gallery-3-preview").data("uploaded-images", results[3]);
+            // Store the uploaded images in the state
+            rpLib.eventsPage.state.existingGallery1 = results[1]; // Offset by 1 due to main image
+            rpLib.eventsPage.state.existingGallery2 = results[2];
+            rpLib.eventsPage.state.existingGallery3 = results[3];
           } else if (results.length >= 3) {
-            $("#gallery-1-preview").data("uploaded-images", results[0]);
-            $("#gallery-2-preview").data("uploaded-images", results[1]);
-            $("#gallery-3-preview").data("uploaded-images", results[2]);
+            // Store the uploaded images in the state
+            rpLib.eventsPage.state.existingGallery1 = results[0];
+            rpLib.eventsPage.state.existingGallery2 = results[1];
+            rpLib.eventsPage.state.existingGallery3 = results[2];
           }
 
           // Once all uploads are complete, call the appropriate function
@@ -1011,41 +1060,8 @@ var rpLib = {
         });
       });
 
-      rpLib.utils.initCitySelection(function (brandId) {
-        rpLib.api.fetchEventsAndRender(brandId);
-
-          // Set View All link
-          const citySlug = $("#city-select option:selected").attr("data-slug");
-          $('a#view-all').attr('href', `http://www.realproducersmagazine.com/events/${citySlug}`);
-      });
-
-      $("#collection-list").on("click", ".item-edit-btn", function () {
-        let eventId = $(this).closest(".collection-item").attr("data-event-id");
-        let slug = $(this).closest(".collection-item").attr("data-slug");
-
-        // Update modal title for editing
-        $(".collection-item-modal").find("h3").text("Edit Event");
-
-        // Set the event ID for editing
-        $(".collection-item-modal").attr("data-event-id", eventId);
-
-        rpLib.api.fetchEventDetailsAndOpenModal(slug);
-      });
       $("body #close-modal").on("click", function () {
         $(".collection-item-modal").addClass("hidden");
-      });
-
-      // Event listener for delete button click
-      $("body").on("click", ".item-delete-btn", function (event) {
-        const eventId = $(this).closest(".collection-item").attr("data-event-id");
-        const eventName = $(this).closest(".collection-item").find(".event-name").text();
-
-        if (confirm(`Are you sure you want to delete event "${eventName}"?`)) {
-          rpLib.api.archiveItem(EVENTS_COLLECTION_ID, eventId, "Event", function () {
-            // Refresh the list after successful archive
-            rpLib.api.fetchEventsAndRender($("#city-select").val());
-          });
-        }
       });
     },
 
@@ -1160,10 +1176,10 @@ var rpLib = {
         // If we only have existing images that weren't changed
         if (galleryFiles.length === 0 && !$preview.find(".replaced").length) {
           // Just use the existing gallery data
-          const galleryNum = galleryId.split("-")[1];
-          if (galleryNum === "1") resolve(existingGallery1);
-          else if (galleryNum === "2") resolve(existingGallery2);
-          else if (galleryNum === "3") resolve(existingGallery3);
+          const galleryNum = galleryId.split("-")[1]; // eg. #gallery-1-preview
+          if (galleryNum === "1") resolve(rpLib.eventsPage.state.existingGallery1);
+          else if (galleryNum === "2") resolve(rpLib.eventsPage.state.existingGallery2);
+          else if (galleryNum === "3") resolve(rpLib.eventsPage.state.existingGallery3);
           return;
         }
 
@@ -1182,7 +1198,7 @@ var rpLib = {
 
           if (isReplaced) {
             // This image was replaced, get the replacement file
-            const replacementFile = $preview.attr(`data-replaced-${index}`);
+            const replacementFile = $preview.data(`replaced-${index}`);
             if (replacementFile) {
               filesToUpload.push(replacementFile);
               imageMap.push({
@@ -1401,7 +1417,7 @@ var rpLib = {
             $(`#${galleryPreviewId} .thumbnail[data-index="${clickedIndex}"]`).attr("src", e.target.result).addClass("replaced");
 
             // Add to a special mapping for replaced images
-            $(`#${galleryPreviewId}`).attr(`data-replaced-${clickedIndex}`, newFile);
+            $(`#${galleryPreviewId}`).data(`replaced-${clickedIndex}`, newFile);
           };
 
           reader.readAsDataURL(newFile);
@@ -1773,10 +1789,13 @@ var rpLib = {
             $("#event-main-image").val(event.fieldData["main-image"]?.url || "");
             $("#main-image-preview").attr("src", event.fieldData["main-image"]?.url || "");
 
-            // Store existing galleries to handle partial updates
-            existingGallery1 = event.fieldData["image-gallery"] || [];
-            existingGallery2 = event.fieldData["image-gallery-2"] || [];
-            existingGallery3 = event.fieldData["image-gallery-3"] || [];
+            // Store existing galleries in state to handle partial updates
+            const existingGallery1 = event.fieldData["image-gallery"] || [];
+            const existingGallery2 = event.fieldData["image-gallery-2"] || [];
+            const existingGallery3 = event.fieldData["image-gallery-3"] || [];
+            rpLib.eventsPage.state.existingGallery1 = existingGallery1;
+            rpLib.eventsPage.state.existingGallery2 = existingGallery2;
+            rpLib.eventsPage.state.existingGallery3 = existingGallery3;
 
             // Reset the gallery previews
             $("#gallery-1-preview").empty();
@@ -1784,9 +1803,9 @@ var rpLib = {
             $("#gallery-3-preview").empty();
 
             // Reset the file arrays for new uploads
-            gallery1Files = [];
-            gallery2Files = [];
-            gallery3Files = [];
+            rpLib.eventsPage.state.uploads.gallery1 = [];
+            rpLib.eventsPage.state.uploads.gallery2 = [];
+            rpLib.eventsPage.state.uploads.gallery3 = [];
 
             // Display existing gallery 1 images
             if (existingGallery1.length > 0) {
@@ -1882,27 +1901,25 @@ var rpLib = {
       }
 
       // Add main image if there's one uploaded
-      const newMainImage = $("#main-image-preview").attr("data-uploaded-image");
-      if (newMainImage && newMainImage.url) {
-        eventData.fieldData["main-image"] = newMainImage;
+      if (rpLib.eventsPage.state.uploads.mainImage) {
+        const newMainImage = $("#main-image-preview").attr("src");
+        eventData.fieldData["main-image"] = { url: newMainImage };
       }
 
       // Get the gallery data that was uploaded and processed
-      const newGallery1Images = $("#gallery-1-preview").data("uploaded-images");
-      const newGallery2Images = $("#gallery-2-preview").data("uploaded-images");
-      const newGallery3Images = $("#gallery-3-preview").data("uploaded-images");
+      const gallery1Images = rpLib.eventsPage.state.existingGallery1;
+      const gallery2Images = rpLib.eventsPage.state.existingGallery2;
+      const gallery3Images = rpLib.eventsPage.state.existingGallery3;
 
       // Add galleries to the event data if they have images
-      if (newGallery1Images && newGallery1Images.length > 0) {
-        eventData.fieldData["image-gallery"] = newGallery1Images;
+      if (gallery1Images && gallery1Images.length > 0) {
+        eventData.fieldData["image-gallery"] = gallery1Images;
       }
-
-      if (newGallery2Images && newGallery2Images.length > 0) {
-        eventData.fieldData["image-gallery-2"] = newGallery2Images;
+      if (gallery2Images && gallery2Images.length > 0) {
+        eventData.fieldData["image-gallery-2"] = gallery2Images;
       }
-
-      if (newGallery3Images && newGallery3Images.length > 0) {
-        eventData.fieldData["image-gallery-3"] = newGallery3Images;
+      if (gallery3Images && gallery3Images.length > 0) {
+        eventData.fieldData["image-gallery-3"] = gallery3Images;
       }
 
       // Save the event data through the API
