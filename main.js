@@ -32,97 +32,171 @@ var rpLib = {
   },
   dashboardPage: {
     init: function () {
-      rpLib.utils.initCitySelection();
+      rpLib.utils.initCitySelection(
+        function (brandId) {
+          // Hide $(".grid-dashboard-page-link-map .text-link-dashboard.domain") and $(".grid-dashboard-page-link-map .links-to") when city that is selected has the nodes "domain" (with an existing value such as "https://easttexasrealproducers.com") and "setup-complete" (with existing value of true) in the fieldData of the response of the current city selected
+          // A request to https://api.webflow.com/v2/collections/658f30a87b1a52ef8ad0b77b/items/675b701e284d752afdaba6c8 will return 1 city object with the fieldData containing the nodes "domain" and "setup-complete"
+          const selectedCityId = $("#city-select").val();
+          const selectedCitySlug = $("#city-select option:selected").attr("data-slug");
+          const selectedCityUrl = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${BRANDS_COLLECTION_ID}/items/${selectedCityId}`;
+
+
+          $.ajax({
+            url: selectedCityUrl,
+            type: "GET",
+            success: function (response) {
+              const domain = response.fieldData?.domain || null;
+              const setupComplete = response.fieldData?.["setup-complete"] || null;
+              const basePageUrl = 'https://www.realproducersmagazine.com'
+
+              if (domain && setupComplete) {
+                $(".grid-dashboard-page-link-map .text-link-dashboard.domain").show();
+                $(".grid-dashboard-page-link-map .links-to").show();
+
+                // Update the domain links
+                $(".domains-and-pages .home-domain-btn").attr("href", domain).text(domain);
+                $(".domains-and-pages .issues-domain-btn").attr("href", domain + "/issues");
+                $(".domains-and-pages .events-domain-btn").attr("href", domain + "/events");
+                $(".domains-and-pages .partners-domain-btn").attr("href", domain + "/partners");
+                $(".domains-and-pages .promos-domain-btn").attr("href", domain + "/promos");
+                $(".domains-and-pages .hello-agents-domain-btn").attr("href", domain + "/hello-agents");
+                $(".domains-and-pages .hello-partners-domain-btn").attr("href", domain + "/hello-partners");
+              } else {
+                $(".grid-dashboard-page-link-map .text-link-dashboard.domain").hide();
+                $(".grid-dashboard-page-link-map .links-to").hide();
+
+
+              }
+
+              // Update the page links
+              $(".domains-and-pages .home-page-btn").attr("href", basePageUrl + "/home/" + selectedCitySlug);
+              $(".domains-and-pages .issues-page-btn").attr("href", basePageUrl + "/issues/" + selectedCitySlug);
+              $(".domains-and-pages .events-page-btn").attr("href", basePageUrl + "/events/" + selectedCitySlug);
+              $(".domains-and-pages .partners-page-btn").attr("href", basePageUrl + "/partners/" + selectedCitySlug);
+              $(".domains-and-pages .promos-page-btn").attr("href", basePageUrl + "/promos/" + selectedCitySlug);
+              $(".domains-and-pages .hello-agents-page-btn").attr("href", basePageUrl + "/hello-agents/" + selectedCitySlug);
+              $(".domains-and-pages .hello-partners-page-btn").attr("href", basePageUrl + "/hello-partners/" + selectedCitySlug);
+
+              // Update the text in the .domains-and-pages list
+              $(".domains-and-pages a.text-link-dashboard").each(function () {
+                // replace text with href
+                const href = $(this).attr("href");
+                $(this).text(href);
+              });
+
+            },
+          });
+
+        }
+      );
     },
   },
   usersPage: {
+    state: {
+      uploads: {
+        profilePic: null,
+        fullPic: null,
+      },
+    },
     init: function () {
-      // Append modal dynamically for editing user details until frontend components are available
-      $("body").append(`
-        <div id="collection-item-modal" class="hidden collection-item-modal">
-            <div class="collection-item-modal-content">
-                <h3>Edit User</h3>
-                <label>First Name:</label><input type="text" id="user-first-name">
-                <label>Last Name:</label><input type="text" id="user-last-name">
-                <label>Title:</label><input type="text" id="user-title">
-                
-                <div>
-                    <label>Profile Picture:</label>
-                    <div class="image-upload-container">
-                        <div class="upload-section">
-                            <span id="profile-pic-upload-status"></span>
-                        </div>
-                        <div class="image-preview">
-                            <img id="profile-pic-preview" src="" alt="Profile Picture Preview">
-                        </div>
-                    </div>
-                </div>
-                
-                <div>
-                    <label>Full Picture:</label>
-                    <div class="image-upload-container">
-                        <div class="upload-section">
-                            <span id="full-pic-upload-status"></span>
-                        </div>
-                        <div class="image-preview">
-                            <img id="full-pic-preview" src="" alt="Full Picture Preview">
-                        </div>
-                    </div>
-                </div>
-                
-                <label>Email:</label><input type="email" id="user-email">
-                <label>Phone:</label><input type="text" id="user-phone">
-                <label>Bio:</label><textarea id="user-bio"></textarea>
-                <label>URL Facebook:</label><input type="text" id="user-url-facebook">
-                <label>URL Instagram:</label><input type="text" id="user-url-instagram">
-                <label>URL X:</label><input type="text" id="user-url-x">
-                <label>URL YouTube:</label><input type="text" id="user-url-youtube">
-                <label>URL LinkedIn:</label><input type="text" id="user-url-linkedin">
-                <label>URL TikTok:</label><input type="text" id="user-url-tiktok">
-                <label>Facebook Pixel ID:</label><input type="text" id="user-facebook-pixel-id">
-                <label>Google Analytics ID:</label><input type="text" id="user-google-analytics-id">
-                <button id="save-user">Save</button>
-                <button id="close-modal">Close</button>
-            </div>
-        </div>
-      `);
-      // Add CSS for the image upload components until frontend components are available
-      $("head").append(`
-      <style>
-        .image-upload-container {
-            margin-bottom: 15px;
-        }
-        .upload-section {
-            margin: 10px 0;
-            display: flex;
-            align-items: center;
-        }
-        .upload-section span {
-            margin-left: 10px;
-            font-size: 0.85em;
-            color: #666;
-        }
-        .image-preview {
-            margin-top: 10px;
-        }
-        .image-preview img {
-            max-width: 150px;
-            max-height: 150px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 3px;
-        }
-      </style>
-      `);
+      // // Append modal dynamically for editing user details until frontend components are available
+      // $("body").append(`
+      //   <div id="collection-item-modal" class="hidden collection-item-modal">
+      //       <div class="collection-item-modal-content">
+      //           <h3>Edit User</h3>
+      //           <label>First Name:</label><input type="text" id="user-first-name">
+      //           <label>Last Name:</label><input type="text" id="user-last-name">
+      //           <label>Title:</label><input type="text" id="user-title">
+      //           
+      //           <div>
+      //               <label>Profile Picture:</label>
+      //               <div class="image-upload-container">
+      //                   <div class="upload-section">
+      //                       <span id="profile-pic-upload-status"></span>
+      //                   </div>
+      //                   <div class="image-preview">
+      //                       <img id="profile-pic-preview" src="" alt="Profile Picture Preview">
+      //                   </div>
+      //               </div>
+      //           </div>
+      //           
+      //           <div>
+      //               <label>Full Picture:</label>
+      //               <div class="image-upload-container">
+      //                   <div class="upload-section">
+      //                       <span id="full-pic-upload-status"></span>
+      //                   </div>
+      //                   <div class="image-preview">
+      //                       <img id="full-pic-preview" src="" alt="Full Picture Preview">
+      //                   </div>
+      //               </div>
+      //           </div>
+      //           
+      //           <label>Email:</label><input type="email" id="user-email">
+      //           <label>Phone:</label><input type="text" id="user-phone">
+      //           <label>Bio:</label><textarea id="user-bio"></textarea>
+      //           <label>URL Facebook:</label><input type="text" id="user-url-facebook">
+      //           <label>URL Instagram:</label><input type="text" id="user-url-instagram">
+      //           <label>URL X:</label><input type="text" id="user-url-x">
+      //           <label>URL YouTube:</label><input type="text" id="user-url-youtube">
+      //           <label>URL LinkedIn:</label><input type="text" id="user-url-linkedin">
+      //           <label>URL TikTok:</label><input type="text" id="user-url-tiktok">
+      //           <button id="save-user">Save</button>
+      //           <button id="close-modal">Close</button>
+      //       </div>
+      //   </div>
+      // `);
+      // // Add CSS for the image upload components until frontend components are available
+      // $("head").append(`
+      // <style>
+      //   .image-upload-container {
+      //       margin-bottom: 15px;
+      //   }
+      //   .upload-section {
+      //       margin: 10px 0;
+      //       display: flex;
+      //       align-items: center;
+      //   }
+      //   .upload-section span {
+      //       margin-left: 10px;
+      //       font-size: 0.85em;
+      //       color: #666;
+      //   }
+      //   .image-preview {
+      //       margin-top: 10px;
+      //   }
+      //   .image-preview img {
+      //       max-width: 150px;
+      //       max-height: 150px;
+      //       border: 1px solid #ddd;
+      //       border-radius: 4px;
+      //       padding: 3px;
+      //   }
+      // </style>
+      // `);
 
       rpLib.utils.initCitySelection( function(brandId) {
-          rpLib.api.fetchBrandUsersAndRender(brandId);
+        // On city selected
+        rpLib.api.fetchBrandUsersAndRender(brandId);
 
-          // Set View All link
-          const citySlug = $("#city-select option:selected").attr("data-slug");
-          $('a#view-all').attr('href', `http://www.realproducersmagazine.com/users/${citySlug}`);
+        // Set View All link
+        const citySlug = $("#city-select option:selected").attr("data-slug");
+        $('a#view-all').attr('href', `http://www.realproducersmagazine.com/users/${citySlug}`);
+
+        // Show the View All link and the Create New button (link)
+        $("#view-all").removeClass("hidden");
+        $(".lib-create-item-btn").removeClass("hidden");
       });
 
+      this.bindEventListeners();
+    },
+    bindEventListeners: function () {
+      this.bindCreateUserEvents();
+      this.bindEditUserEvents();
+      this.bindDeleteUserEvents();
+      this.bindModalEvents();
+    },
+    bindCreateUserEvents: function () {
       // Event listener for create button click
       $("body").on("click", ".lib-create-item-btn", function (event) {
         // Clear modal data attribute to indicate this is a new item
@@ -146,19 +220,24 @@ var rpLib = {
         $("#user-url-youtube").val("");
         $("#user-url-linkedin").val("");
         $("#user-url-tiktok").val("");
-        $("#user-facebook-pixel-id").val("");
-        $("#user-google-analytics-id").val("");
 
         // Clear image previews
-        $("#profile-pic-preview").attr("src", "");
-        $("#full-pic-preview").attr("src", "");
+        $("#profile-pic-preview").attr("src", profilePicPlaceholderImg);
+        $("#full-pic-preview").attr("src", profilePicPlaceholderImg);
         $("#profile-pic-upload-status").text("");
         $("#full-pic-upload-status").text("");
+
+        // Init/Reset rich text editor for user bio
+        rpLib.utils.initRichTextEditor(
+          "user-bio",
+          "Share user bio or info here..."
+        );
 
         // Show the modal
         $(".collection-item-modal").removeClass("hidden");
       });
-
+    },
+    bindEditUserEvents: function () {
       // Event listener for edit button click and open modal
       $("body").on("click", ".item-edit-btn", function (event) {
         let userId = $(this).closest(".collection-item").attr('data-user-id');
@@ -173,28 +252,8 @@ var rpLib = {
         // Fetch and populate user details
         rpLib.api.fetchUserDetailsAndOpenModal(slug);
       });
-
-      // Close modal
-      $("#close-modal").on("click", function () {
-        $(".collection-item-modal").addClass("hidden");
-      });
-
-      // Store file references
-      let profilePicFile = null;
-      let fullPicFile = null;
-
-      // On profile pic preview replacement click, open file dialog
-      rpLib.utils.setupSingleImgPreviewReplacement("profile-pic-preview", function(newFile) {
-        $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
-        profilePicFile = newFile;
-      });
-
-      // On full pic preview replacement click, open file dialog
-      rpLib.utils.setupSingleImgPreviewReplacement("full-pic-preview", function(newFile) {
-        $("#full-pic-upload-status").text("Image selected (will upload when saved)");
-        fullPicFile = newFile;
-      });
-
+    },
+    bindDeleteUserEvents: function () {
       // Event listener for delete button click
       $("body").on("click", ".item-delete-btn", function (event) {
         const userId = $(this).closest(".collection-item").attr("data-user-id");
@@ -207,81 +266,111 @@ var rpLib = {
           });
         }
       });
+    },
+    bindModalEvents: function () {
+      // Event listener on url inputs to add "http://" to website URL if not present
+      $(document).on('blur', '.collection-item-modal input[type="url"]', function() {
+        const url = $(this).val().trim();
+    
+        const urlWithProtocol = rpLib.utils.formatUrlWithProtocol(url);
+        $(this).val(urlWithProtocol);
+      });
 
-      // Save user details
+      // On save button click
       $("#save-user").on("click", function () {
-        const userId = $(".collection-item-modal").attr("data-user-id");
-        const isCreatingNewUser = !userId; // Check if we're creating a new user
+        rpLib.usersPage.handleSaveUserClick(
+          rpLib.usersPage.state.uploads.profilePic,
+          rpLib.usersPage.state.uploads.fullPic
+        );
+      });
 
-        let uploadPromises = [];
 
-        // Show saving status
-        $("#save-user").text("Uploading images...");
-        $("#save-user").prop("disabled", true);
-
-        // Upload profile pic if needed
-        if (profilePicFile) {
-          $("#profile-pic-upload-status").text("Uploading...");
-          let profilePicPromise = new Promise((resolve) => {
-            rpLib.api.uploadImage(
-              profilePicFile,
-              function (result) {
-                $("#profile-pic-upload-status").text("Upload complete!");
-                $("#profile-pic-preview").attr("src", result.url);
-                resolve(result); // Resolve when upload succeeds
-              },
-              function (error) {
-                $("#profile-pic-upload-status").text("Upload failed: " + error.statusText);
-                resolve(); // Resolve even if upload fails
-              }
-            );
-          });
-          uploadPromises.push(profilePicPromise);
-        }
-
-        // Upload full pic if needed
-        if (fullPicFile) {
-          $("#full-pic-upload-status").text("Uploading...");
-          let fullPicPromise = new Promise((resolve) => {
-            rpLib.api.uploadImage(
-              fullPicFile,
-              function (result) {
-                $("#full-pic-upload-status").text("Upload complete!");
-                $("#full-pic-preview").attr("src", result.url);
-                resolve(result);
-              },
-              function (error) {
-                $("#full-pic-upload-status").text("Upload failed: " + error.statusText);
-                resolve();
-              }
-            );
-          });
-          uploadPromises.push(fullPicPromise);
-        }
-
-        // Wait for all uploads to finish before saving and closing modal
-        Promise.all(uploadPromises).then((results) => {
-          // Store the uploaded image URLs in the preview fields data attribute
-          if (profilePicFile) {
-            $("#profile-pic-preview").attr("data-uploaded-image", results[0]);
-          }
-          if (fullPicFile) {
-            $("#full-pic-preview").attr("data-uploaded-image", results[1]);
-          }
-
-          if (isCreatingNewUser) {
-            rpLib.api.createUserAndRefreshList($("#city-select").val());
-          } else {
-            rpLib.api.updateUserAndRefreshList(userId);
-          }
-
-          // Reset button text and re-enable it
-          $("#save-user").text("Save");
-          $("#save-user").prop("disabled", false);
-
-          // Close the modal
+      // Close modal
+      $("#close-modal").on("click", function () {
+        // Ask for confirmation before closing the modal
+        if (confirm("Are you sure you want to close the modal? Any unsaved changes will be lost.")) {
           $(".collection-item-modal").addClass("hidden");
+        }
+      });
+
+
+      // On profile pic preview replacement click, open file dialog
+      rpLib.utils.setupSingleImgPreviewReplacement("profile-pic-preview", function(newFile) {
+        $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
+        rpLib.usersPage.state.uploads.profilePic = newFile;
+      });
+
+      // On full pic preview replacement click, open file dialog
+      rpLib.utils.setupSingleImgPreviewReplacement("full-pic-preview", function(newFile) {
+        $("#full-pic-upload-status").text("Image selected (will upload when saved)");
+        rpLib.usersPage.state.uploads.fullPic = newFile;
+      });
+    },
+    handleSaveUserClick: function (profilePicFile, fullPicFile) {
+      const userId = $(".collection-item-modal").attr("data-user-id");
+      const isCreatingNewUser = !userId; // Check if we're creating a new user
+
+      let uploadPromises = [];
+
+      // Show saving status
+      $("#save-user").text("Uploading images...");
+      $("#save-user").prop("disabled", true);
+
+      // Upload profile pic if needed
+      if (rpLib.usersPage.state.uploads.profilePic) {
+        $("#profile-pic-upload-status").text("Uploading...");
+        let profilePicPromise = new Promise((resolve) => {
+          rpLib.api.uploadImage(
+            rpLib.usersPage.state.uploads.profilePic,
+            function (result) {
+              $("#profile-pic-upload-status").text("Upload complete!");
+              $("#profile-pic-preview").attr("src", result.url);
+              resolve(result); // Resolve when upload succeeds
+            },
+            function (error) {
+              $("#profile-pic-upload-status").text("Upload failed: " + error.statusText);
+              resolve(); // Resolve even if upload fails
+            }
+          );
         });
+        uploadPromises.push(profilePicPromise);
+      }
+
+      // Upload full pic if needed
+      if (fullPicFile) {
+        $("#full-pic-upload-status").text("Uploading...");
+        let fullPicPromise = new Promise((resolve) => {
+          rpLib.api.uploadImage(
+            fullPicFile,
+            function (result) {
+              $("#full-pic-upload-status").text("Upload complete!");
+              $("#full-pic-preview").attr("src", result.url);
+              resolve(result);
+            },
+            function (error) {
+              $("#full-pic-upload-status").text("Upload failed: " + error.statusText);
+              resolve();
+            }
+          );
+        });
+        uploadPromises.push(fullPicPromise);
+      }
+
+      // Wait for all uploads to finish before saving and closing modal
+      Promise.all(uploadPromises).then((results) => {
+        if (isCreatingNewUser) {
+          const brandId = $("#city-select").val();
+          rpLib.api.createUserAndRefreshList(brandId, profilePicFile, fullPicFile);
+        } else {
+          rpLib.api.updateUserAndRefreshList(userId, profilePicFile, fullPicFile);
+        }
+
+        // Reset button text and re-enable it
+        $("#save-user").text("Save");
+        $("#save-user").prop("disabled", false);
+
+        // Close the modal
+        $(".collection-item-modal").addClass("hidden");
       });
     },
     renderUser: function (user) {
@@ -1428,7 +1517,7 @@ var rpLib = {
     initRichTextEditor: function (editorId, placeholderContent = "", existingContent = "") {
       // Reset editor elements
       $(`#${editorId}`).prev('.ql-toolbar').remove();
-      $("#partner-description").replaceWith(`<div id="partner-description">${existingContent}</div>`);
+      $(`#${editorId}`).replaceWith(`<div id="${editorId}">${existingContent}</div>`);
 
       const quill = new Quill(`#${editorId}`, {
         modules: {
@@ -1446,7 +1535,7 @@ var rpLib = {
       return cleanedHTML;
     },
     formatUrlWithProtocol: function (url) {
-      if (url && !url.startswith('http://') && !url.startswith('https://')) {
+      if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
         return 'http://' + url;
       }
       return url; 
@@ -1646,7 +1735,7 @@ var rpLib = {
             rpLib.utils.initRichTextEditor(
               "partner-description",
               "Share partner bio or info here...",
-              partner.fieldData["description"]
+              partner.fieldData["description"] || ""
             );
 
             // Show the modal
@@ -1674,7 +1763,6 @@ var rpLib = {
           "url-youtube": $("#partner-youtube").val(),
           "url-linkedin": $("#partner-linkedin").val(),
           "url-tiktok": $("#partner-tiktok").val(),
-          description: $("#partner-description").val(),
           "preview-text": $("#partner-preview-text").val(),
           address: $("#partner-address").val(),
           "city-state-zip": $("#partner-city").val(),
@@ -1958,21 +2046,32 @@ var rpLib = {
             $("#user-last-name").val(user.fieldData["last-name"] || "");
             $("#user-title").val(user.fieldData.title || "");
             $("#user-profile-pic").val(user.fieldData["profile-picture"]?.url || "");
-            $("#profile-pic-preview").attr("src", user.fieldData["profile-picture"]?.url || "");
-            $("#user-full-pic").val(user.fieldData["full-picture"]?.url || "");
             $("#full-pic-preview").attr("src", user.fieldData["full-picture"]?.url || "");
             $("#user-email").val(user.fieldData.email || "");
             $("#user-phone").val(user.fieldData.phone || "");
-            $("#user-bio").val(user.fieldData.bio || "");
             $("#user-url-facebook").val(user.fieldData["url-facebook"] || "");
             $("#user-url-instagram").val(user.fieldData["url-instagram"] || "");
             $("#user-url-x").val(user.fieldData["url-x"] || "");
             $("#user-url-youtube").val(user.fieldData["url-youtube"] || "");
             $("#user-url-linkedin").val(user.fieldData["url-linkedin"] || "");
             $("#user-url-tiktok").val(user.fieldData["url-tiktok"] || "");
-            $("#user-facebook-pixel-id").val(user.fieldData["facebook-pixel-id"] || "");
-            $("#user-google-analytics-id").val(user.fieldData["google-analytics-id"] || "");
+            if (user.fieldData["profile-picture"]?.url) {
+              $("#profile-pic-preview").attr("src", user.fieldData["profile-picture"]?.url);
+              $("#profile-pic-preview").removeAttr("srcset");
+            }
+            if (user.fieldData["full-picture"]?.url) {
+              $("#full-pic-preview").attr("src", user.fieldData["full-picture"]?.url);
+              $("#full-pic-preview").removeAttr("srcset");
+            }
 
+            // Init rich text editor for user bio
+            rpLib.utils.initRichTextEditor(
+              "user-bio",
+              "Share user bio or info here...",
+              user.fieldData.bio || ""
+            );
+
+            // Show the modal
             $(".collection-item-modal").removeClass("hidden");
           }
         },
@@ -1982,7 +2081,7 @@ var rpLib = {
       });
     },
 
-    updateUserAndRefreshList: function (userId) {
+    updateUserAndRefreshList: function (userId, newProfilePicFile, newFullPicFile) {
       let updatedData = {
         fieldData: {
           "first-name": $("#user-first-name").val(),
@@ -1993,28 +2092,30 @@ var rpLib = {
           "full-picture": $("#full-pic-preview").attr("uploaded-image"),
           email: $("#user-email").val(),
           phone: $("#user-phone").val(),
-          bio: $("#user-bio").val(),
           "url-facebook": $("#user-url-facebook").val(),
           "url-instagram": $("#user-url-instagram").val(),
           "url-x": $("#user-url-x").val(),
           "url-youtube": $("#user-url-youtube").val(),
           "url-linkedin": $("#user-url-linkedin").val(),
           "url-tiktok": $("#user-url-tiktok").val(),
-          "facebook-pixel-id": $("#user-facebook-pixel-id").val(),
-          "google-analytics-id": $("#user-google-analytics-id").val(),
         },
       };
 
+      // get bio from quill editor
+      updatedData.fieldData["bio"] = rpLib.utils.cleanQuillInnerHTMLToWf(
+        document.querySelector("#user-bio .ql-editor").innerHTML
+      );
+
       // Add profile picture if available
-      let newProfilePic = $("#profile-pic-preview").attr("data-uploaded-image");
-      if (newProfilePic && newProfilePic.url) {
-        updatedData.fieldData["profile-picture"] = newProfilePic;
+      if (newProfilePicFile) {
+        const newImgUrl = $("#profile-pic-preview").attr('src');
+        updatedData.fieldData["profile-picture"] = { url: newImgUrl };
       }
 
       // Add full picture if available
-      let newFullPic = $("#full-pic-preview").attr("data-uploaded-image");
-      if (newFullPic && newFullPic.url) {
-        updatedData.fieldData["full-picture"] = newFullPic;
+      if (newFullPicFile) {
+        const newImgUrl = $("#full-pic-preview").attr('src');
+        updatedData.fieldData["full-picture"] = { url: newImgUrl };
       }
 
       $.ajax({
@@ -2180,30 +2281,31 @@ var rpLib = {
           title: $("#user-title").val(),
           email: $("#user-email").val(),
           phone: $("#user-phone").val(),
-          bio: $("#user-bio").val(),
           "url-facebook": $("#user-url-facebook").val(),
           "url-instagram": $("#user-url-instagram").val(),
           "url-x": $("#user-url-x").val(),
           "url-youtube": $("#user-url-youtube").val(),
           "url-linkedin": $("#user-url-linkedin").val(),
           "url-tiktok": $("#user-url-tiktok").val(),
-          "facebook-pixel-id": $("#user-facebook-pixel-id").val(),
-          "google-analytics-id": $("#user-google-analytics-id").val(),
-          // Set the brand relationship
-          "brand-s": [brandId],
+          "brand-s": [brandId], // Set the brand relationship
         },
       };
 
+      // get bio from quill editor
+      newUserData.fieldData["bio"] = rpLib.utils.cleanQuillInnerHTMLToWf(
+        document.querySelector("#user-bio .ql-editor").innerHTML
+      );
+
       // Add profile picture if available
-      let newProfilePic = $("#profile-pic-preview").attr("data-uploaded-image");
-      if (newProfilePic && newProfilePic.url) {
-        newUserData.fieldData["profile-picture"] = newProfilePic;
+      if (newProfilePic) {
+        const newImgUrl = $("#profile-pic-preview").attr('src');
+        newUserData.fieldData["profile-picture"] = { url: newImgUrl };
       }
 
       // Add full picture if available
-      let newFullPic = $("#full-pic-preview").attr("data-uploaded-image");
-      if (newFullPic && newFullPic.url) {
-        newUserData.fieldData["full-picture"] = newFullPic;
+      if (newFullPic) {
+        const newImgUrl = $("#full-pic-preview").attr('src');
+        newUserData.fieldData["full-picture"] = { url: newImgUrl };
       }
 
       $.ajax({
@@ -2243,7 +2345,6 @@ var rpLib = {
           "url-youtube": $("#partner-youtube").val(),
           "url-linkedin": $("#partner-linkedin").val(),
           "url-tiktok": $("#partner-tiktok").val(),
-          description: $("#partner-description").val(),
           "preview-text": $("#partner-preview-text").val(),
           address: $("#partner-address").val(),
           "city-state-zip": $("#partner-city").val(),
@@ -2254,6 +2355,11 @@ var rpLib = {
           city: [brandId],
         },
       };
+
+      // get description from quill editor
+      newPartnerData.fieldData["description"] = rpLib.utils.cleanQuillInnerHTMLToWf(
+        document.querySelector("#partner-description .ql-editor").innerHTML
+      );
 
       // Add profile picture if available
       if (newProfilePicFile) {
