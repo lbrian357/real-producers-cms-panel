@@ -466,6 +466,13 @@ var rpLib = {
       templateRowItem.find(".partner-email").text(partner.fieldData.email || "");
       templateRowItem.find(".item-view-btn").attr("href", `http://www.realproducersmagazine.com/partner/${partner.fieldData.slug}` || "");
 
+      const $showOrHideCheckbox = templateRowItem.find("div[title='show or hide'] .switch input");
+      if (partner.fieldData["show-partner"] === true) {
+        $showOrHideCheckbox.prop("checked", true);
+      } else {
+        $showOrHideCheckbox.prop("checked", false);
+      }
+
       $("#collection-list").append(templateRowItem);
     },
     handleSavePartnerClick: function (profilePicFile, logoFile, adImageFile) {
