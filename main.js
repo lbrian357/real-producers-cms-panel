@@ -361,6 +361,7 @@ var rpLib = {
       this.bindCreatePartnerEvents();
       this.bindEditPartnerEvents();
       this.bindDeletePartnerEvents();
+      this.bindShowHideEvents();
       this.bindModalEvents();
     },
     bindCreatePartnerEvents: function () {
@@ -407,6 +408,16 @@ var rpLib = {
             rpLib.api.fetchPartnersAndRender($("#city-select").val());
           });
         }
+      });
+    },
+    bindShowHideEvents: function () {
+      // if the checkbox input (div[title='show or hide'] .switch input)  is changed, update the partner's "show-partner" field
+      $("body").on("change", "div[title='show or hide'] .switch input", function () {
+        const partnerId = $(this).closest(".collection-item").attr("data-partner-id");
+        const showPartner = $(this).is(":checked");
+
+        // Update the partner's "show-partner" field
+        rpLib.api.updatePartnerShowHide(partnerId, showPartner);
       });
     },
     bindModalEvents: function () {
@@ -620,6 +631,10 @@ var rpLib = {
           // Set View All link
           const citySlug = $("#city-select option:selected").attr("data-slug");
           $('a#view-all').attr('href', `http://www.realproducersmagazine.com/events/${citySlug}`);
+
+          // Show the View All link and the Create New button (link)
+          $("#view-all").removeClass("hidden");
+          $(".lib-create-item-btn").removeClass("hidden");
       });
 
       this.bindEventListeners();
@@ -1545,6 +1560,38 @@ var rpLib = {
           }
           else {
             alert("Error updating partner. Please try again. Error status:" + errorRes.status);
+          }
+        },
+      });
+    },
+    updatePartnerShowHide: function (partnerId, showPartner) {
+      $.ajax({
+        url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNERS_COLLECTION_ID}/items/${partnerId}/live`,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "PATCH",
+        data: JSON.stringify({
+          fieldData: {
+            "show-partner": showPartner,
+          },
+        }),
+        success: function () {
+          alert("Success! Partner profile updated. \n\n Click the eyeball icon to view your updates.");
+        },
+        error: function (errorRes) {
+          console.error("Error updating partner:", errorRes);
+
+          // Handle Validation Error and list the fields that failed validation in the alert
+          if (errorRes.responseJSON && errorRes.responseJSON?.code === "validation_error" && errorRes.responseJSON?.details.length > 0) {
+            let failedFields = errorRes.responseJSON.details.map((detail) => (
+              `${detail.param}—${detail.description}`
+            ));
+            alert("Error updating partner. Please try again. Failed fields: " + failedFields.join(", "));
+          }
+          else {
+            alert("Error updating partner. Please try again. Error status:" + errorRes.status);
+            rpLib.api.fetchPartnersAndRender($("#city-select").val()); // Refresh list
           }
         },
       });
