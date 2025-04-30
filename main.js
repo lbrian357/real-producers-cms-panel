@@ -309,6 +309,14 @@ var rpLib = {
       templateRowItem.find(".user-email").text(user.fieldData.email || "");
       templateRowItem.find(".item-view-btn").attr("href", `https://www.realproducersmagazine.com/user/${user.fieldData.slug}` || "");
 
+
+      const $showOrHideCheckbox = templateRowItem.find("div[title='show or hide'] .switch input");
+      if (user.fieldData["show-user"] === true) {
+        $showOrHideCheckbox.prop("checked", true);
+      } else {
+        $showOrHideCheckbox.prop("checked", false);
+      }
+
       $("#collection-list").append(templateRowItem);
     },
   },
@@ -644,6 +652,7 @@ var rpLib = {
       this.bindEditEventEvents();
       this.bindDeleteEventEvents();
       this.bindModalEvents();
+      this.bindShowHideEvents();
     },
     bindCreateEventEvents: function () {
       // Event listener for create button click
@@ -729,14 +738,26 @@ var rpLib = {
         }
       });
     },
+    bindShowHideEvents: function () {
+      // if the checkbox input (div[title='show or hide'] .switch input)  is changed, update the event's "show-event" field
+      $("body").on("change", "div[title='show or hide'] .switch input", function () {
+        const eventId = $(this).closest(".collection-item").attr("data-event-id");
+        const showEvent = $(this).is(":checked");
+        // Update the event's "show-event" field
+        rpLib.api.updateEventShowHide(eventId, showEvent);
+      });
+    },
     bindModalEvents: function () {
-      // On main image preview replacement click, open file dialog
-      rpLib.utils.setupSingleImgPreviewReplacement("main-image-preview", function(newFile) {
+      rpLib.utils.setupSingleImgPreviewReplacement("event-main-img-preview", function(newFile) {
         // Update the status text after selecting a new image
-        $("#main-image-upload-status").text("Image selected (will upload when saved)");
+        $("#event-main-img-upload-status").text("Image selected (will upload when saved)");
 
         // Update uploads state to indicate a new file was selected
         rpLib.eventsPage.state.uploads.mainImage = newFile;
+      });
+      rpLib.utils.setupSingleImgPreviewReplacement("flyer-img-preview", function(newFile) {
+        $("#flyer-img-status").text("Image selected (will upload when saved)");
+        rpLib.partnersPage.state.uploads.logo = newFile;
       });
 
       // Gallery 1 Preview Handler
@@ -895,7 +916,6 @@ var rpLib = {
         $(".collection-item-modal").addClass("hidden");
       });
     },
-
     renderEvent: function (event) {
       const templateRowItem = $(".collection-item-row-template").clone();
       templateRowItem.removeClass("collection-item-row-template");
@@ -913,6 +933,13 @@ var rpLib = {
       }
       templateRowItem.find(".event-location").text(event.fieldData["location-name"] || "");
       templateRowItem.find(".item-view-btn").attr("href", `https://www.realproducersmagazine.com/event/${event.fieldData.slug}` || "");
+
+      const $showOrHideCheckbox = templateRowItem.find("div[title='show or hide'] .switch input");
+      if (event.fieldData["show-event"] === true) {
+        $showOrHideCheckbox.prop("checked", true);
+      } else {
+        $showOrHideCheckbox.prop("checked", false);
+      }
 
       $("#collection-list").append(templateRowItem);
     },
@@ -1592,6 +1619,36 @@ var rpLib = {
           else {
             alert("Error updating partner. Please try again. Error status:" + errorRes.status);
             rpLib.api.fetchPartnersAndRender($("#city-select").val()); // Refresh list
+          }
+        },
+      });
+    },
+    updateEventShowHide: function (eventId, showEvent) {
+      $.ajax({
+        url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${EVENTS_COLLECTION_ID}/items/${eventId}/live`,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "PATCH",
+        data: JSON.stringify({
+          fieldData: {
+            "show-event": showEvent,
+          },
+        }),
+        success: function () {
+          alert("Success! Event profile updated. \n\n Click the eyeball icon to view your updates.");
+        },
+        error: function (errorRes) {
+          console.error("Error updating event:", errorRes);
+          // Handle Validation Error and list the fields that failed validation in the alert
+          if (errorRes.responseJSON && errorRes.responseJSON?.code === "validation_error" && errorRes.responseJSON?.details.length > 0) {
+            let failedFields = errorRes.responseJSON.details.map((detail) => (
+              `${detail.param}—${detail.description}`
+            ));
+            alert("Error updating event. Please try again. Failed fields: " + failedFields.join(", "));
+          }
+          else {
+            alert("Error updating event. Please try again. Error status:" + errorRes.status);
           }
         },
       });
