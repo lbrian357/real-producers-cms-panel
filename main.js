@@ -32,14 +32,17 @@ var rpLib = {
   },
   dashboardPage: {
     init: function () {
-      rpLib.utils.initCitySelection(
+      // Hide content that requires a city selection
+      $(".grid-main-account-dashboard .grid-dashboard-section").hide();
+
+      rpLib.utils.initCitySelection( // On city selected
         function (brandId) {
-          // Hide $(".grid-dashboard-page-link-map .text-link-dashboard.domain") and $(".grid-dashboard-page-link-map .links-to") when city that is selected has the nodes "domain" (with an existing value such as "https://easttexasrealproducers.com") and "setup-complete" (with existing value of true) in the fieldData of the response of the current city selected
-          // A request to https://api.webflow.com/v2/collections/658f30a87b1a52ef8ad0b77b/items/675b701e284d752afdaba6c8 will return 1 city object with the fieldData containing the nodes "domain" and "setup-complete"
+          // Show the content that requires a city selection
+          $(".grid-main-account-dashboard .grid-dashboard-section").show();
+
           const selectedCityId = $("#city-select").val();
           const selectedCitySlug = $("#city-select option:selected").attr("data-slug");
           const selectedCityUrl = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${BRANDS_COLLECTION_ID}/items/${selectedCityId}`;
-
 
           $.ajax({
             url: selectedCityUrl,
@@ -83,10 +86,8 @@ var rpLib = {
                 const href = $(this).attr("href");
                 $(this).text(href);
               });
-
             },
           });
-
         }
       );
     },
@@ -99,17 +100,17 @@ var rpLib = {
       },
     },
     init: function () {
-      rpLib.utils.initCitySelection( function(brandId) {
-        // On city selected
+      rpLib.utils.initCitySelection( function(brandId) { // On city selected
         rpLib.api.fetchBrandUsersAndRender(brandId);
 
         // Set View All link
         const citySlug = $("#city-select option:selected").attr("data-slug");
         $('a#view-all').attr('href', `http://www.realproducersmagazine.com/users/${citySlug}`);
 
-        // Show the View All link and the Create New button (link)
+        // Show elements that are hidden by default until a city is selected
         $("#view-all").removeClass("hidden");
         $(".lib-create-item-btn").removeClass("hidden");
+        $(".grid-header-row").removeClass("hidden");
       });
 
       this.bindEventListeners();
@@ -310,7 +311,7 @@ var rpLib = {
       templateRowItem.find(".item-view-btn").attr("href", `https://www.realproducersmagazine.com/user/${user.fieldData.slug}` || "");
 
 
-      const $showOrHideCheckbox = templateRowItem.find("div[title='show or hide'] .switch input");
+      const $showOrHideCheckbox = templateRowItem.find(".show-hide-switch .switch input");
       if (user.fieldData["show-user"] === true) {
         $showOrHideCheckbox.prop("checked", true);
       } else {
@@ -356,9 +357,10 @@ var rpLib = {
           const citySlug = $("#city-select option:selected").attr("data-slug");
           $('a#view-all').attr('href', `http://www.realproducersmagazine.com/partners/${citySlug}`);
 
-          // Show the View All link and the Create New button (link)
+          // Show elements that are hidden by default until a city is selected
           $("#view-all").removeClass("hidden");
           $(".lib-create-item-btn").removeClass("hidden");
+          $(".grid-header-row").removeClass("hidden");
         });
       });
 
@@ -419,8 +421,8 @@ var rpLib = {
       });
     },
     bindShowHideEvents: function () {
-      // if the checkbox input (div[title='show or hide'] .switch input)  is changed, update the partner's "show-partner" field
-      $("body").on("change", "div[title='show or hide'] .switch input", function () {
+      // if the checkbox input (.show-hide-switch .switch input)  is changed, update the partner's "show-partner" field
+      $("body").on("change", ".show-hide-switch .switch input", function () {
         const partnerId = $(this).closest(".collection-item").attr("data-partner-id");
         const showPartner = $(this).is(":checked");
 
@@ -485,7 +487,7 @@ var rpLib = {
       templateRowItem.find(".partner-email").text(partner.fieldData.email || "");
       templateRowItem.find(".item-view-btn").attr("href", `http://www.realproducersmagazine.com/partner/${partner.fieldData.slug}` || "");
 
-      const $showOrHideCheckbox = templateRowItem.find("div[title='show or hide'] .switch input");
+      const $showOrHideCheckbox = templateRowItem.find(".show-hide-switch .switch input");
       if (partner.fieldData["show-partner"] === true) {
         $showOrHideCheckbox.prop("checked", true);
       } else {
@@ -636,13 +638,14 @@ var rpLib = {
       rpLib.utils.initCitySelection(function (brandId) {
         rpLib.api.fetchEventsAndRender(brandId);
 
-          // Set View All link
-          const citySlug = $("#city-select option:selected").attr("data-slug");
-          $('a#view-all').attr('href', `http://www.realproducersmagazine.com/events/${citySlug}`);
+        // Set View All link
+        const citySlug = $("#city-select option:selected").attr("data-slug");
+        $('a#view-all').attr('href', `http://www.realproducersmagazine.com/events/${citySlug}`);
 
-          // Show the View All link and the Create New button (link)
-          $("#view-all").removeClass("hidden");
-          $(".lib-create-item-btn").removeClass("hidden");
+        // Show elements that are hidden by default until a city is selected
+        $("#view-all").removeClass("hidden");
+        $(".lib-create-item-btn").removeClass("hidden");
+        $(".grid-header-row").removeClass("hidden");
       });
 
       this.bindEventListeners();
@@ -739,8 +742,8 @@ var rpLib = {
       });
     },
     bindShowHideEvents: function () {
-      // if the checkbox input (div[title='show or hide'] .switch input)  is changed, update the event's "show-event" field
-      $("body").on("change", "div[title='show or hide'] .switch input", function () {
+      // if the checkbox input (.show-hide-switch .switch input)  is changed, update the event's "show-event" field
+      $("body").on("change", ".show-hide-switch .switch input", function () {
         const eventId = $(this).closest(".collection-item").attr("data-event-id");
         const showEvent = $(this).is(":checked");
         // Update the event's "show-event" field
@@ -748,15 +751,15 @@ var rpLib = {
       });
     },
     bindModalEvents: function () {
-      rpLib.utils.setupSingleImgPreviewReplacement("event-main-img-preview", function(newFile) {
+      rpLib.utils.setupSingleImgPreviewReplacement("main-image-preview", function(newFile) {
         // Update the status text after selecting a new image
-        $("#event-main-img-upload-status").text("Image selected (will upload when saved)");
+        $("#main-image-upload-status").text("Image selected (will upload when saved)");
 
         // Update uploads state to indicate a new file was selected
         rpLib.eventsPage.state.uploads.mainImage = newFile;
       });
-      rpLib.utils.setupSingleImgPreviewReplacement("flyer-img-preview", function(newFile) {
-        $("#flyer-img-status").text("Image selected (will upload when saved)");
+      rpLib.utils.setupSingleImgPreviewReplacement("event-flyer-preview", function(newFile) {
+        $("#event-flyer-status").text("Image selected (will upload when saved)");
         rpLib.partnersPage.state.uploads.logo = newFile;
       });
 
@@ -934,7 +937,7 @@ var rpLib = {
       templateRowItem.find(".event-location").text(event.fieldData["location-name"] || "");
       templateRowItem.find(".item-view-btn").attr("href", `https://www.realproducersmagazine.com/event/${event.fieldData.slug}` || "");
 
-      const $showOrHideCheckbox = templateRowItem.find("div[title='show or hide'] .switch input");
+      const $showOrHideCheckbox = templateRowItem.find(".show-hide-switch .switch input");
       if (event.fieldData["show-event"] === true) {
         $showOrHideCheckbox.prop("checked", true);
       } else {
@@ -1153,19 +1156,20 @@ var rpLib = {
       rpLib.api.fetchUserBrands(() => {
         const lastSelectedCity = sessionStorage.getItem("selectedCity");
 
-        if (lastSelectedCity) {
-          // Select the last selected city if available
-          $("#city-select").val(lastSelectedCity).trigger("change");
+        if ($("#city-select option").length === 1) {
+          // If there are no cities, do nothing
         } else if ($("#city-select option").length === 2) {
           // If there is only one city, select it by default
           $("#city-select option:last").prop("selected", true).trigger("change");
+        } else if (lastSelectedCity) {
+          // Select the last selected city if available
+          $("#city-select").val(lastSelectedCity).trigger("change");
         }
 
         // If no city is selected (ie. first default option is selected) then show the notification that no city is selected
         if ($("#city-select").val() === "") {
           $('#select-city-notification').removeClass("hidden");
         }
-
       });
 
       // Fetch all users after city selection
@@ -1360,6 +1364,11 @@ var rpLib = {
 
     fetchUserBrands: function (callback) {
       const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${USERS_COLLECTION_ID}/items/live?slug=${USER_SLUG}&sortBy=lastPublished&sortOrder=desc`;
+
+      if (USER_SLUG.trim() === "") {
+        if (callback) callback();
+        return;
+      }
 
       rpLib.api.fetchAllPaginated(url, (items) => {
         if (items.length > 0) {
@@ -1696,7 +1705,6 @@ var rpLib = {
             $("#event-location-address").val(event.fieldData["location-address"] || "");
             $("#button-url").val(event.fieldData["button-url"] || "");
             $("#button-text").val(event.fieldData["button-text"] || "");
-            $("#event-flyer").val(event.fieldData["event-flyer"] || "");
             $("#youtube-video-id").val(event.fieldData["youtube-video-id"] || "");
             $("#youtube-video-id-2").val(event.fieldData["youtube-video-id-2"] || "");
             $("#event-description").val(event.fieldData.description || "");
@@ -1707,6 +1715,10 @@ var rpLib = {
             // Populate main image
             $("#event-main-image").val(event.fieldData["main-image"]?.url || "");
             $("#main-image-preview").attr("src", event.fieldData["main-image"]?.url || "");
+
+            // Populate flyer image
+            $("#event-flyer").val(event.fieldData["event-flyer"]?.url || "");
+            $("#event-flyer-preview").attr("src", event.fieldData["event-flyer"]?.url || "");
 
             // Store existing galleries in state to handle partial updates
             const existingGallery1 = event.fieldData["image-gallery"] || [];
