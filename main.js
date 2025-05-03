@@ -35,7 +35,7 @@ var rpLib = {
       // Hide content that requires a city selection
       $(".grid-main-account-dashboard .grid-dashboard-section").hide();
 
-      rpLib.utils.initCitySelection( // On city selected
+      rpLib.utils.initCitySelection( // On city selected by user
         function (brandId) {
           // Show the content that requires a city selection
           $(".grid-main-account-dashboard .grid-dashboard-section").show();
@@ -684,11 +684,9 @@ var rpLib = {
         // Clear image previews
         $("#main-image-preview").attr("src", "");
         $("#main-image-upload-status").text("");
-        $("#gallery-1-preview").empty();
+        $("#gallery-1-preview, #gallery-2-preview, #gallery-3-preview").children(':not(.add-img-btn)').remove();
         $("#gallery-1-upload-status").text("");
-        $("#gallery-2-preview").empty();
         $("#gallery-2-upload-status").text("");
-        $("#gallery-3-preview").empty();
         $("#gallery-3-upload-status").text("");
 
         // Reset file variables
@@ -705,9 +703,7 @@ var rpLib = {
         rpLib.eventsPage.state.existingGallery3 = [];
 
         // Enable upload inputs
-        $("#gallery-1-upload").prop("disabled", false);
-        $("#gallery-2-upload").prop("disabled", false);
-        $("#gallery-3-upload").prop("disabled", false);
+        $('.add-img-btn').removeClass('hidden');
 
         // Show the modal
         $(".collection-item-modal").removeClass("hidden");
@@ -763,14 +759,29 @@ var rpLib = {
         rpLib.partnersPage.state.uploads.logo = newFile;
       });
 
+      // When an .add-img-btn is clicked, create a new invisible temp file input and trigger the click event
+      $(".add-img-btn").on("click", function () {
+        // Get id from class name .gallery-1-add-img-btn, .gallery-2-add-img-btn, .gallery-3-add-img-btn with regex (hacky :/) 
+        const galleryId = $(this).attr("class").match(/gallery-(\d+)-add-img-btn/)[1];
+        // Get the file input element using the gallery ID
+        const tempInputElId = `gallery-${galleryId}-upload`;
+
+        const $tempInput = $(`<input type='file' id='${tempInputElId}' accept='image/*' multiple style='display:none;' />`);
+        $("body").append($tempInput);
+
+        $tempInput.trigger("click");
+      });
+
+
       // Gallery 1 Preview Handler
-      $("#gallery-1-upload").on("change", function (e) {
+      $("body #gallery-1-upload").on("change", function (e) {
+        debugger;
         const files = Array.from(e.target.files);
 
         if (files.length === 0) return;
 
         // Get current images count (both existing and newly added)
-        const currentCount = $("#gallery-1-preview img").length;
+        const currentCount = $("#gallery-1-preview .gallery-img").length;
 
         // Check if adding these files would exceed the limit
         if (currentCount + files.length > 25) {
@@ -787,16 +798,19 @@ var rpLib = {
         files.forEach((file, index) => {
           rpLib.utils.addImageToGallery("gallery-1", file, index);
         });
+
+        // Remove this input after use
+        $(this).remove();
       });
 
       // Gallery 2 Preview Handler
-      $("#gallery-2-upload").on("change", function (e) {
+      $("body #gallery-2-upload").on("change", function (e) {
         const files = Array.from(e.target.files);
 
         if (files.length === 0) return;
 
         // Get current images count
-        const currentCount = $("#gallery-2-preview img").length;
+        const currentCount = $("#gallery-2-preview .gallery-img").length;
 
         // Check if adding these files would exceed the limit
         if (currentCount + files.length > 25) {
@@ -816,13 +830,13 @@ var rpLib = {
       });
 
       // Gallery 3 Preview Handler
-      $("#gallery-3-upload").on("change", function (e) {
+      $("body #gallery-3-upload").on("change", function (e) {
         const files = Array.from(e.target.files);
 
         if (files.length === 0) return;
 
         // Get current images count
-        const currentCount = $("#gallery-3-preview img").length;
+        const currentCount = $("#gallery-3-preview .gallery-img").length;
 
         // Check if adding these files would exceed the limit
         if (currentCount + files.length > 25) {
@@ -919,6 +933,22 @@ var rpLib = {
         $(".collection-item-modal").addClass("hidden");
       });
     },
+    addExistingImageToGallery: function (galleryId, imageData) {
+      if (imageData && imageData.url) {
+        const index = $(`#${galleryId}-preview img`).length;
+        const img = $("<img>")
+          .addClass("thumbnail")
+          .addClass("gallery-img")
+          .attr("src", imageData.url)
+          .attr("data-index", index)
+          .attr("data-image-id", imageData.id)
+          .attr("data-existing", true)
+          .attr("title", "Click to replace this image");
+        $(`#${galleryId}-preview .add-img-btn`).before(img);
+        // Update limits display
+        rpLib.utils.updateGalleryLimits(galleryId, index + 1);
+      }
+    },
     renderEvent: function (event) {
       const templateRowItem = $(".collection-item-row-template").clone();
       templateRowItem.removeClass("collection-item-row-template");
@@ -1011,6 +1041,7 @@ var rpLib = {
         const index = $(`#${galleryId}-preview img`).length;
         const img = $("<img>")
           .addClass("thumbnail")
+          .addClass("gallery-img")
           .attr("src", e.target.result)
           .attr("data-index", index)
           .attr("data-file-index", fileIndex)
@@ -1138,15 +1169,16 @@ var rpLib = {
     // Helper function to check gallery size and update UI
     updateGalleryLimits: function (galleryId, count) {
       const maxImages = 25;
-      const $uploadInput = $(`#${galleryId}-upload`);
+      const $uploadBtn = $(`#${galleryId}-upload`);
       const $statusEl = $(`#${galleryId}-upload-status`);
 
       if (count >= maxImages) {
-        $uploadInput.prop("disabled", true);
+        $uploadBtn.addClass("hidden");
         $statusEl.text(`Maximum limit of ${maxImages} images reached`);
         $statusEl.css("color", "red");
       } else {
-        $uploadInput.prop("disabled", false);
+        // $uploadBtn.prop("disabled", false);
+        $uploadBtn.removeClass("hidden");
         $statusEl.text(`${count} images (${maxImages - count} more allowed)`);
         $statusEl.css("color", "#666");
       }
@@ -1253,7 +1285,8 @@ var rpLib = {
       return new Date(localeDatetimeStr).toISOString();
     },
     setupGalleryImageReplacement: function (galleryPreviewId) {
-      $(`#${galleryPreviewId}`).on("click", ".thumbnail", function () {
+      $(`#${galleryPreviewId}`).on("click", ".gallery-img", function () {
+        debugger;
         // Store the index of the clicked image
         const clickedIndex = $(this).attr("data-index");
 
@@ -1728,10 +1761,8 @@ var rpLib = {
             rpLib.eventsPage.state.existingGallery2 = existingGallery2;
             rpLib.eventsPage.state.existingGallery3 = existingGallery3;
 
-            // Reset the gallery previews
-            $("#gallery-1-preview").empty();
-            $("#gallery-2-preview").empty();
-            $("#gallery-3-preview").empty();
+            // Reset the gallery previews (but keep the add image button)
+            $("#gallery-1-preview, #gallery-2-preview, #gallery-3-preview").children(':not(.add-img-btn)').remove();
 
             // Reset the file arrays for new uploads
             rpLib.eventsPage.state.uploads.gallery1 = [];
@@ -1740,59 +1771,23 @@ var rpLib = {
 
             // Display existing gallery 1 images
             if (existingGallery1.length > 0) {
-              existingGallery1.forEach((img, index) => {
-                if (img && img.url) {
-                  const imgEl = $("<img>")
-                    .addClass("thumbnail")
-                    .attr("src", img.url)
-                    .attr("data-index", index)
-                    .attr("data-image-id", img.id)
-                    .attr("data-existing", true)
-                    .attr("title", "Click to replace this image");
-                  $("#gallery-1-preview").append(imgEl);
-                }
+              existingGallery1.forEach((img) => {
+                rpLib.eventsPage.addExistingImageToGallery("gallery-1", img);
               });
-
-              // Update limits display
-              rpLib.utils.updateGalleryLimits("gallery-1", existingGallery1.length);
             }
-
+            
             // Display existing gallery 2 images
             if (existingGallery2.length > 0) {
-              existingGallery2.forEach((img, index) => {
-                if (img && img.url) {
-                  const imgEl = $("<img>")
-                    .addClass("thumbnail")
-                    .attr("src", img.url)
-                    .attr("data-index", index)
-                    .attr("data-image-id", img.id)
-                    .attr("data-existing", true)
-                    .attr("title", "Click to replace this image");
-                  $("#gallery-2-preview").append(imgEl);
-                }
+              existingGallery2.forEach((img) => {
+                rpLib.eventsPage.addExistingImageToGallery("gallery-2", img);
               });
-
-              // Update limits display
-              rpLib.utils.updateGalleryLimits("gallery-2", existingGallery2.length);
             }
-
+            
             // Display existing gallery 3 images
             if (existingGallery3.length > 0) {
-              existingGallery3.forEach((img, index) => {
-                if (img && img.url) {
-                  const imgEl = $("<img>")
-                    .addClass("thumbnail")
-                    .attr("src", img.url)
-                    .attr("data-index", index)
-                    .attr("data-image-id", img.id)
-                    .attr("data-existing", true)
-                    .attr("title", "Click to replace this image");
-                  $("#gallery-3-preview").append(imgEl);
-                }
+              existingGallery3.forEach((img) => {
+                rpLib.eventsPage.addExistingImageToGallery("gallery-3", img);
               });
-
-              // Update limits display
-              rpLib.utils.updateGalleryLimits("gallery-3", existingGallery3.length);
             }
 
             // Show the modal
