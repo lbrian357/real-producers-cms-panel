@@ -626,6 +626,7 @@ var rpLib = {
     state: {
       uploads: {
         mainImage: null,
+        flyerImage: null,
         gallery1: [],
         gallery2: [],
         gallery3: [],
@@ -685,9 +686,9 @@ var rpLib = {
         $("#main-image-preview").attr("src", "");
         $("#main-image-upload-status").text("");
         $("#gallery-1-preview, #gallery-2-preview, #gallery-3-preview").children(':not(.add-img-btn)').remove();
-        $("#gallery-1-upload-status").text("Add Up To 25 Images");
-        $("#gallery-2-upload-status").text("Add Up To 25 Images");
-        $("#gallery-3-upload-status").text("Add Up To 25 Images");
+        rpLib.utils.updateGalleryLimits("gallery-1", 0);
+        rpLib.utils.updateGalleryLimits("gallery-2", 0);
+        rpLib.utils.updateGalleryLimits("gallery-3", 0);
 
         // Reset file variables
         rpLib.eventsPage.state.uploads = {
@@ -747,6 +748,14 @@ var rpLib = {
       });
     },
     bindModalEvents: function () {
+      // Event listener on url inputs to add "http://" to website URL if not present
+      $(document).on('blur', '.collection-item-modal input[type="url"]', function() {
+        const url = $(this).val().trim();
+    
+        const urlWithProtocol = rpLib.utils.formatUrlWithProtocol(url);
+        $(this).val(urlWithProtocol);
+      });
+
       rpLib.utils.setupSingleImgPreviewReplacement("main-image-preview", function(newFile) {
         // Update the status text after selecting a new image
         $("#main-image-upload-status").text("Image selected (will upload when saved)");
@@ -756,7 +765,7 @@ var rpLib = {
       });
       rpLib.utils.setupSingleImgPreviewReplacement("event-flyer-preview", function(newFile) {
         $("#event-flyer-status").text("Image selected (will upload when saved)");
-        rpLib.partnersPage.state.uploads.logo = newFile;
+        rpLib.partnersPage.state.uploads.flyerImage = newFile;
       });
 
       // When an .add-img-btn is clicked, create a new invisible temp file input and trigger the click event
@@ -837,6 +846,26 @@ var rpLib = {
           uploadPromises.push(mainImagePromise);
         }
 
+        // Upload flyer image if selected
+        if (rpLib.eventsPage.state.uploads.flyerImage) {
+          $("#event-flyer-status").text("Uploading...");
+          let flyerImagePromise = new Promise((resolve) => {
+            rpLib.api.uploadImage(
+              rpLib.eventsPage.state.uploads.flyerImage,
+              function (result) {
+                $("#event-flyer-status").text("Upload complete!");
+                $("#event-flyer-preview").attr("src", result.url);
+                resolve(result);
+              },
+              function (error) {
+                $("#event-flyer-status").text("Upload failed: " + error.statusText);
+                resolve(); // Resolve even if upload fails
+              }
+            );
+          });
+          uploadPromises.push(flyerImagePromise);
+        }
+
         // Handle each gallery upload
         let gallery1Promise = rpLib.utils.handleGalleryUpload("gallery-1", rpLib.eventsPage.state.uploads.gallery1);
         let gallery2Promise = rpLib.utils.handleGalleryUpload("gallery-2", rpLib.eventsPage.state.uploads.gallery2);
@@ -871,17 +900,15 @@ var rpLib = {
           $("#save-event").prop("disabled", false);
 
           // Close the modal
-          $("#close-modal").on("click", function () {
-            // Ask for confirmation before closing the modal
-            if (confirm("Are you sure you want to close the modal? Any unsaved changes will be lost.")) {
-              $(".collection-item-modal").addClass("hidden");
-            }
-          });
+          $(".collection-item-modal").addClass("hidden");
         });
       });
 
-      $("body #close-modal").on("click", function () {
-        $(".collection-item-modal").addClass("hidden");
+      $("#close-modal").on("click", function () {
+        // Ask for confirmation before closing the modal
+        if (confirm("Are you sure you want to close the modal? Any unsaved changes will be lost.")) {
+          $(".collection-item-modal").addClass("hidden");
+        }
       });
     },
     addExistingImageToGallery: function (galleryId, imageData) {
@@ -1700,12 +1727,16 @@ var rpLib = {
             $("#event-show").prop("checked", event.fieldData["show-event"]);
 
             // Populate main image
-            $("#event-main-image").val(event.fieldData["main-image"]?.url || "");
-            $("#main-image-preview").attr("src", event.fieldData["main-image"]?.url || "");
+            if (event.fieldData["main-image"]?.url) {
+              $("#event-main-image").val(event.fieldData["main-image"]?.url || "");
+              $("#main-image-preview").attr("src", event.fieldData["main-image"]?.url).removeAttr("srcset");
+            }
 
             // Populate flyer image
-            $("#event-flyer").val(event.fieldData["event-flyer"]?.url || "");
-            $("#event-flyer-preview").attr("src", event.fieldData["event-flyer"]?.url || "");
+            if (event.fieldData["event-flyer"]?.url) {
+              $("#event-flyer").val(event.fieldData["event-flyer"]?.url || "");
+              $("#event-flyer-preview").attr("src", event.fieldData["event-flyer"]?.url);
+            }
 
             // Store existing galleries in state to handle partial updates
             const existingGallery1 = event.fieldData["image-gallery"] || [];
@@ -1790,6 +1821,12 @@ var rpLib = {
       if (rpLib.eventsPage.state.uploads.mainImage) {
         const newMainImage = $("#main-image-preview").attr("src");
         eventData.fieldData["main-image"] = { url: newMainImage };
+      }
+      
+      // Add flyer image if there's one uploaded
+      if (rpLib.eventsPage.state.uploads.flyerImage) {
+        const newFlyerImage = $("#event-flyer-preview").attr("src");
+        eventData.fieldData["event-flyer"] = { url: newFlyerImage };
       }
 
       // Get the gallery data that was uploaded and processed
@@ -2208,11 +2245,6 @@ var rpLib = {
       });
     },
     createEventAndRefreshList: function (brandId) {
-      // Gather gallery image data
-      let gallery1Images = $("#gallery-1-preview").attr("data-uploaded-images") || [];
-      let gallery2Images = $("#gallery-2-preview").attr("data-uploaded-images") || [];
-      let gallery3Images = $("#gallery-3-preview").attr("data-uploaded-images") || [];
-
       let newEventData = {
         fieldData: {
           name: $("#event-name").val(),
@@ -2232,22 +2264,30 @@ var rpLib = {
         },
       };
 
-      // Add main image if available
-      let mainImage = $("#main-image-preview").attr("data-uploaded-image");
-      if (mainImage && mainImage.url) {
-        newEventData.fieldData["main-image"] = mainImage;
+      // Add main image if there's one uploaded
+      if (rpLib.eventsPage.state.uploads.mainImage) {
+        const newMainImage = $("#main-image-preview").attr("src");
+        newEventData.fieldData["main-image"] = { url: newMainImage };
       }
 
-      // Add gallery images
-      if (gallery1Images.length > 0) {
-        newEventData.fieldData["image-gallery-1"] = gallery1Images;
+      // Add flyer image if there's one uploaded
+      if (rpLib.eventsPage.state.uploads.flyerImage) {
+        const newFlyerImage = $("#event-flyer-preview").attr("src");
+        newEventData.fieldData["event-flyer"] = { url: newFlyerImage };
       }
 
-      if (gallery2Images.length > 0) {
+      // Get the gallery data that was uploaded and processed
+      const gallery1Images = rpLib.eventsPage.state.existingGallery1;
+      const gallery2Images = rpLib.eventsPage.state.existingGallery2;
+      const gallery3Images = rpLib.eventsPage.state.existingGallery3;
+      // Add galleries to the event data if they have images
+      if (gallery1Images && gallery1Images.length > 0) {
+        newEventData.fieldData["image-gallery"] = gallery1Images;
+      }
+      if (gallery2Images && gallery2Images.length > 0) {
         newEventData.fieldData["image-gallery-2"] = gallery2Images;
       }
-
-      if (gallery3Images.length > 0) {
+      if (gallery3Images && gallery3Images.length > 0) {
         newEventData.fieldData["image-gallery-3"] = gallery3Images;
       }
 
@@ -2259,7 +2299,8 @@ var rpLib = {
         method: "POST",
         data: JSON.stringify(newEventData),
         success: function (response) {
-          alert("New event created successfully!");
+          alert("Success! Event created. \n\n Click the eyeball icon to view your updates.");
+          $(".collection-item-modal").addClass("hidden");
           // Refresh list
           rpLib.api.fetchEventsAndRender(brandId);
         },
