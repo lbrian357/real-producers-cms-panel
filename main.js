@@ -685,9 +685,9 @@ var rpLib = {
         $("#main-image-preview").attr("src", "");
         $("#main-image-upload-status").text("");
         $("#gallery-1-preview, #gallery-2-preview, #gallery-3-preview").children(':not(.add-img-btn)').remove();
-        $("#gallery-1-upload-status").text("");
-        $("#gallery-2-upload-status").text("");
-        $("#gallery-3-upload-status").text("");
+        $("#gallery-1-upload-status").text("Add Up To 25 Images");
+        $("#gallery-2-upload-status").text("Add Up To 25 Images");
+        $("#gallery-3-upload-status").text("Add Up To 25 Images");
 
         // Reset file variables
         rpLib.eventsPage.state.uploads = {
@@ -761,98 +761,44 @@ var rpLib = {
 
       // When an .add-img-btn is clicked, create a new invisible temp file input and trigger the click event
       $(".add-img-btn").on("click", function () {
-        // Get id from class name .gallery-1-add-img-btn, .gallery-2-add-img-btn, .gallery-3-add-img-btn with regex (hacky :/) 
+        // Get id from class name .gallery-1-add-img-btn, .gallery-2-add-img-btn, .gallery-3-add-img-btn with regex (this is hacky :/) 
         const galleryId = $(this).attr("class").match(/gallery-(\d+)-add-img-btn/)[1];
-        // Get the file input element using the gallery ID
         const tempInputElId = `gallery-${galleryId}-upload`;
-
         const $tempInput = $(`<input type='file' id='${tempInputElId}' accept='image/*' multiple style='display:none;' />`);
+        
+        // Attach the change event handler before appending to body
+        $tempInput.on("change", function (e) {
+          const files = Array.from(e.target.files);
+          if (files.length === 0) return;
+          
+          // Get current images count (both existing and newly added)
+          const currentCount = $(`#gallery-${galleryId}-preview .gallery-img`).length;
+          
+          // Check if adding these files would exceed the limit
+          if (currentCount + files.length > 25) {
+            const remaining = 25 - currentCount;
+            alert(`You can only add ${remaining} more image${remaining !== 1 ? "s" : ""}. Please select fewer images.`);
+            $(this).val(""); // Reset the input
+            return;
+          }
+          
+          // Add new files to the array
+          rpLib.eventsPage.state.uploads[`gallery${galleryId}`] = [
+            ...rpLib.eventsPage.state.uploads[`gallery${galleryId}`], 
+            ...files
+          ];
+          
+          // Show preview for each file
+          files.forEach((file, index) => {
+            rpLib.utils.addImageToGallery(`gallery-${galleryId}`, file, index);
+          });
+          
+          // Remove temp input after use
+          $tempInput.remove();
+        });
+        
         $("body").append($tempInput);
-
         $tempInput.trigger("click");
-      });
-
-
-      // Gallery 1 Preview Handler
-      $("body #gallery-1-upload").on("change", function (e) {
-        debugger;
-        const files = Array.from(e.target.files);
-
-        if (files.length === 0) return;
-
-        // Get current images count (both existing and newly added)
-        const currentCount = $("#gallery-1-preview .gallery-img").length;
-
-        // Check if adding these files would exceed the limit
-        if (currentCount + files.length > 25) {
-          const remaining = 25 - currentCount;
-          alert(`You can only add ${remaining} more image${remaining !== 1 ? "s" : ""}. Please select fewer images.`);
-          $(this).val(""); // Reset the input
-          return;
-        }
-
-        // Add new files to the array
-        rpLib.eventsPage.state.uploads.gallery1 = [...rpLib.eventsPage.state.uploads.gallery1, ...files];
-
-        // Show preview for each file
-        files.forEach((file, index) => {
-          rpLib.utils.addImageToGallery("gallery-1", file, index);
-        });
-
-        // Remove this input after use
-        $(this).remove();
-      });
-
-      // Gallery 2 Preview Handler
-      $("body #gallery-2-upload").on("change", function (e) {
-        const files = Array.from(e.target.files);
-
-        if (files.length === 0) return;
-
-        // Get current images count
-        const currentCount = $("#gallery-2-preview .gallery-img").length;
-
-        // Check if adding these files would exceed the limit
-        if (currentCount + files.length > 25) {
-          const remaining = 25 - currentCount;
-          alert(`You can only add ${remaining} more image${remaining !== 1 ? "s" : ""}. Please select fewer images.`);
-          $(this).val(""); // Reset the input
-          return;
-        }
-
-        // Add new files to the array
-        rpLib.eventsPage.state.uploads.gallery2 = [...rpLib.eventsPage.state.uploads.gallery2, ...files];
-
-        // Show preview for each file
-        files.forEach((file, index) => {
-          rpLib.utils.addImageToGallery("gallery-2", file, index);
-        });
-      });
-
-      // Gallery 3 Preview Handler
-      $("body #gallery-3-upload").on("change", function (e) {
-        const files = Array.from(e.target.files);
-
-        if (files.length === 0) return;
-
-        // Get current images count
-        const currentCount = $("#gallery-3-preview .gallery-img").length;
-
-        // Check if adding these files would exceed the limit
-        if (currentCount + files.length > 25) {
-          const remaining = 25 - currentCount;
-          alert(`You can only add ${remaining} more image${remaining !== 1 ? "s" : ""}. Please select fewer images.`);
-          $(this).val(""); // Reset the input
-          return;
-        }
-
-        // Add new files to the array
-        rpLib.eventsPage.state.uploads.gallery3 = [...rpLib.eventsPage.state.uploads.gallery3, ...files];
-
-        // Show preview for each file
-        files.forEach((file, index) => {
-          rpLib.utils.addImageToGallery("gallery-3", file, index);
-        });
       });
 
       // Setup the image replacement for all galleries
@@ -925,7 +871,12 @@ var rpLib = {
           $("#save-event").prop("disabled", false);
 
           // Close the modal
-          $(".collection-item-modal").addClass("hidden");
+          $("#close-modal").on("click", function () {
+            // Ask for confirmation before closing the modal
+            if (confirm("Are you sure you want to close the modal? Any unsaved changes will be lost.")) {
+              $(".collection-item-modal").addClass("hidden");
+            }
+          });
         });
       });
 
@@ -935,7 +886,7 @@ var rpLib = {
     },
     addExistingImageToGallery: function (galleryId, imageData) {
       if (imageData && imageData.url) {
-        const index = $(`#${galleryId}-preview img`).length;
+        const index = $(`#${galleryId}-preview .gallery-img`).length;
         const img = $("<img>")
           .addClass("thumbnail")
           .addClass("gallery-img")
@@ -1038,7 +989,7 @@ var rpLib = {
     addImageToGallery: function (galleryId, file, fileIndex) {
       const reader = new FileReader();
       reader.onload = function (e) {
-        const index = $(`#${galleryId}-preview img`).length;
+        const index = $(`#${galleryId}-preview .gallery-img`).length;
         const img = $("<img>")
           .addClass("thumbnail")
           .addClass("gallery-img")
@@ -1046,7 +997,7 @@ var rpLib = {
           .attr("data-index", index)
           .attr("data-file-index", fileIndex)
           .attr("title", "Click to replace this image");
-        $(`#${galleryId}-preview`).append(img);
+        $(`#${galleryId}-preview .add-img-btn`).before(img);
 
         // Update limits display
         rpLib.utils.updateGalleryLimits(galleryId, index + 1);
@@ -1169,18 +1120,21 @@ var rpLib = {
     // Helper function to check gallery size and update UI
     updateGalleryLimits: function (galleryId, count) {
       const maxImages = 25;
-      const $uploadBtn = $(`#${galleryId}-upload`);
+      const $uploadBtn = $(`#${galleryId}-add-img-btn`);
       const $statusEl = $(`#${galleryId}-upload-status`);
 
       if (count >= maxImages) {
         $uploadBtn.addClass("hidden");
         $statusEl.text(`Maximum limit of ${maxImages} images reached`);
         $statusEl.css("color", "red");
+      } else if (count === 0) {
+        $uploadBtn.removeClass("hidden");
+        $statusEl.text("Add Up To 25 Images");
+        $statusEl.css("color", "rgb(37, 165, 222)");
       } else {
-        // $uploadBtn.prop("disabled", false);
         $uploadBtn.removeClass("hidden");
         $statusEl.text(`${count} images (${maxImages - count} more allowed)`);
-        $statusEl.css("color", "#666");
+        $statusEl.css("color", "rgb(37, 165, 222)");
       }
     },
     initCitySelection: function (callback) {
@@ -1774,6 +1728,8 @@ var rpLib = {
               existingGallery1.forEach((img) => {
                 rpLib.eventsPage.addExistingImageToGallery("gallery-1", img);
               });
+            } else {
+              rpLib.utils.updateGalleryLimits("gallery-1", 0);
             }
             
             // Display existing gallery 2 images
@@ -1781,6 +1737,8 @@ var rpLib = {
               existingGallery2.forEach((img) => {
                 rpLib.eventsPage.addExistingImageToGallery("gallery-2", img);
               });
+            } else {
+              rpLib.utils.updateGalleryLimits("gallery-2", 0);
             }
             
             // Display existing gallery 3 images
@@ -1788,6 +1746,8 @@ var rpLib = {
               existingGallery3.forEach((img) => {
                 rpLib.eventsPage.addExistingImageToGallery("gallery-3", img);
               });
+            } else {
+              rpLib.utils.updateGalleryLimits("gallery-3", 0);
             }
 
             // Show the modal
@@ -1855,6 +1815,8 @@ var rpLib = {
         data: JSON.stringify(eventData),
         contentType: "application/json",
         success: function () {
+          alert("Success! Event updated. \n\n Click the eyeball icon to view your updates.");
+
           // Close modal
           $(".collection-item-modal").addClass("hidden");
 
