@@ -1896,10 +1896,14 @@ var rpLib = {
             if (user.fieldData["profile-picture"]?.url) {
               $("#profile-pic-preview").attr("src", user.fieldData["profile-picture"]?.url);
               $("#profile-pic-preview").removeAttr("srcset");
+            } else {
+              $("#profile-pic-preview").attr("src", profilePicPlaceholderImg);
             }
             if (user.fieldData["full-picture"]?.url) {
               $("#full-pic-preview").attr("src", user.fieldData["full-picture"]?.url);
               $("#full-pic-preview").removeAttr("srcset");
+            } else {
+              $("#full-pic-preview").attr("src", profilePicPlaceholderImg);
             }
 
             // Init rich text editor for user bio
