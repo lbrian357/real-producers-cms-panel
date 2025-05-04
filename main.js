@@ -261,7 +261,7 @@ var rpLib = {
         uploadPromises.push(profilePicPromise);
       }
 
-      // Upload full pic if needed
+      // Upload full pic if it's a new file
       if (fullPicFile) {
         $("#full-pic-upload-status").text("Uploading...");
         let fullPicPromise = new Promise((resolve) => {
@@ -293,9 +293,6 @@ var rpLib = {
         // Reset button text and re-enable it
         $("#save-user").text("Save");
         $("#save-user").prop("disabled", false);
-
-        // Close the modal
-        $(".collection-item-modal").addClass("hidden");
       });
     },
     renderUser: function (user) {
@@ -675,7 +672,6 @@ var rpLib = {
         $("#button-url").val("");
         $("#button-text").val("");
         $("#event-show").prop("checked", false);
-        $("#event-flyer").val("");
         $("#youtube-video-id").val("");
         $("#youtube-video-id-2").val("");
         $("#event-description").val("");
@@ -683,8 +679,12 @@ var rpLib = {
         $("#sponsor-event-button-text").val("");
 
         // Clear image previews
-        $("#main-image-preview").attr("src", "");
+        $("#main-image-preview").attr("src", eventMainPlaceholderImg);
         $("#main-image-upload-status").text("");
+
+        $("#event-flyer-preview").attr("src", logoPlaceholderImg);
+        $("#event-flyer-status").text("");
+
         $("#gallery-1-preview, #gallery-2-preview, #gallery-3-preview").children(':not(.add-img-btn)').remove();
         rpLib.utils.updateGalleryLimits("gallery-1", 0);
         rpLib.utils.updateGalleryLimits("gallery-2", 0);
@@ -765,7 +765,7 @@ var rpLib = {
       });
       rpLib.utils.setupSingleImgPreviewReplacement("event-flyer-preview", function(newFile) {
         $("#event-flyer-status").text("Image selected (will upload when saved)");
-        rpLib.partnersPage.state.uploads.flyerImage = newFile;
+        rpLib.eventsPage.state.uploads.flyerImage = newFile;
       });
 
       // When an .add-img-btn is clicked, create a new invisible temp file input and trigger the click event
@@ -898,9 +898,6 @@ var rpLib = {
           // Reset button text and re-enable it
           $("#save-event").text("Save");
           $("#save-event").prop("disabled", false);
-
-          // Close the modal
-          $(".collection-item-modal").addClass("hidden");
         });
       });
 
@@ -1267,7 +1264,6 @@ var rpLib = {
     },
     setupGalleryImageReplacement: function (galleryPreviewId) {
       $(`#${galleryPreviewId}`).on("click", ".gallery-img", function () {
-        debugger;
         // Store the index of the clicked image
         const clickedIndex = $(this).attr("data-index");
 
@@ -1647,6 +1643,7 @@ var rpLib = {
       });
     },
     updateEventShowHide: function (eventId, showEvent) {
+      debugger;
       $.ajax({
         url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${EVENTS_COLLECTION_ID}/items/${eventId}/live`,
         headers: {
@@ -1730,12 +1727,16 @@ var rpLib = {
             if (event.fieldData["main-image"]?.url) {
               $("#event-main-image").val(event.fieldData["main-image"]?.url || "");
               $("#main-image-preview").attr("src", event.fieldData["main-image"]?.url).removeAttr("srcset");
+            } else {
+              $("#main-image-preview").attr("src", eventMainPlaceholderImg);
             }
 
             // Populate flyer image
             if (event.fieldData["event-flyer"]?.url) {
               $("#event-flyer").val(event.fieldData["event-flyer"]?.url || "");
-              $("#event-flyer-preview").attr("src", event.fieldData["event-flyer"]?.url);
+              $("#event-flyer-preview").attr("src", event.fieldData["event-flyer"]?.url).removeAttr("srcset");
+            } else {
+              $("#event-flyer-preview").attr("src", logoPlaceholderImg);
             }
 
             // Store existing galleries in state to handle partial updates
@@ -1963,7 +1964,7 @@ var rpLib = {
         method: "PATCH",
         data: JSON.stringify(updatedData),
         success: function () {
-          alert("User updated!");
+          alert("Success! User updated. \n\n Click the eyeball icon to view your updates.");
           $(".collection-item-modal").addClass("hidden");
           rpLib.api.fetchBrandUsersAndRender($("#city-select").val()); // Refresh list
         },
@@ -2153,7 +2154,7 @@ var rpLib = {
         method: "POST",
         data: JSON.stringify(newUserData),
         success: function (response) {
-          alert("New user created successfully!");
+          alert("Success! User created. \n\n Click the eyeball icon to view your updates.");
           // Refresh list
           rpLib.api.fetchBrandUsersAndRender(brandId);
         },
