@@ -1814,12 +1814,12 @@ var rpLib = {
       if (eventData.fieldData["youtube-video-id"]) {
         eventData.fieldData["video"] = {"url": `https://www.youtube.com/watch?v=${eventData.fieldData["youtube-video-id"]}`};
       } else {
-        eventData.fieldData["video"] = {"url": "WIP"};
+        // eventData.fieldData["video"] = {"url": null};
       }
       if (eventData.fieldData["youtube-video-id-2"]) {
         eventData.fieldData["video-2"] = {"url": `https://www.youtube.com/watch?v=${eventData.fieldData["youtube-video-id-2"]}`};
       } else {
-        eventData.fieldData["video-2"] = {"url": "WIP"};
+        // eventData.fieldData["video-2"] = {"url": null};
       }
 
       // Add main image if there's one uploaded
