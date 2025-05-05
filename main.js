@@ -1,4 +1,3 @@
-const USER_SLUG = $("[data-ms-member='wf-users-slug']").text();
 const EVENTS_COLLECTION_ID = "658f30a87b1a52ef8ad0b8e4";
 const USERS_COLLECTION_ID = "658f30a87b1a52ef8ad0b74b";
 const BRANDS_COLLECTION_ID = "658f30a87b1a52ef8ad0b77b";
@@ -1150,6 +1149,7 @@ var rpLib = {
     initCitySelection: function (callback) {
       // Fetch all brands for city selection dropdown and populate the dropdown
       rpLib.api.fetchUserBrands(() => {
+        debugger;
         const lastSelectedCity = sessionStorage.getItem("selectedCity");
 
         if ($("#city-select option").length === 1) {
@@ -1371,6 +1371,9 @@ var rpLib = {
         return 'http://' + url;
       }
       return url; 
+    },
+    getUserSlug: function () {
+      return $("[data-ms-member='wf-users-slug']").text();
     }
   },
 
@@ -1422,9 +1425,9 @@ var rpLib = {
     },
 
     fetchUserBrands: function (callback) {
-      const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${USERS_COLLECTION_ID}/items/live?slug=${USER_SLUG}&sortBy=lastPublished&sortOrder=desc`;
+      const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${USERS_COLLECTION_ID}/items/live?slug=${rpLib.utils.getUserSlug()}&sortBy=lastPublished&sortOrder=desc`;
 
-      if (USER_SLUG.trim() === "") {
+      if (rpLib.utils.getUserSlug().trim() === "") {
         if (callback) callback();
         return;
       }
