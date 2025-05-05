@@ -1149,7 +1149,6 @@ var rpLib = {
     initCitySelection: function (callback) {
       // Fetch all brands for city selection dropdown and populate the dropdown
       rpLib.api.fetchUserBrands(() => {
-        debugger;
         const lastSelectedCity = sessionStorage.getItem("selectedCity");
 
         if ($("#city-select option").length === 1) {
