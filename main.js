@@ -11,7 +11,6 @@ const adPlaceholderImg = "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad
 const eventMainPlaceholderImg = "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/67dfcd6c686c0fa648b21c00_icon-event.png";
 
 
-
 $(document).ready(function () {
   rpLib.utils.injectCSS();
   rpLib.utils.injectDependencies();
@@ -340,26 +339,30 @@ var rpLib = {
         profilePic: null,
         logo: null,
         adImage: null,
-      }
+      },
+      partnerCategories: [],
+      modalContentTemplateHTML: null,
     },
     init: function () {
       // Load list of partner categories first so it's available to populate the dropdown in the edit modal
       rpLib.api.fetchAllPartnerCategories(function(categories) {
-        $("#partner-categories").empty(); // Clear existing options
-        $("#partner-categories").multiselect({
-          maxHeight: 200,
-        });
-        
-        // Add options for all categories
-        categories.forEach(function(category) {
-          $("#partner-categories").append(
-            $("<option>", {
-              value: category.id,
-              text: category.fieldData.name || "Unnamed Category"
-            })
-          );
-          $("#partner-categories").multiselect('reload');
-        });
+        // Save categories to state for later use
+        rpLib.partnersPage.state.partnerCategories = categories;
+
+        // $("#partner-categories").empty(); // Clear existing options
+        // $("#partner-categories").multiselect({
+        //   maxHeight: 200,
+        // });
+        // // Add options for all categories
+        // categories.forEach(function(category) {
+        //   $("#partner-categories").append(
+        //     $("<option>", {
+        //       value: category.id,
+        //       text: category.fieldData.name || "Unnamed Category"
+        //     })
+        //   );
+        //   $("#partner-categories").multiselect('reload');
+        // });
 
         // Initialize city selection and fetch partners
         rpLib.utils.initCitySelection(function (brandId) {
@@ -381,6 +384,8 @@ var rpLib = {
 
     },
     bindEventListeners: function () {
+      this.state.modalContentTemplateHTML = $(".collection-item-modal-content")[0].outerHTML;
+
       this.bindCreatePartnerEvents();
       this.bindEditPartnerEvents();
       this.bindDeletePartnerEvents();
@@ -390,34 +395,21 @@ var rpLib = {
     bindCreatePartnerEvents: function () {
       // On create new partner click
       $("body").on("click", ".lib-create-item-btn", function (event) {
-        rpLib.partnersPage.state.uploads = {
-          profilePic: null,
-          logo: null,
-          adImage: null,
-        }
-
         rpLib.partnersPage.handleCreatePartnerClick();
       });
     },
     bindEditPartnerEvents: function () {
       // On edit button click open modal
       $("body").on("click", ".item-edit-btn", function (event) {
-        // Reset image file references
-        rpLib.partnersPage.state.uploads = {
-          profilePic: null,
-          logo: null,
-          adImage: null,
-        }
-
         const partnerId = $(this).closest(".collection-item").attr("data-partner-id");
         const slug = $(this).closest(".collection-item").attr("data-slug");
 
-        // Set the modal partner ID for editing
-        $(".collection-item-modal").attr("data-partner-id", partnerId);
+        rpLib.partnersPage.resetPartnersModalContent(function() {
+          $(".collection-item-modal").attr("data-partner-id", partnerId);
 
-        rpLib.api.fetchPartnerDetailsAndOpenModal(slug);
+          rpLib.api.fetchPartnerDetailsAndOpenModal(slug);
+        });
       });
-
     },
     bindDeletePartnerEvents: function () {
       // On delete button click
@@ -449,6 +441,46 @@ var rpLib = {
         const urlWithProtocol = rpLib.utils.formatUrlWithProtocol(url);
         $(this).val(urlWithProtocol);
       });
+    },
+    resetPartnersModalContent: function (afterResetCallback) {
+      rpLib.partnersPage.state.uploads = {
+        profilePic: null,
+        logo: null,
+        adImage: null,
+      }
+
+      cleanModalContentTemplate = $(this.state.modalContentTemplateHTML);
+      $(".collection-item-modal").removeAttr("data-partner-id");
+      $('.collection-item-modal').empty();
+      $('.collection-item-modal').append(cleanModalContentTemplate);
+
+      // Re/init partner categories
+      $("#partner-categories").empty(); // Clear existing options
+      $("#partner-categories").multiselect({
+        maxHeight: 200,
+      });
+      let count = 0;
+      rpLib.partnersPage.state.partnerCategories.forEach(function(category) {
+        console.log('category: ', category);
+        console.log('count: ', count);
+        count++;
+        $("#partner-categories").append(
+          $("<option>", {
+            value: category.id,
+            text: category.fieldData.name || "Unnamed Category"
+          })
+        );
+      });
+
+      // Re/Init rich text editor for partner description
+      rpLib.utils.initRichTextEditor(
+        "partner-description",
+        "Share partner bio or info here..."
+      );
+
+      if (typeof(afterResetCallback) === "function") {
+        afterResetCallback();
+      }
 
       // On modal save click
       $("#save-partner").on("click", function () {
@@ -483,6 +515,7 @@ var rpLib = {
         $("#ad-image-upload-status").text("Image selected (will upload when saved)");
         rpLib.partnersPage.state.uploads.adImage = newFile;
       });
+
     },
     renderPartner: function (partner) {
       const templateRowItem = $(".collection-item-row-template").clone();
@@ -598,46 +631,11 @@ var rpLib = {
     },
 
     handleCreatePartnerClick: function () {
-      // Clear modal data attribute to indicate this is a new item
-      $(".collection-item-modal").removeAttr("data-partner-id");
-
-      // Update modal title for creation
-      $(".collection-item-modal").find("h3").text("Create New Partner");
-
-      // Clear all form fields
-      $("#profile-pic-preview").attr("src", profilePicPlaceholderImg);
-      $("#logo-preview").attr("src", logoPlaceholderImg);
-      $("#ad-image-preview").attr("src", adPlaceholderImg);
-
-      $("#partner-name").val("");
-      $("#partner-company").val("");
-      $("#partner-title").val("");
-      $("#partner-phone").val("");
-      $("#partner-email").val("");
-      $("#partner-website").val("");
-      $("#partner-license").val("");
-      $("#partner-facebook").val("");
-      $("#partner-instagram").val("");
-      $("#partner-x").val("");
-      $("#partner-youtube").val("");
-      $("#partner-linkedin").val("");
-      $("#partner-tiktok").val("");
-
-      // Init/Reset rich text editor for partner description
-      rpLib.utils.initRichTextEditor(
-        "partner-description",
-        "Share partner bio or info here..."
-      );
-
-      $("#partner-preview-text").val("");
-      $("#partner-address").val("");
-      $("#partner-city").val("");
-      $("#partner-categories").val([]);
-      // Reset the multiselect
-      $("#partner-categories").multiselect('reload');
-
-      // Show the modal
-      $(".collection-item-modal").removeClass("hidden");
+      rpLib.partnersPage.resetPartnersModalContent(function () {
+        $(".collection-item-modal").find("h3").text("Create New Partner");
+        $("#partner-categories").multiselect('reload');
+        $(".collection-item-modal").removeClass("hidden");
+      });
     }
   },
   eventsPage: {
@@ -2074,6 +2072,17 @@ var rpLib = {
         },
         error: function (error) {
           console.error("Error updating user:", error);
+          
+          // Handle Validation Error and list the fields that failed validation in the alert
+          if (error.responseJSON && error.responseJSON?.code === "validation_error" && error.responseJSON?.details.length > 0) {
+            let failedFields = error.responseJSON.details.map((detail) => (
+              `${detail.param}—${detail.description}`
+            ));
+            alert("Error updating user. Please try again. Failed fields: " + failedFields.join(", "));
+          }
+          else {
+            alert("Error updating user. Please try again. Error status:" + error.status);
+          }
         },
         complete: function () {
           if (typeof callback === "function") {
@@ -2253,7 +2262,7 @@ var rpLib = {
 
       let newUserData = {
         fieldData: {
-          name: `${firstName} ${lastName}`.trim(), // Combine first and last name
+          name: `${firstName} ${lastName}`.trim(),
           "first-name": firstName,
           "last-name": lastName,
           title: $("#user-title").val(),
@@ -2266,7 +2275,7 @@ var rpLib = {
           "url-linkedin": $("#user-url-linkedin").val(),
           "url-tiktok": $("#user-url-tiktok").val(),
           "show-user": true,
-          "brand-s": [brandId], // Set the brand relationship
+          "brand-s": [brandId], // Sets the brand relationship
         },
       };
 
