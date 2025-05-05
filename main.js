@@ -1554,7 +1554,6 @@ var rpLib = {
           "preview-text": $("#partner-preview-text").val(),
           address: $("#partner-address").val(),
           "city-state-zip": $("#partner-city").val(),
-          "show-partner": $("#partner-show").prop("checked"),
           "partner-categories": $("#partner-categories").val(), // Multi-reference
         },
       };
@@ -1721,7 +1720,6 @@ var rpLib = {
             $("#event-description").val(event.fieldData.description || "");
             $("#sponsor-event-button-url").val(event.fieldData["sponsor-event-button-url"] || "");
             $("#sponsor-event-button-text").val(event.fieldData["sponsor-event-button-text"] || "");
-            $("#event-show").prop("checked", event.fieldData["show-event"]);
 
             // Populate main image
             if (event.fieldData["main-image"]?.url) {
@@ -1806,7 +1804,6 @@ var rpLib = {
           description: $("#event-description").val(),
           "sponsor-event-button-url": $("#sponsor-event-button-url").val(),
           "sponsor-event-button-text": $("#sponsor-event-button-text").val(),
-          "show-event": $("#event-show").is(":checked"),
         },
       };
 
@@ -2129,6 +2126,7 @@ var rpLib = {
           "url-youtube": $("#user-url-youtube").val(),
           "url-linkedin": $("#user-url-linkedin").val(),
           "url-tiktok": $("#user-url-tiktok").val(),
+          "show-user": true,
           "brand-s": [brandId], // Set the brand relationship
         },
       };
@@ -2190,7 +2188,7 @@ var rpLib = {
           "preview-text": $("#partner-preview-text").val(),
           address: $("#partner-address").val(),
           "city-state-zip": $("#partner-city").val(),
-          "show-partner": $("#partner-show").prop("checked"),
+          "show-partner": true,
           "partner-categories": $("#partner-categories").val(), // Multi-reference
           // Set the brand relationship
           brand: brandId,
@@ -2264,6 +2262,7 @@ var rpLib = {
           description: $("#event-description").val(),
           "sponsor-event-button-url": $("#sponsor-event-button-url").val(),
           "sponsor-event-button-text": $("#sponsor-event-button-text").val(),
+          "show-event": true,
           // Set the brand relationship
           brand: brandId,
         },
