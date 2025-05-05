@@ -97,6 +97,7 @@ var rpLib = {
         profilePic: null,
         fullPic: null,
       },
+      modalContentTemplateHTML: null,
     },
     init: function () {
       rpLib.utils.initCitySelection( function(brandId) { // On city selected
@@ -115,6 +116,8 @@ var rpLib = {
       this.bindEventListeners();
     },
     bindEventListeners: function () {
+      this.state.modalContentTemplateHTML = $(".collection-item-modal-content")[0].outerHTML;
+
       this.bindCreateUserEvents();
       this.bindEditUserEvents();
       this.bindDeleteUserEvents();
@@ -124,42 +127,10 @@ var rpLib = {
     bindCreateUserEvents: function () {
       // Event listener for create button click
       $("body").on("click", ".lib-create-item-btn", function (event) {
-        // Clear modal data attribute to indicate this is a new item
-        $(".collection-item-modal").removeAttr("data-user-id");
-
-        // Update modal title for creation
-        $(".collection-item-modal").find("h3").text("Create New User");
-
-        // Clear all form fields
-        $("#user-first-name").val("");
-        $("#user-last-name").val("");
-        $("#user-title").val("");
-        $("#user-profile-pic").val("");
-        $("#user-full-pic").val("");
-        $("#user-email").val("");
-        $("#user-phone").val("");
-        $("#user-bio").val("");
-        $("#user-url-facebook").val("");
-        $("#user-url-instagram").val("");
-        $("#user-url-x").val("");
-        $("#user-url-youtube").val("");
-        $("#user-url-linkedin").val("");
-        $("#user-url-tiktok").val("");
-
-        // Clear image previews
-        $("#profile-pic-preview").attr("src", profilePicPlaceholderImg);
-        $("#full-pic-preview").attr("src", profilePicPlaceholderImg);
-        $("#profile-pic-upload-status").text("");
-        $("#full-pic-upload-status").text("");
-
-        // Init/Reset rich text editor for user bio
-        rpLib.utils.initRichTextEditor(
-          "user-bio",
-          "Share user bio or info here..."
-        );
-
-        // Show the modal
-        $(".collection-item-modal").removeClass("hidden");
+        rpLib.usersPage.resetUsersModalContent(function() {
+          // Show the modal after resetting content
+          $(".collection-item-modal").removeClass("hidden");
+        });
       });
     },
     bindEditUserEvents: function () {
@@ -168,14 +139,14 @@ var rpLib = {
         let userId = $(this).closest(".collection-item").attr('data-user-id');
         let slug = $(this).closest(".collection-item").attr("data-slug");
 
-        // Update modal title for editing
-        $(".collection-item-modal").find("h3").text("Edit User");
+        // Reset modal content
+        rpLib.usersPage.resetUsersModalContent(function() {
+          // Set the user ID for editing
+          $(".collection-item-modal").attr("data-user-id", userId);
 
-        // Set the user ID for editing
-        $(".collection-item-modal").attr("data-user-id", userId);
-
-        // Fetch and populate user details
-        rpLib.api.fetchUserDetailsAndOpenModal(slug);
+          // Fetch and populate user details
+          rpLib.api.fetchUserDetailsAndOpenModal(slug);
+        });
       });
     },
     bindDeleteUserEvents: function () {
@@ -207,36 +178,6 @@ var rpLib = {
     
         const urlWithProtocol = rpLib.utils.formatUrlWithProtocol(url);
         $(this).val(urlWithProtocol);
-      });
-
-      // On save button click
-      $("#save-user").on("click", function () {
-        rpLib.usersPage.handleSaveUserClick(
-          rpLib.usersPage.state.uploads.profilePic,
-          rpLib.usersPage.state.uploads.fullPic
-        );
-      });
-
-
-      // Close modal
-      $("#close-modal").on("click", function () {
-        // Ask for confirmation before closing the modal
-        if (confirm("Are you sure you want to close the modal? Any unsaved changes will be lost.")) {
-          $(".collection-item-modal").addClass("hidden");
-        }
-      });
-
-
-      // On profile pic preview replacement click, open file dialog
-      rpLib.utils.setupSingleImgPreviewReplacement("profile-pic-preview", function(newFile) {
-        $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
-        rpLib.usersPage.state.uploads.profilePic = newFile;
-      });
-
-      // On full pic preview replacement click, open file dialog
-      rpLib.utils.setupSingleImgPreviewReplacement("full-pic-preview", function(newFile) {
-        $("#full-pic-upload-status").text("Image selected (will upload when saved)");
-        rpLib.usersPage.state.uploads.fullPic = newFile;
       });
     },
     handleSaveUserClick: function (profilePicFile, fullPicFile) {
@@ -310,6 +251,58 @@ var rpLib = {
         }
       });
     },
+    resetUsersModalContent: function (afterResetCallback) {
+      rpLib.usersPage.state.uploads = {
+        profilePic: null,
+        fullPic: null,
+      }
+
+      cleanModalContentTemplate = $(this.state.modalContentTemplateHTML);
+      $(".collection-item-modal").removeAttr("data-user-id");
+      $('.collection-item-modal').empty();
+      $('.collection-item-modal').append(cleanModalContentTemplate);
+
+      // Re/init rich text editor for user bio
+      rpLib.utils.initRichTextEditor(
+        "user-bio",
+        "Share user bio or info here..."
+      );
+
+      if (typeof(afterResetCallback) === "function") {
+        afterResetCallback();
+      }
+
+      // On save button click
+      $("#save-user").on("click", function () {
+        rpLib.usersPage.handleSaveUserClick(
+          rpLib.usersPage.state.uploads.profilePic,
+          rpLib.usersPage.state.uploads.fullPic
+        );
+      });
+
+
+      // Close modal
+      $("#close-modal").on("click", function () {
+        // Ask for confirmation before closing the modal
+        if (confirm("Are you sure you want to close the modal? Any unsaved changes will be lost.")) {
+          $(".collection-item-modal").addClass("hidden");
+        }
+      });
+
+
+      // On profile pic preview replacement click, open file dialog
+      rpLib.utils.setupSingleImgPreviewReplacement("profile-pic-preview", function(newFile) {
+        $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
+        rpLib.usersPage.state.uploads.profilePic = newFile;
+      });
+
+      // On full pic preview replacement click, open file dialog
+      rpLib.utils.setupSingleImgPreviewReplacement("full-pic-preview", function(newFile) {
+        $("#full-pic-upload-status").text("Image selected (will upload when saved)");
+        rpLib.usersPage.state.uploads.fullPic = newFile;
+      });
+
+    },
     renderUser: function (user) {
       const templateRowItem = $(".collection-item-row-template").clone();
       templateRowItem.removeClass("collection-item-row-template");
@@ -349,21 +342,6 @@ var rpLib = {
         // Save categories to state for later use
         rpLib.partnersPage.state.partnerCategories = categories;
 
-        // $("#partner-categories").empty(); // Clear existing options
-        // $("#partner-categories").multiselect({
-        //   maxHeight: 200,
-        // });
-        // // Add options for all categories
-        // categories.forEach(function(category) {
-        //   $("#partner-categories").append(
-        //     $("<option>", {
-        //       value: category.id,
-        //       text: category.fieldData.name || "Unnamed Category"
-        //     })
-        //   );
-        //   $("#partner-categories").multiselect('reload');
-        // });
-
         // Initialize city selection and fetch partners
         rpLib.utils.initCitySelection(function (brandId) {
           // On city selected
@@ -395,7 +373,10 @@ var rpLib = {
     bindCreatePartnerEvents: function () {
       // On create new partner click
       $("body").on("click", ".lib-create-item-btn", function (event) {
-        rpLib.partnersPage.handleCreatePartnerClick();
+        rpLib.partnersPage.resetPartnersModalContent(function () {
+          $("#partner-categories").multiselect('reload');
+          $(".collection-item-modal").removeClass("hidden");
+        });
       });
     },
     bindEditPartnerEvents: function () {
@@ -629,14 +610,6 @@ var rpLib = {
         }
       });
     },
-
-    handleCreatePartnerClick: function () {
-      rpLib.partnersPage.resetPartnersModalContent(function () {
-        $(".collection-item-modal").find("h3").text("Create New Partner");
-        $("#partner-categories").multiselect('reload');
-        $(".collection-item-modal").removeClass("hidden");
-      });
-    }
   },
   eventsPage: {
     state: {
@@ -650,6 +623,7 @@ var rpLib = {
       existingGallery1: [],
       existingGallery2: [],
       existingGallery3: [],
+      modalContentTemplateHTML: null,
     },
     init: function () {
       rpLib.utils.initCitySelection(function (brandId) {
@@ -668,6 +642,8 @@ var rpLib = {
       this.bindEventListeners();
     },
     bindEventListeners: function () {
+      this.state.modalContentTemplateHTML = $(".collection-item-modal-content")[0].outerHTML;
+
       this.bindCreateEventEvents();
       this.bindEditEventEvents();
       this.bindDeleteEventEvents();
@@ -677,56 +653,9 @@ var rpLib = {
     bindCreateEventEvents: function () {
       // Event listener for create button click
       $("body").on("click", ".lib-create-item-btn", function (event) {
-        // Clear modal data attribute to indicate this is a new item
-        $(".collection-item-modal").removeAttr("data-event-id");
-
-        // Update modal title for creation
-        $(".collection-item-modal").find("h3").text("Create New Event");
-
-        // Clear all form fields
-        $("#event-name").val("");
-        $("#event-date").val("");
-        $("#event-location-name").val("");
-        $("#event-location-address").val("");
-        $("#button-url").val("");
-        $("#button-text").val("");
-        $("#event-show").prop("checked", false);
-        $("#youtube-video-id").val("");
-        $("#youtube-video-id-2").val("");
-        $("#event-description").val("");
-        $("#sponsor-event-button-url").val("");
-        $("#sponsor-event-button-text").val("");
-
-        // Clear image previews
-        $("#main-image-preview").attr("src", eventMainPlaceholderImg);
-        $("#main-image-upload-status").text("");
-
-        $("#event-flyer-preview").attr("src", logoPlaceholderImg);
-        $("#event-flyer-status").text("");
-
-        $("#gallery-1-preview, #gallery-2-preview, #gallery-3-preview").children(':not(.add-img-btn)').remove();
-        rpLib.utils.updateGalleryLimits("gallery-1", 0);
-        rpLib.utils.updateGalleryLimits("gallery-2", 0);
-        rpLib.utils.updateGalleryLimits("gallery-3", 0);
-
-        // Reset file variables
-        rpLib.eventsPage.state.uploads = {
-          mainImage: null,
-          gallery1: [],
-          gallery2: [],
-          gallery3: [],
-        }
-
-        // Reset existing gallery data
-        rpLib.eventsPage.state.existingGallery1 = [];
-        rpLib.eventsPage.state.existingGallery2 = [];
-        rpLib.eventsPage.state.existingGallery3 = [];
-
-        // Enable upload inputs
-        $('.add-img-btn').removeClass('hidden');
-
-        // Show the modal
-        $(".collection-item-modal").removeClass("hidden");
+        rpLib.eventsPage.resetEventsModalContent(function() {
+          $(".collection-item-modal").removeClass("hidden");
+        });
       });
     },
     bindEditEventEvents: function () {
@@ -734,13 +663,12 @@ var rpLib = {
         let eventId = $(this).closest(".collection-item").attr("data-event-id");
         let slug = $(this).closest(".collection-item").attr("data-slug");
 
-        // Update modal title for editing
-        $(".collection-item-modal").find("h3").text("Edit Event");
+        // Reset modal content
+        rpLib.eventsPage.resetEventsModalContent(function() {
+          $(".collection-item-modal").attr("data-event-id", eventId);
 
-        // Set the event ID for editing
-        $(".collection-item-modal").attr("data-event-id", eventId);
-
-        rpLib.api.fetchEventDetailsAndOpenModal(slug);
+          rpLib.api.fetchEventDetailsAndOpenModal(slug);
+        });
       });
     },
     bindDeleteEventEvents: function () {
@@ -774,6 +702,35 @@ var rpLib = {
         const urlWithProtocol = rpLib.utils.formatUrlWithProtocol(url);
         $(this).val(urlWithProtocol);
       });
+    },
+    resetEventsModalContent: function (afterResetCallback) {
+      rpLib.eventsPage.state.uploads = {
+        mainImage: null,
+        flyerImage: null,
+        gallery1: [],
+        gallery2: [],
+        gallery3: [],
+      }
+
+      cleanModalContentTemplate = $(this.state.modalContentTemplateHTML);
+      $(".collection-item-modal").removeAttr("data-event-id");
+      $('.collection-item-modal').empty();
+      $('.collection-item-modal').append(cleanModalContentTemplate);
+
+      // Reset the gallery previews (but keep the add image button)
+      $("#gallery-1-preview, #gallery-2-preview, #gallery-3-preview").children(':not(.add-img-btn)').remove();
+
+      // Re/init rich text editor for event description
+      if ($("#event-description").length) { // Did gabe remove this?
+        rpLib.utils.initRichTextEditor(
+          "event-description",
+          "Share event description or info here..."
+        );
+      }
+
+      if (typeof(afterResetCallback) === "function") {
+        afterResetCallback();
+      }
 
       rpLib.utils.setupSingleImgPreviewReplacement("main-image-preview", function(newFile) {
         // Update the status text after selecting a new image
@@ -1886,7 +1843,6 @@ var rpLib = {
       const eventData = {
         fieldData: {
           name: $("#event-name").val(),
-          // date: $("#event-date").val(),
           date: rpLib.utils.turnPstDateToUtcForInputEl($("#event-date").val()),
           "location-name": $("#event-location-name").val(),
           "location-address": $("#event-location-address").val(),
@@ -2408,7 +2364,7 @@ var rpLib = {
       let newEventData = {
         fieldData: {
           name: $("#event-name").val(),
-          date: $("#event-date").val(),
+          date: rpLib.utils.turnPstDateToUtcForInputEl($("#event-date").val()),
           "location-name": $("#event-location-name").val(),
           "location-address": $("#event-location-address").val(),
           "button-url": $("#button-url").val(),
@@ -2427,10 +2383,10 @@ var rpLib = {
 
       // Construct youtube video URLs if that exists
       if (newEventData.fieldData["youtube-video-id"]) {
-        newEeventData.fieldData["video"] = {"url": `https://www.youtube.com/watch?v=${eventData.fieldData["youtube-video-id"]}`};
+        newEventData.fieldData["video"] = {"url": `https://www.youtube.com/watch?v=${$("#youtube-video-id").val()}`};
       }
       if (newEventData.fieldData["youtube-video-id-2"]) {
-        newEventData.fieldData["video-2"] = {"url": `https://www.youtube.com/watch?v=${eventData.fieldData["youtube-video-id-2"]}`};
+        newEventData.fieldData["video-2"] = {"url": `https://www.youtube.com/watch?v=${$("#youtube-video-id-2").val()}`};
       }
 
       // Add main image if there's one uploaded
