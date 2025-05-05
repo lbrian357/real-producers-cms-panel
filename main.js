@@ -2419,7 +2419,6 @@ var rpLib = {
         newEventData.fieldData["image-gallery-3"] = gallery3Images;
       }
 
-      debugger;
       $.ajax({
         url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${EVENTS_COLLECTION_ID}/items/live`,
         headers: {
