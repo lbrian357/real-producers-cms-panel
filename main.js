@@ -4,10 +4,6 @@ const BRANDS_COLLECTION_ID = "658f30a87b1a52ef8ad0b77b";
 const PARTNERS_COLLECTION_ID = "65e7ff7b313c5cd8cd924886";
 const PARTNER_CATEGORIES_COLLECTION_ID = "65e7fc8199c534cfe2cba083";
 const SITE_ID = "658f30a87b1a52ef8ad0b732";
-const profilePicPlaceholderImg = "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/66a4a5fa00aa346e11374944_user-profile-place-holder.jpg";
-const logoPlaceholderImg = "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/67d3e49e496d302f371805d7_logo-placeholder.jpg";
-const adPlaceholderImg = "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/67d3e6f9e85351033700473f_ad-image-placeholder.jpg";
-const eventMainPlaceholderImg = "https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/67dfcd6c686c0fa648b21c00_icon-event.png";
 
 
 $(document).ready(function () {
@@ -439,11 +435,7 @@ var rpLib = {
       $("#partner-categories").multiselect({
         maxHeight: 200,
       });
-      let count = 0;
       rpLib.partnersPage.state.partnerCategories.forEach(function(category) {
-        console.log('category: ', category);
-        console.log('count: ', count);
-        count++;
         $("#partner-categories").append(
           $("<option>", {
             value: category.id,
@@ -1545,20 +1537,14 @@ var rpLib = {
             if (partner.fieldData["profile-pic"]?.url) {
               $("#profile-pic-preview").attr("src", partner.fieldData["profile-pic"].url);
               $("#profile-pic-preview").removeAttr("srcset");
-            } else {
-              $("#profile-pic-preview").attr("src", profilePicPlaceholderImg);
             }
             if (partner.fieldData["logo"]?.url) {
               $("#logo-preview").attr("src", partner.fieldData["logo"]?.url);
               $("#logo-preview").removeAttr("srcset");
-            } else {
-              $("#logo-preview").attr("src", logoPlaceholderImg);
             }
             if (partner.fieldData["advertisement"]?.url) {
               $("#ad-image-preview").attr("src", partner.fieldData["advertisement"]?.url);
               $("#ad-image-preview").removeAttr("srcset");
-            } else {
-              $("#ad-image-preview").attr("src", adPlaceholderImg);
             }
 
             // Populate multi-reference fields (dropdown with multiple selections)
@@ -1780,16 +1766,12 @@ var rpLib = {
             if (event.fieldData["main-image"]?.url) {
               $("#event-main-image").val(event.fieldData["main-image"]?.url || "");
               $("#main-image-preview").attr("src", event.fieldData["main-image"]?.url).removeAttr("srcset");
-            } else {
-              $("#main-image-preview").attr("src", eventMainPlaceholderImg);
             }
 
             // Populate flyer image
             if (event.fieldData["event-flyer"]?.url) {
               $("#event-flyer").val(event.fieldData["event-flyer"]?.url || "");
               $("#event-flyer-preview").attr("src", event.fieldData["event-flyer"]?.url).removeAttr("srcset");
-            } else {
-              $("#event-flyer-preview").attr("src", logoPlaceholderImg);
             }
 
             // Store existing galleries in state to handle partial updates
@@ -1955,14 +1937,10 @@ var rpLib = {
             if (user.fieldData["profile-picture"]?.url) {
               $("#profile-pic-preview").attr("src", user.fieldData["profile-picture"]?.url);
               $("#profile-pic-preview").removeAttr("srcset");
-            } else {
-              $("#profile-pic-preview").attr("src", profilePicPlaceholderImg);
             }
             if (user.fieldData["full-picture"]?.url) {
               $("#full-pic-preview").attr("src", user.fieldData["full-picture"]?.url);
               $("#full-pic-preview").removeAttr("srcset");
-            } else {
-              $("#full-pic-preview").attr("src", profilePicPlaceholderImg);
             }
 
             // Init rich text editor for user bio
