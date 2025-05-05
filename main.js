@@ -240,6 +240,7 @@ var rpLib = {
       // Show saving status
       $("#save-user").text("Uploading images...");
       $("#save-user").prop("disabled", true);
+      $("#full-page-loading-overlay").show();
 
       // Upload profile pic if needed
       if (rpLib.usersPage.state.uploads.profilePic) {
@@ -285,14 +286,20 @@ var rpLib = {
       Promise.all(uploadPromises).then((results) => {
         if (isCreatingNewUser) {
           const brandId = $("#city-select").val();
-          rpLib.api.createUserAndRefreshList(brandId, profilePicFile, fullPicFile);
+          rpLib.api.createUserAndRefreshList(brandId, profilePicFile, fullPicFile, function() {
+            // Reset button text and re-enable it
+            $("#save-user").text("Save");
+            $("#save-user").prop("disabled", false);
+            $("#full-page-loading-overlay").hide();
+          });
         } else {
-          rpLib.api.updateUserAndRefreshList(userId, profilePicFile, fullPicFile);
+          rpLib.api.updateUserAndRefreshList(userId, profilePicFile, fullPicFile, function() {
+            // Reset button text and re-enable it
+            $("#save-user").text("Save");
+            $("#save-user").prop("disabled", false);
+            $("#full-page-loading-overlay").hide();
+          });
         }
-
-        // Reset button text and re-enable it
-        $("#save-user").text("Save");
-        $("#save-user").prop("disabled", false);
       });
     },
     renderUser: function (user) {
@@ -502,6 +509,7 @@ var rpLib = {
       // Show saving status
       $("#save-partner").text("Uploading images...");
       $("#save-partner").prop("disabled", true);
+      $("#full-page-loading-overlay").show();
 
       // Upload profile pic if new file selected
       if (profilePicFile) {
@@ -565,14 +573,20 @@ var rpLib = {
       Promise.all(uploadPromises).then((results) => {
         if (isCreatingNewPartner) {
           const brandId = $("#city-select").val();
-          rpLib.api.createPartnerAndRefreshList(brandId, profilePicFile, logoFile, adImageFile);
+          rpLib.api.createPartnerAndRefreshList(brandId, profilePicFile, logoFile, adImageFile, function() {
+            // Reset saving status
+            $("#save-partner").text("Save");
+            $("#save-partner").prop("disabled", false);
+            $("#full-page-loading-overlay").hide();
+          });
         } else {
-          rpLib.api.updatePartnerAndRefreshList(partnerId, profilePicFile, logoFile, adImageFile);
+          rpLib.api.updatePartnerAndRefreshList(partnerId, profilePicFile, logoFile, adImageFile, function() {
+            // Reset saving status
+            $("#save-partner").text("Save");
+            $("#save-partner").prop("disabled", false);
+            $("#full-page-loading-overlay").hide();
+          });
         }
-
-        // Reset button text and re-enable it
-        $("#save-partner").text("Save");
-        $("#save-partner").prop("disabled", false);
       });
     },
 
@@ -823,6 +837,7 @@ var rpLib = {
         // Show saving status
         $("#save-event").text("Uploading images...");
         $("#save-event").prop("disabled", true);
+        $("#full-page-loading-overlay").show();
 
         let uploadPromises = [];
 
@@ -890,14 +905,20 @@ var rpLib = {
 
           // Once all uploads are complete, call the appropriate function
           if (isCreatingNewEvent) {
-            rpLib.api.createEventAndRefreshList($("#city-select").val());
+            rpLib.api.createEventAndRefreshList($("#city-select").val(), function () {
+              // Reset saving status
+              $("#save-event").text("Save");
+              $("#save-event").prop("disabled", false);
+              $("#full-page-loading-overlay").hide();
+            });
           } else {
-            rpLib.api.updateEventAndRefreshList(eventId);
+            rpLib.api.updateEventAndRefreshList(eventId, function () {
+              // Reset saving status
+              $("#save-event").text("Save");
+              $("#save-event").prop("disabled", false);
+              $("#full-page-loading-overlay").hide();
+            });
           }
-
-          // Reset button text and re-enable it
-          $("#save-event").text("Save");
-          $("#save-event").prop("disabled", false);
         });
       });
 
@@ -1233,7 +1254,11 @@ var rpLib = {
       });
     },
     formatWfDate: function (utcDatetimeStr) {
-      date = new Date(utcDatetimeStr);
+      let date = new Date(utcDatetimeStr);
+
+      // turn date to pst as this is what realproducers on webflow uses
+      const options = { timeZone: "America/Los_Angeles" };
+      date = new Date(date.toLocaleString("en-US", options));
 
       const monthsShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     
@@ -1241,10 +1266,12 @@ var rpLib = {
       const day = date.getDate();
       const year = date.getFullYear();
       const hours = date.getHours();
+      const minutes = date.getMinutes();
+      const minutesFormatted = minutes < 10 ? "0" + minutes : minutes;
       const period = hours >= 12 ? "pm" : "am";
       const hourFormatted = hours % 12 === 0 ? 12 : hours % 12;
       
-      return `${month}, ${day}${rpLib.utils.getOrdinalSuffix(day)} ${year} ${hourFormatted}${period}`;
+      return `${month}, ${day}${rpLib.utils.getOrdinalSuffix(day)} ${year} ${hourFormatted}:${minutesFormatted}${period}`;
     },
     getOrdinalSuffix: function (day) {
       if (day >= 11 && day <= 13) return "th";
@@ -1258,6 +1285,63 @@ var rpLib = {
 
     formatWfDateForInputEl: function (utcDatetimeStr) {
       return new Date(utcDatetimeStr).toISOString().slice(0, 16);
+    },
+    turnUtcDateToPstForInputEl: function (utcDatetimeStr) {
+      // Create a date object from the UTC string
+      const dateObj = new Date(utcDatetimeStr);
+      
+      // Format the date in PST timezone to get proper components
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Los_Angeles',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+      
+      // Get formatted parts
+      const parts = formatter.formatToParts(dateObj);
+      
+      // Extract values from parts
+      const values = {};
+      for (const part of parts) {
+        if (part.type !== 'literal') {
+          values[part.type] = part.value;
+        }
+      }
+      
+      // Construct the datetime-local string (YYYY-MM-DDTHH:MM)
+      return `${values.year}-${values.month}-${values.day}T${values.hour}:${values.minute}`;
+    },
+    turnPstDateToUtcForInputEl: function (pstDatetimeStr) {
+      // Create a date object in the local timezone
+      const localDate = new Date(pstDatetimeStr);
+      
+      // Get the timezone offset for America/Los_Angeles at this specific date
+      const pstOptions = { timeZone: 'America/Los_Angeles', timeZoneName: 'short' };
+      const pstFormatter = new Intl.DateTimeFormat('en-US', pstOptions);
+      
+      // Format the date to get time zone name (PDT or PST)
+      const formattedDate = pstFormatter.format(localDate);
+      const isDST = formattedDate.includes('PDT');
+      
+      // Calculate UTC time by adding the appropriate offset (7 hours for PDT, 8 for PST)
+      const offset = isDST ? 7 : 8;
+      
+      // Create a new date with the correct UTC time
+      const year = localDate.getFullYear();
+      const month = localDate.getMonth(); 
+      const day = localDate.getDate();
+      const hour = localDate.getHours();
+      const minute = localDate.getMinutes();
+      
+      // Create a UTC date and add the offset
+      const utcDate = new Date(Date.UTC(year, month, day, hour + offset, minute));
+      
+      // Return ISO format for datetime-local input
+      return utcDate.toISOString();
     },
     localeDatetimeStrToUtcStr: function (localeDatetimeStr) {
       return new Date(localeDatetimeStr).toISOString();
@@ -1535,7 +1619,7 @@ var rpLib = {
         },
       });
     },
-    updatePartnerAndRefreshList: function (partnerId, newProfilePicFile, newLogoFile, newAdImageFile) {
+    updatePartnerAndRefreshList: function (partnerId, newProfilePicFile, newLogoFile, newAdImageFile, callback) {
       let updatedData = {
         fieldData: {
           name: $("#partner-name").val(),
@@ -1607,6 +1691,11 @@ var rpLib = {
             alert("Error updating partner. Please try again. Error status:" + errorRes.status);
           }
         },
+        complete: function () {
+          if (typeof callback === "function") {
+            callback();
+          }
+        },
       });
     },
     updatePartnerShowHide: function (partnerId, showPartner) {
@@ -1642,7 +1731,6 @@ var rpLib = {
       });
     },
     updateEventShowHide: function (eventId, showEvent) {
-      debugger;
       $.ajax({
         url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${EVENTS_COLLECTION_ID}/items/${eventId}/live`,
         headers: {
@@ -1706,7 +1794,7 @@ var rpLib = {
             // Populate form fields with event data
             $("#event-name").val(event.fieldData.name || "");
             if (event.fieldData.date) {
-              const localDatetime = rpLib.utils.formatWfDateForInputEl(event.fieldData.date);
+              const localDatetime = rpLib.utils.turnUtcDateToPstForInputEl(event.fieldData.date);
               $("#event-date").val(localDatetime);
             } else {
               $("#event-date").val("");
@@ -1789,11 +1877,12 @@ var rpLib = {
         },
       });
     },
-    updateEventAndRefreshList: function (eventId) {
+    updateEventAndRefreshList: function (eventId, callback) {
       const eventData = {
         fieldData: {
           name: $("#event-name").val(),
-          date: $("#event-date").val(),
+          // date: $("#event-date").val(),
+          date: rpLib.utils.turnPstDateToUtcForInputEl($("#event-date").val()),
           "location-name": $("#event-location-name").val(),
           "location-address": $("#event-location-address").val(),
           "button-url": $("#button-url").val(),
@@ -1850,7 +1939,6 @@ var rpLib = {
         data: JSON.stringify(eventData),
         contentType: "application/json",
         success: function () {
-          alert("Success! Event updated. \n\n Click the eyeball icon to view your updates.");
 
           // Close modal
           $(".collection-item-modal").addClass("hidden");
@@ -1861,11 +1949,19 @@ var rpLib = {
 
           // Refresh the event list
           rpLib.api.fetchEventsAndRender($("#city-select").val());
+
+          // Show success message
+          alert("Success! Event updated. \n\n Click the eyeball icon to view your updates.");
         },
         error: function (error) {
           console.error("Error updating event:", error);
-          $("#save-event").text("Save");
-          $("#save-event").prop("disabled", false);
+
+          alert("Failed to create event. Please try again.");
+        },
+        complete: function () {
+          if (typeof callback === "function") {
+            callback();
+          }
         },
       });
     },
@@ -1920,7 +2016,7 @@ var rpLib = {
       });
     },
 
-    updateUserAndRefreshList: function (userId, newProfilePicFile, newFullPicFile) {
+    updateUserAndRefreshList: function (userId, newProfilePicFile, newFullPicFile, callback) {
       let updatedData = {
         fieldData: {
           "first-name": $("#user-first-name").val(),
@@ -1972,6 +2068,11 @@ var rpLib = {
         error: function (error) {
           console.error("Error updating user:", error);
         },
+        complete: function () {
+          if (typeof callback === "function") {
+            callback();
+          }
+        }
       });
     },
     uploadImage: function (file, onSuccess, onError) {
@@ -2107,7 +2208,7 @@ var rpLib = {
         },
       });
     },
-    createUserAndRefreshList: function (brandId) {
+    createUserAndRefreshList: function (brandId, callback) {
       // The first and last name are used to create the full name
       const firstName = $("#user-first-name").val();
       const lastName = $("#user-last-name").val();
@@ -2167,9 +2268,14 @@ var rpLib = {
           $("#save-user").text("Save");
           $("#save-user").prop("disabled", false);
         },
+        complete: function () {
+          if (typeof callback === "function") {
+            callback();
+          }
+        },
       });
     },
-    createPartnerAndRefreshList: function (brandId, newProfilePicFile, newLogoFile, newAdImageFile) {
+    createPartnerAndRefreshList: function (brandId, newProfilePicFile, newLogoFile, newAdImageFile, callback) {
       let newPartnerData = {
         fieldData: {
           name: $("#partner-name").val(),
@@ -2239,15 +2345,19 @@ var rpLib = {
               `${detail.param}—${detail.description}`
             ));
             alert("Error creating partner. Please try again. Failed fields: " + failedFields.join(", "));
-          }
-          else {
+          } else {
             console.error("Error creating partner:", errorRes);
             alert("Failed to create partner. Please try again. " + errorRes.responseJSON?.message);
           }
         },
+        complete: function () {
+          if (typeof callback === "function") {
+            callback();
+          }
+        }
       });
     },
-    createEventAndRefreshList: function (brandId) {
+    createEventAndRefreshList: function (brandId, callback) {
       let newEventData = {
         fieldData: {
           name: $("#event-name").val(),
@@ -2311,14 +2421,22 @@ var rpLib = {
         method: "POST",
         data: JSON.stringify(newEventData),
         success: function (response) {
-          alert("Success! Event created. \n\n Click the eyeball icon to view your updates.");
           $(".collection-item-modal").addClass("hidden");
           // Refresh list
           rpLib.api.fetchEventsAndRender(brandId);
+
+          // Show success message
+          alert("Success! Event created. \n\n Click the eyeball icon to view your updates.");
         },
         error: function (error) {
           console.error("Error creating event:", error);
-          alert("Failed to create event. Please check the console for details.");
+
+          alert("Failed to create event. Please try again.");
+        },
+        complete: function () {
+          if (typeof callback === "function") {
+            callback();
+          }
         },
       });
     },
