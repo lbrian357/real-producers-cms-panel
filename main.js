@@ -119,6 +119,7 @@ var rpLib = {
       this.bindCreateUserEvents();
       this.bindEditUserEvents();
       this.bindDeleteUserEvents();
+      this.bindShowHideEvents();
       this.bindModalEvents();
     },
     bindCreateUserEvents: function () {
@@ -190,6 +191,14 @@ var rpLib = {
             rpLib.api.fetchBrandUsersAndRender($("#city-select").val());
           });
         }
+      });
+    },
+    bindShowHideEvents: function () {
+      $("body").on("change", ".show-hide-switch .switch input", function () {
+        const userId = $(this).closest(".collection-item").attr("data-user-id");
+        const showUser = $(this).is(":checked");
+
+        rpLib.api.updateUserShowHide(userId, showUser);
       });
     },
     bindModalEvents: function () {
@@ -425,12 +434,10 @@ var rpLib = {
       });
     },
     bindShowHideEvents: function () {
-      // if the checkbox input (.show-hide-switch .switch input)  is changed, update the partner's "show-partner" field
       $("body").on("change", ".show-hide-switch .switch input", function () {
         const partnerId = $(this).closest(".collection-item").attr("data-partner-id");
         const showPartner = $(this).is(":checked");
 
-        // Update the partner's "show-partner" field
         rpLib.api.updatePartnerShowHide(partnerId, showPartner);
       });
     },
@@ -2073,6 +2080,37 @@ var rpLib = {
             callback();
           }
         }
+      });
+    },
+
+    updateUserShowHide: function (userId, showUser) {
+      $.ajax({
+        url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${USERS_COLLECTION_ID}/items/${userId}/live`,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "PATCH",
+        data: JSON.stringify({
+          fieldData: {
+            "show-user": showUser,
+          },
+        }),
+        success: function () {
+          alert("Success! User profile updated. \n\n Click the eyeball icon to view your updates.");
+        },
+        error: function (errorRes) {
+          console.error("Error updating user:", errorRes);
+          // Handle Validation Error and list the fields that failed validation in the alert
+          if (errorRes.responseJSON && errorRes.responseJSON?.code === "validation_error" && errorRes.responseJSON?.details.length > 0) {
+            let failedFields = errorRes.responseJSON.details.map((detail) => (
+              `${detail.param}—${detail.description}`
+            ));
+            alert("Error updating user. Please try again. Failed fields: " + failedFields.join(", "));
+          }
+          else {
+            alert("Error updating user. Please try again. Error status:" + errorRes.status);
+          }
+        },
       });
     },
     uploadImage: function (file, onSuccess, onError) {
