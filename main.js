@@ -1814,12 +1814,12 @@ var rpLib = {
       if (eventData.fieldData["youtube-video-id"]) {
         eventData.fieldData["video"] = {"url": `https://www.youtube.com/watch?v=${eventData.fieldData["youtube-video-id"]}`};
       } else {
-        eventData.fieldData["video"] = {"url": ""};
+        eventData.fieldData["video"] = {"url": "WIP"};
       }
       if (eventData.fieldData["youtube-video-id-2"]) {
         eventData.fieldData["video-2"] = {"url": `https://www.youtube.com/watch?v=${eventData.fieldData["youtube-video-id-2"]}`};
       } else {
-        eventData.fieldData["video-2"] = {"url": ""};
+        eventData.fieldData["video-2"] = {"url": "WIP"};
       }
 
       // Add main image if there's one uploaded
@@ -2274,15 +2274,15 @@ var rpLib = {
       };
 
       // Construct youtube video URLs if that exists
-      if (eventData.fieldData["youtube-video-id"]) {
-        eventData.fieldData["video"] = {"url": `https://www.youtube.com/watch?v=${eventData.fieldData["youtube-video-id"]}`};
+      if (newEventData.fieldData["youtube-video-id"]) {
+        newEeventData.fieldData["video"] = {"url": `https://www.youtube.com/watch?v=${eventData.fieldData["youtube-video-id"]}`};
       } else {
-        eventData.fieldData["video"] = {"url": ""};
+        newEventData.fieldData["video"] = {"url": ""};
       }
-      if (eventData.fieldData["youtube-video-id-2"]) {
-        eventData.fieldData["video-2"] = {"url": `https://www.youtube.com/watch?v=${eventData.fieldData["youtube-video-id-2"]}`};
+      if (newEventData.fieldData["youtube-video-id-2"]) {
+        newEventData.fieldData["video-2"] = {"url": `https://www.youtube.com/watch?v=${eventData.fieldData["youtube-video-id-2"]}`};
       } else {
-        eventData.fieldData["video-2"] = {"url": ""};
+        newEventData.fieldData["video-2"] = {"url": ""};
       }
 
       // Add main image if there's one uploaded
