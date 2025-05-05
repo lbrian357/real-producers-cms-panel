@@ -711,6 +711,9 @@ var rpLib = {
         gallery2: [],
         gallery3: [],
       }
+      rpLib.eventsPage.state.existingGallery1 = [];
+      rpLib.eventsPage.state.existingGallery2 = [];
+      rpLib.eventsPage.state.existingGallery3 = [];
 
       cleanModalContentTemplate = $(this.state.modalContentTemplateHTML);
       $(".collection-item-modal").removeAttr("data-event-id");
@@ -2416,6 +2419,7 @@ var rpLib = {
         newEventData.fieldData["image-gallery-3"] = gallery3Images;
       }
 
+      debugger;
       $.ajax({
         url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${EVENTS_COLLECTION_ID}/items/live`,
         headers: {
