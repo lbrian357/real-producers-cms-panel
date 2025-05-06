@@ -136,7 +136,7 @@ var rpLib = {
 
         // Reset modal content
         rpLib.usersPage.resetUsersModalContent(function() {
-          // Set the user ID for editing
+          // Set the user ID for editing (not creating)
           $(".collection-item-modal").attr("data-user-id", userId);
 
           // Fetch and populate user details
@@ -186,7 +186,7 @@ var rpLib = {
       $("#save-user").prop("disabled", true);
       $("#full-page-loading-overlay").show();
 
-      // Upload profile pic if needed
+      // Upload profile pic if it's a new file
       if (rpLib.usersPage.state.uploads.profilePic) {
         $("#profile-pic-upload-status").text("Uploading...");
         let profilePicPromise = new Promise((resolve) => {
@@ -231,14 +231,14 @@ var rpLib = {
         if (isCreatingNewUser) {
           const brandId = $("#city-select").val();
           rpLib.api.createUserAndRefreshList(brandId, profilePicFile, fullPicFile, function() {
-            // Reset button text and re-enable it
+            // Reset button text and re-enable it, then hide loading overlay
             $("#save-user").text("Save");
             $("#save-user").prop("disabled", false);
             $("#full-page-loading-overlay").hide();
           });
         } else {
           rpLib.api.updateUserAndRefreshList(userId, profilePicFile, fullPicFile, function() {
-            // Reset button text and re-enable it
+            // Reset button text and re-enable it, then hide loading overlay
             $("#save-user").text("Save");
             $("#save-user").prop("disabled", false);
             $("#full-page-loading-overlay").hide();
@@ -247,11 +247,13 @@ var rpLib = {
       });
     },
     resetUsersModalContent: function (afterResetCallback) {
+      // Reset the uploads state
       rpLib.usersPage.state.uploads = {
         profilePic: null,
         fullPic: null,
       }
 
+      // Reset the modal content to template
       cleanModalContentTemplate = $(this.state.modalContentTemplateHTML);
       $(".collection-item-modal").removeAttr("data-user-id");
       $('.collection-item-modal').empty();
@@ -275,7 +277,6 @@ var rpLib = {
         );
       });
 
-
       // Close modal
       $("#close-modal").on("click", function () {
         // Ask for confirmation before closing the modal
@@ -283,7 +284,6 @@ var rpLib = {
           $(".collection-item-modal").addClass("hidden");
         }
       });
-
 
       // On profile pic preview replacement click, open file dialog
       rpLib.utils.setupSingleImgPreviewReplacement("profile-pic-preview", function(newFile) {
@@ -1042,7 +1042,7 @@ var rpLib = {
 
           if (isReplaced) {
             // This image was replaced, get the replacement file
-            const replacementFile = $preview.data(`replaced-${index}`);
+            const replacementFile = $preview.data(`replaced-${index}`); // TODO: use state instead of storing and getting from jquery's data attribute
             if (replacementFile) {
               filesToUpload.push(replacementFile);
               imageMap.push({
@@ -1329,7 +1329,7 @@ var rpLib = {
             $(`#${galleryPreviewId} .thumbnail[data-index="${clickedIndex}"]`).attr("src", e.target.result).addClass("replaced");
 
             // Add to a special mapping for replaced images
-            $(`#${galleryPreviewId}`).data(`replaced-${clickedIndex}`, newFile);
+            $(`#${galleryPreviewId}`).data(`replaced-${clickedIndex}`, newFile); // TODO: use state instead of storing  and getting from jquery's data attribute
           };
 
           reader.readAsDataURL(newFile);
