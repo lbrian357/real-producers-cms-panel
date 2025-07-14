@@ -1373,7 +1373,7 @@ var rpLib = {
       // Disable the dropdown when pagination starts (only for the first call)
       if (offset === 0) {
         $("#city-select").attr("disabled", true);
-        // Add a <progress></progress> element to indicate loading
+        // Add a <progress></progress> element to indicate loading. TODO: replace with a component made in webflow
         $("#city-select").closest('#wf-form-city-select-form').after('<progress style="background-attachment: revert !important; position: absolute; margin-top: -18px;"></progress>');
       }
 
@@ -2194,7 +2194,7 @@ var rpLib = {
         },
       });
     },
-    createUserAndRefreshList: function (brandId, callback) {
+    createUserAndRefreshList: function (brandId, newProfilePic, newFullPic, callback) {
       // The first and last name are used to create the full name
       const firstName = $("#user-first-name").val();
       const lastName = $("#user-last-name").val();
