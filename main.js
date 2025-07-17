@@ -1959,6 +1959,7 @@ var rpLib = {
             $("#user-url-youtube").val(user.fieldData["url-youtube"] || "");
             $("#user-url-linkedin").val(user.fieldData["url-linkedin"] || "");
             $("#user-url-tiktok").val(user.fieldData["url-tiktok"] || "");
+            $("#user-order").val(user.fieldData["order"] || "");
             if (user.fieldData["profile-picture"]?.url) {
               $("#profile-pic-preview").attr("src", user.fieldData["profile-picture"]?.url);
               $("#profile-pic-preview").removeAttr("srcset");
@@ -2002,6 +2003,7 @@ var rpLib = {
           "url-youtube": $("#user-url-youtube").val(),
           "url-linkedin": $("#user-url-linkedin").val(),
           "url-tiktok": $("#user-url-tiktok").val(),
+          "order": $("#user-order").val() || "",
         },
       };
 
@@ -2238,6 +2240,7 @@ var rpLib = {
           "url-youtube": $("#user-url-youtube").val(),
           "url-linkedin": $("#user-url-linkedin").val(),
           "url-tiktok": $("#user-url-tiktok").val(),
+          "order": $("#user-order").val(),
           "show-user": true,
           "brand-s": [brandId], // Sets the brand relationship
         },
