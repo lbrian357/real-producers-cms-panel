@@ -120,7 +120,7 @@ var rpLib = {
 
         // Set View All link
         const citySlug = $("#city-select option:selected").attr("data-slug");
-        $('a#view-all').attr('href', `http://www.realproducersmagazine.com/users/${citySlug}`);
+        $('a#view-all').attr('href', `http://www.realproducersmagazine.com/about/${citySlug}`);
 
         // Show elements that are hidden by default until a city is selected
         $("#view-all").removeClass("hidden");
