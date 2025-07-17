@@ -45,6 +45,8 @@ var rpLib = {
               const domain = response.fieldData?.domain || null;
               const setupComplete = response.fieldData?.["setup-complete"] || null;
               const basePageUrl = 'https://www.realproducersmagazine.com'
+              const originalWebsiteUrl = response.fieldData?.["url-original-rp-website"] || null;
+              const isForwardedFromOriginalUrl = response.fieldData?.["url-original-rp-website-forwarded-to-new-website"] || false;
 
               if (domain && setupComplete) {
                 $(".grid-dashboard-page-link-map .text-link-dashboard.domain").show();
@@ -58,11 +60,26 @@ var rpLib = {
                 $(".domains-and-pages .promos-domain-btn").attr("href", domain + "/promos");
                 $(".domains-and-pages .hello-agents-domain-btn").attr("href", domain + "/hello-agents");
                 $(".domains-and-pages .hello-partners-domain-btn").attr("href", domain + "/hello-partners");
+                $(".domains-and-pages .about-domain-btn").attr("href", domain + "/about");
+                $(".domains-and-pages .advertise-domain-btn").attr("href", domain + "/advertise");
+
+                // Update the original website URL if provided
+                $(".domains-and-pages .old-website-url-btn").attr("href", originalWebsiteUrl).text(originalWebsiteUrl);
+                if (isForwardedFromOriginalUrl) {
+                  // show .old-website-forwarded and replace text with "Linked To New Website"
+                  $(".domains-and-pages .old-website-forwarded").show();
+                  $(".domains-and-pages .old-website-no-foward").hide();
+                  $(".domains-and-pages .old-website-forwarded").text("Linked To New Website");
+                } else {
+                  // show .old-website-no-foward and replace text with "Not Forwarded"
+                  $(".domains-and-pages .old-website-no-foward").show();
+                  $(".domains-and-pages .old-website-forwarded").hide();
+                  $(".domains-and-pages .old-website-no-foward").text("Not Forwarded");
+                }
+
               } else {
                 $(".grid-dashboard-page-link-map .text-link-dashboard.domain").hide();
                 $(".grid-dashboard-page-link-map .links-to").hide();
-
-
               }
 
               // Update the page links
@@ -73,6 +90,9 @@ var rpLib = {
               $(".domains-and-pages .promos-page-btn").attr("href", basePageUrl + "/promos/" + selectedCitySlug);
               $(".domains-and-pages .hello-agents-page-btn").attr("href", basePageUrl + "/hello-agents/" + selectedCitySlug);
               $(".domains-and-pages .hello-partners-page-btn").attr("href", basePageUrl + "/hello-partners/" + selectedCitySlug);
+              $(".domains-and-pages .about-page-btn").attr("href", basePageUrl + "/about/" + selectedCitySlug);
+              $(".domains-and-pages .advertise-page-btn").attr("href", basePageUrl + "/advertise/" + selectedCitySlug);
+              
 
               // Update the text in the .domains-and-pages list
               $(".domains-and-pages a.text-link-dashboard").each(function () {
@@ -1600,6 +1620,9 @@ var rpLib = {
         document.querySelector("#partner-description .ql-editor").innerHTML
       );
 
+      // add preview-text with textContent of ql-editor
+      updatedData.fieldData["preview-text"] = document.querySelector("#partner-description .ql-editor").textContent.trim();
+
       // Add profile picture if available
       if (newProfilePicFile) {
         const newImgUrl = $("#profile-pic-preview").attr('src');
@@ -1761,6 +1784,7 @@ var rpLib = {
             $("#event-description").val(event.fieldData.description || "");
             $("#sponsor-event-button-url").val(event.fieldData["sponsor-event-button-url"] || "");
             $("#sponsor-event-button-text").val(event.fieldData["sponsor-event-button-text"] || "");
+            $("#show-future-event-checkbox").prop("checked", event.fieldData["show-future-event"] || false);
 
             // Populate main image
             if (event.fieldData["main-image"]?.url) {
@@ -1841,6 +1865,7 @@ var rpLib = {
           description: $("#event-description").val(),
           "sponsor-event-button-url": $("#sponsor-event-button-url").val(),
           "sponsor-event-button-text": $("#sponsor-event-button-text").val(),
+          "show-future-event": $("#show-future-event-checkbox").is(":checked"),
         },
       };
 
@@ -2244,6 +2269,7 @@ var rpLib = {
         data: JSON.stringify(newUserData),
         success: function (response) {
           alert("Success! User created. \n\n Click the eyeball icon to view your updates.");
+          $(".collection-item-modal").addClass("hidden");
           // Refresh list
           rpLib.api.fetchBrandUsersAndRender(brandId);
         },
@@ -2292,6 +2318,9 @@ var rpLib = {
       newPartnerData.fieldData["description"] = rpLib.utils.cleanQuillInnerHTMLToWf(
         document.querySelector("#partner-description .ql-editor").innerHTML
       );
+
+      // add preview-text with textContent of ql-editor
+      newPartnerData.fieldData["preview-text"] = document.querySelector("#partner-description .ql-editor").textContent.trim();
 
       // Add profile picture if available
       if (newProfilePicFile) {
@@ -2359,6 +2388,7 @@ var rpLib = {
           "sponsor-event-button-url": $("#sponsor-event-button-url").val(),
           "sponsor-event-button-text": $("#sponsor-event-button-text").val(),
           "show-event": true,
+          "show-future-event": $("#show-future-event-checkbox").is(":checked"),
           // Set the brand relationship
           brand: brandId,
         },
