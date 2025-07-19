@@ -67,15 +67,13 @@ var rpLib = {
                 // Update the original website URL if provided
                 $(".domains-and-pages .old-website-url-btn").attr("href", originalWebsiteUrl).text(originalWebsiteUrl);
                 if (isForwardedFromOriginalUrl) {
-                  // show .old-website-forwarded and replace text with "Linked To New Website"
+                  // show .old-website-forwarded
                   $(".domains-and-pages .old-website-forwarded").show();
-                  $(".domains-and-pages .old-website-no-foward").hide();
-                  $(".domains-and-pages .old-website-forwarded").text("Linked To New Website");
+                  $(".domains-and-pages .old-website-no-forward").hide();
                 } else {
-                  // show .old-website-no-foward and replace text with "Not Forwarded"
-                  $(".domains-and-pages .old-website-no-foward").show();
+                  // show .old-website-no-forward
+                  $(".domains-and-pages .old-website-no-forward").show();
                   $(".domains-and-pages .old-website-forwarded").hide();
-                  $(".domains-and-pages .old-website-no-foward").text("Not Forwarded");
                 }
               } else {
                 $(".grid-dashboard-page-link-map .text-link-dashboard.domain").hide();
@@ -94,7 +92,7 @@ var rpLib = {
               $(".domains-and-pages .advertise-page-btn").attr("href", basePageUrl + "/advertise/" + selectedCitySlug);
 
               // Update the text in the .domains-and-pages list
-              $(".domains-and-pages a.text-link-dashboard").each(function () {
+              $(".domains-and-pages a.text-link-dashboard").not('.is-label').each(function () {
                 // replace text with href
                 const href = $(this).attr("href");
                 $(this).text(href);
