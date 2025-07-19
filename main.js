@@ -29,7 +29,8 @@ var rpLib = {
       // Hide content that requires a city selection
       $(".grid-main-account-dashboard .grid-dashboard-section").hide();
 
-      rpLib.utils.initCitySelection( // On city selected by user
+      rpLib.utils.initCitySelection(
+        // On city selected by user
         function (brandId) {
           // Show the content that requires a city selection
           $(".grid-main-account-dashboard .grid-dashboard-section").show();
@@ -44,7 +45,7 @@ var rpLib = {
             success: function (response) {
               const domain = response.fieldData?.domain || null;
               const setupComplete = response.fieldData?.["setup-complete"] || null;
-              const basePageUrl = 'https://www.realproducersmagazine.com'
+              const basePageUrl = "https://www.realproducersmagazine.com";
               const originalWebsiteUrl = response.fieldData?.["url-original-rp-website"] || null;
               const isForwardedFromOriginalUrl = response.fieldData?.["url-original-rp-website-forwarded-to-new-website"] || false;
 
@@ -76,7 +77,6 @@ var rpLib = {
                   $(".domains-and-pages .old-website-forwarded").hide();
                   $(".domains-and-pages .old-website-no-foward").text("Not Forwarded");
                 }
-
               } else {
                 $(".grid-dashboard-page-link-map .text-link-dashboard.domain").hide();
                 $(".grid-dashboard-page-link-map .links-to").hide();
@@ -92,7 +92,6 @@ var rpLib = {
               $(".domains-and-pages .hello-partners-page-btn").attr("href", basePageUrl + "/hello-partners/" + selectedCitySlug);
               $(".domains-and-pages .about-page-btn").attr("href", basePageUrl + "/about/" + selectedCitySlug);
               $(".domains-and-pages .advertise-page-btn").attr("href", basePageUrl + "/advertise/" + selectedCitySlug);
-              
 
               // Update the text in the .domains-and-pages list
               $(".domains-and-pages a.text-link-dashboard").each(function () {
@@ -115,12 +114,13 @@ var rpLib = {
       modalContentTemplateHTML: null,
     },
     init: function () {
-      rpLib.utils.initCitySelection( function(brandId) { // On city selected
+      rpLib.utils.initCitySelection(function (brandId) {
+        // On city selected
         rpLib.api.fetchBrandUsersAndRender(brandId);
 
         // Set View All link
         const citySlug = $("#city-select option:selected").attr("data-slug");
-        $('a#view-all').attr('href', `http://www.realproducersmagazine.com/about/${citySlug}`);
+        $("a#view-all").attr("href", `http://www.realproducersmagazine.com/about/${citySlug}`);
 
         // Show elements that are hidden by default until a city is selected
         $("#view-all").removeClass("hidden");
@@ -142,7 +142,7 @@ var rpLib = {
     bindCreateUserEvents: function () {
       // Event listener for create button click
       $("body").on("click", ".lib-create-item-btn", function (event) {
-        rpLib.usersPage.resetUsersModalContent(function() {
+        rpLib.usersPage.resetUsersModalContent(function () {
           // Show the modal after resetting content
           $(".collection-item-modal").removeClass("hidden");
         });
@@ -151,11 +151,11 @@ var rpLib = {
     bindEditUserEvents: function () {
       // Event listener for edit button click and open modal
       $("body").on("click", ".item-edit-btn", function (event) {
-        let userId = $(this).closest(".collection-item").attr('data-user-id');
+        let userId = $(this).closest(".collection-item").attr("data-user-id");
         let slug = $(this).closest(".collection-item").attr("data-slug");
 
         // Reset modal content
-        rpLib.usersPage.resetUsersModalContent(function() {
+        rpLib.usersPage.resetUsersModalContent(function () {
           // Set the user ID for editing (not creating)
           $(".collection-item-modal").attr("data-user-id", userId);
 
@@ -188,9 +188,9 @@ var rpLib = {
     },
     bindModalEvents: function () {
       // Event listener on url inputs to add "http://" to website URL if not present
-      $(document).on('blur', '.collection-item-modal input[type="url"]', function() {
+      $(document).on("blur", '.collection-item-modal input[type="url"]', function () {
         const url = $(this).val().trim();
-    
+
         const urlWithProtocol = rpLib.utils.formatUrlWithProtocol(url);
         $(this).val(urlWithProtocol);
       });
@@ -250,14 +250,14 @@ var rpLib = {
       Promise.all(uploadPromises).then((results) => {
         if (isCreatingNewUser) {
           const brandId = $("#city-select").val();
-          rpLib.api.createUserAndRefreshList(brandId, profilePicFile, fullPicFile, function() {
+          rpLib.api.createUserAndRefreshList(brandId, profilePicFile, fullPicFile, function () {
             // Reset button text and re-enable it, then hide loading overlay
             $("#save-user").text("Save");
             $("#save-user").prop("disabled", false);
             $("#full-page-loading-overlay").hide();
           });
         } else {
-          rpLib.api.updateUserAndRefreshList(userId, profilePicFile, fullPicFile, function() {
+          rpLib.api.updateUserAndRefreshList(userId, profilePicFile, fullPicFile, function () {
             // Reset button text and re-enable it, then hide loading overlay
             $("#save-user").text("Save");
             $("#save-user").prop("disabled", false);
@@ -271,30 +271,24 @@ var rpLib = {
       rpLib.usersPage.state.uploads = {
         profilePic: null,
         fullPic: null,
-      }
+      };
 
       // Reset the modal content to template
       cleanModalContentTemplate = $(this.state.modalContentTemplateHTML);
       $(".collection-item-modal").removeAttr("data-user-id");
-      $('.collection-item-modal').empty();
-      $('.collection-item-modal').append(cleanModalContentTemplate);
+      $(".collection-item-modal").empty();
+      $(".collection-item-modal").append(cleanModalContentTemplate);
 
       // Re/init rich text editor for user bio
-      rpLib.utils.initRichTextEditor(
-        "user-bio",
-        "Share user bio or info here..."
-      );
+      rpLib.utils.initRichTextEditor("user-bio", "Share user bio or info here...");
 
-      if (typeof(afterResetCallback) === "function") {
+      if (typeof afterResetCallback === "function") {
         afterResetCallback();
       }
 
       // On save button click
       $("#save-user").on("click", function () {
-        rpLib.usersPage.handleSaveUserClick(
-          rpLib.usersPage.state.uploads.profilePic,
-          rpLib.usersPage.state.uploads.fullPic
-        );
+        rpLib.usersPage.handleSaveUserClick(rpLib.usersPage.state.uploads.profilePic, rpLib.usersPage.state.uploads.fullPic);
       });
 
       // Close modal
@@ -306,17 +300,16 @@ var rpLib = {
       });
 
       // On profile pic preview replacement click, open file dialog
-      rpLib.utils.setupSingleImgPreviewReplacement("profile-pic-preview", function(newFile) {
+      rpLib.utils.setupSingleImgPreviewReplacement("profile-pic-preview", function (newFile) {
         $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
         rpLib.usersPage.state.uploads.profilePic = newFile;
       });
 
       // On full pic preview replacement click, open file dialog
-      rpLib.utils.setupSingleImgPreviewReplacement("full-pic-preview", function(newFile) {
+      rpLib.utils.setupSingleImgPreviewReplacement("full-pic-preview", function (newFile) {
         $("#full-pic-upload-status").text("Image selected (will upload when saved)");
         rpLib.usersPage.state.uploads.fullPic = newFile;
       });
-
     },
     renderUser: function (user) {
       const templateRowItem = $(".collection-item-row-template").clone();
@@ -329,7 +322,6 @@ var rpLib = {
       templateRowItem.find(".user-number").text(user.fieldData.phone || "");
       templateRowItem.find(".user-email").text(user.fieldData.email || "");
       templateRowItem.find(".item-view-btn").attr("href", `https://www.realproducersmagazine.com/user/${user.fieldData.slug}` || "");
-
 
       const $showOrHideCheckbox = templateRowItem.find(".show-hide-switch .switch input");
       if (user.fieldData["show-user"] === true) {
@@ -353,7 +345,7 @@ var rpLib = {
     },
     init: function () {
       // Load list of partner categories first so it's available to populate the dropdown in the edit modal
-      rpLib.api.fetchAllPartnerCategories(function(categories) {
+      rpLib.api.fetchAllPartnerCategories(function (categories) {
         // Save categories to state for later use
         rpLib.partnersPage.state.partnerCategories = categories;
 
@@ -364,7 +356,7 @@ var rpLib = {
 
           // Set View All link
           const citySlug = $("#city-select option:selected").attr("data-slug");
-          $('a#view-all').attr('href', `http://www.realproducersmagazine.com/partners/${citySlug}`);
+          $("a#view-all").attr("href", `http://www.realproducersmagazine.com/partners/${citySlug}`);
 
           // Show elements that are hidden by default until a city is selected
           $("#view-all").removeClass("hidden");
@@ -374,7 +366,6 @@ var rpLib = {
       });
 
       this.bindEventListeners();
-
     },
     bindEventListeners: function () {
       this.state.modalContentTemplateHTML = $(".collection-item-modal-content")[0].outerHTML;
@@ -389,7 +380,7 @@ var rpLib = {
       // On create new partner click
       $("body").on("click", ".lib-create-item-btn", function (event) {
         rpLib.partnersPage.resetPartnersModalContent(function () {
-          $("#partner-categories").multiselect('reload');
+          $("#partner-categories").multiselect("reload");
           $(".collection-item-modal").removeClass("hidden");
         });
       });
@@ -400,7 +391,7 @@ var rpLib = {
         const partnerId = $(this).closest(".collection-item").attr("data-partner-id");
         const slug = $(this).closest(".collection-item").attr("data-slug");
 
-        rpLib.partnersPage.resetPartnersModalContent(function() {
+        rpLib.partnersPage.resetPartnersModalContent(function () {
           $(".collection-item-modal").attr("data-partner-id", partnerId);
 
           rpLib.api.fetchPartnerDetailsAndOpenModal(slug);
@@ -431,9 +422,9 @@ var rpLib = {
     },
     bindModalEvents: function () {
       // Event listener on url inputs to add "http://" to website URL if not present
-      $(document).on('blur', '.collection-item-modal input[type="url"]', function() {
+      $(document).on("blur", '.collection-item-modal input[type="url"]', function () {
         const url = $(this).val().trim();
-    
+
         const urlWithProtocol = rpLib.utils.formatUrlWithProtocol(url);
         $(this).val(urlWithProtocol);
       });
@@ -443,34 +434,31 @@ var rpLib = {
         profilePic: null,
         logo: null,
         adImage: null,
-      }
+      };
 
       cleanModalContentTemplate = $(this.state.modalContentTemplateHTML);
       $(".collection-item-modal").removeAttr("data-partner-id");
-      $('.collection-item-modal').empty();
-      $('.collection-item-modal').append(cleanModalContentTemplate);
+      $(".collection-item-modal").empty();
+      $(".collection-item-modal").append(cleanModalContentTemplate);
 
       // Re/init partner categories
       $("#partner-categories").empty(); // Clear existing options
       $("#partner-categories").multiselect({
         maxHeight: 200,
       });
-      rpLib.partnersPage.state.partnerCategories.forEach(function(category) {
+      rpLib.partnersPage.state.partnerCategories.forEach(function (category) {
         $("#partner-categories").append(
           $("<option>", {
             value: category.id,
-            text: category.fieldData.name || "Unnamed Category"
+            text: category.fieldData.name || "Unnamed Category",
           })
         );
       });
 
       // Re/Init rich text editor for partner description
-      rpLib.utils.initRichTextEditor(
-        "partner-description",
-        "Share partner bio or info here..."
-      );
+      rpLib.utils.initRichTextEditor("partner-description", "Share partner bio or info here...");
 
-      if (typeof(afterResetCallback) === "function") {
+      if (typeof afterResetCallback === "function") {
         afterResetCallback();
       }
 
@@ -492,22 +480,21 @@ var rpLib = {
       });
 
       // On image preview replacement click, open file dialog
-      rpLib.utils.setupSingleImgPreviewReplacement("profile-pic-preview", function(newFile) {
+      rpLib.utils.setupSingleImgPreviewReplacement("profile-pic-preview", function (newFile) {
         // Update the status text after selecting a new image
         $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
 
         // Update the state/variable to indicate a new file was selected
         rpLib.partnersPage.state.uploads.profilePic = newFile;
       });
-      rpLib.utils.setupSingleImgPreviewReplacement("logo-preview", function(newFile) {
+      rpLib.utils.setupSingleImgPreviewReplacement("logo-preview", function (newFile) {
         $("#logo-upload-status").text("Image selected (will upload when saved)");
         rpLib.partnersPage.state.uploads.logo = newFile;
       });
-      rpLib.utils.setupSingleImgPreviewReplacement("ad-image-preview", function(newFile) {
+      rpLib.utils.setupSingleImgPreviewReplacement("ad-image-preview", function (newFile) {
         $("#ad-image-upload-status").text("Image selected (will upload when saved)");
         rpLib.partnersPage.state.uploads.adImage = newFile;
       });
-
     },
     renderPartner: function (partner) {
       const templateRowItem = $(".collection-item-row-template").clone();
@@ -516,7 +503,10 @@ var rpLib = {
       templateRowItem.attr("data-partner-id", partner.id);
 
       if (partner.fieldData["profile-pic"]?.url) {
-        templateRowItem.find(".partner-pic").attr("src", partner.fieldData["profile-pic"]?.url || "").removeAttr("srcset");
+        templateRowItem
+          .find(".partner-pic")
+          .attr("src", partner.fieldData["profile-pic"]?.url || "")
+          .removeAttr("srcset");
       }
       templateRowItem.find(".partner-name").text(partner.fieldData.name || "");
       templateRowItem.find(".partner-number").text(partner.fieldData.phone || "");
@@ -605,14 +595,14 @@ var rpLib = {
       Promise.all(uploadPromises).then((results) => {
         if (isCreatingNewPartner) {
           const brandId = $("#city-select").val();
-          rpLib.api.createPartnerAndRefreshList(brandId, profilePicFile, logoFile, adImageFile, function() {
+          rpLib.api.createPartnerAndRefreshList(brandId, profilePicFile, logoFile, adImageFile, function () {
             // Reset saving status
             $("#save-partner").text("Save");
             $("#save-partner").prop("disabled", false);
             $("#full-page-loading-overlay").hide();
           });
         } else {
-          rpLib.api.updatePartnerAndRefreshList(partnerId, profilePicFile, logoFile, adImageFile, function() {
+          rpLib.api.updatePartnerAndRefreshList(partnerId, profilePicFile, logoFile, adImageFile, function () {
             // Reset saving status
             $("#save-partner").text("Save");
             $("#save-partner").prop("disabled", false);
@@ -642,7 +632,7 @@ var rpLib = {
 
         // Set View All link
         const citySlug = $("#city-select option:selected").attr("data-slug");
-        $('a#view-all').attr('href', `http://www.realproducersmagazine.com/events/${citySlug}`);
+        $("a#view-all").attr("href", `http://www.realproducersmagazine.com/events/${citySlug}`);
 
         // Show elements that are hidden by default until a city is selected
         $("#view-all").removeClass("hidden");
@@ -664,7 +654,7 @@ var rpLib = {
     bindCreateEventEvents: function () {
       // Event listener for create button click
       $("body").on("click", ".lib-create-item-btn", function (event) {
-        rpLib.eventsPage.resetEventsModalContent(function() {
+        rpLib.eventsPage.resetEventsModalContent(function () {
           $(".collection-item-modal").removeClass("hidden");
         });
       });
@@ -675,7 +665,7 @@ var rpLib = {
         let slug = $(this).closest(".collection-item").attr("data-slug");
 
         // Reset modal content
-        rpLib.eventsPage.resetEventsModalContent(function() {
+        rpLib.eventsPage.resetEventsModalContent(function () {
           $(".collection-item-modal").attr("data-event-id", eventId);
 
           rpLib.api.fetchEventDetailsAndOpenModal(slug);
@@ -707,9 +697,9 @@ var rpLib = {
     },
     bindModalEvents: function () {
       // Event listener on url inputs to add "http://" to website URL if not present
-      $(document).on('blur', '.collection-item-modal input[type="url"]', function() {
+      $(document).on("blur", '.collection-item-modal input[type="url"]', function () {
         const url = $(this).val().trim();
-    
+
         const urlWithProtocol = rpLib.utils.formatUrlWithProtocol(url);
         $(this).val(urlWithProtocol);
       });
@@ -721,56 +711,55 @@ var rpLib = {
         gallery1: [],
         gallery2: [],
         gallery3: [],
-      }
+      };
       rpLib.eventsPage.state.existingGallery1 = [];
       rpLib.eventsPage.state.existingGallery2 = [];
       rpLib.eventsPage.state.existingGallery3 = [];
 
       cleanModalContentTemplate = $(this.state.modalContentTemplateHTML);
       $(".collection-item-modal").removeAttr("data-event-id");
-      $('.collection-item-modal').empty();
-      $('.collection-item-modal').append(cleanModalContentTemplate);
+      $(".collection-item-modal").empty();
+      $(".collection-item-modal").append(cleanModalContentTemplate);
 
       // Reset the gallery previews (but keep the add image button)
-      $("#gallery-1-preview, #gallery-2-preview, #gallery-3-preview").children(':not(.add-img-btn)').remove();
+      $("#gallery-1-preview, #gallery-2-preview, #gallery-3-preview").children(":not(.add-img-btn)").remove();
 
       // Re/init rich text editor for event description
-      if ($("#event-description").length) { // Did gabe remove this?
-        rpLib.utils.initRichTextEditor(
-          "event-description",
-          "Share event description or info here..."
-        );
+      if ($("#event-description").length) {
+        // Did gabe remove this?
+        rpLib.utils.initRichTextEditor("event-description", "Share event description or info here...");
       }
 
-      if (typeof(afterResetCallback) === "function") {
+      if (typeof afterResetCallback === "function") {
         afterResetCallback();
       }
 
-      rpLib.utils.setupSingleImgPreviewReplacement("main-image-preview", function(newFile) {
+      rpLib.utils.setupSingleImgPreviewReplacement("main-image-preview", function (newFile) {
         // Update the status text after selecting a new image
         $("#main-image-upload-status").text("Image selected (will upload when saved)");
 
         // Update uploads state to indicate a new file was selected
         rpLib.eventsPage.state.uploads.mainImage = newFile;
       });
-      rpLib.utils.setupSingleImgPreviewReplacement("event-flyer-preview", function(newFile) {
+      rpLib.utils.setupSingleImgPreviewReplacement("event-flyer-preview", function (newFile) {
         $("#event-flyer-status").text("Image selected (will upload when saved)");
         rpLib.eventsPage.state.uploads.flyerImage = newFile;
       });
 
       // When an .add-img-btn is clicked, create a new invisible temp file input and trigger the click event
       $(".add-img-btn").on("click", function () {
-        // Get id from class name .gallery-1-add-img-btn, .gallery-2-add-img-btn, .gallery-3-add-img-btn with regex (this is hacky :/) 
-        const galleryId = $(this).attr("class").match(/gallery-(\d+)-add-img-btn/)[1];
+        // Get id from class name .gallery-1-add-img-btn, .gallery-2-add-img-btn, .gallery-3-add-img-btn with regex (this is hacky :/)
+        const galleryId = $(this)
+          .attr("class")
+          .match(/gallery-(\d+)-add-img-btn/)[1];
         const tempInputElId = `gallery-${galleryId}-upload`;
         const $tempInput = $(`<input type='file' id='${tempInputElId}' accept='image/*' multiple style='display:none;' />`);
-        
-        // Attach the change event handler before appending to body
+
+        // Update the gallery file count check in resetEventsModalContent
         $tempInput.on("change", function (e) {
           const files = Array.from(e.target.files);
           if (files.length === 0) return;
 
-          
           // Validate each file size
           const maxSize = 4 * 1024 * 1024; // 4MB per file
           const invalidFiles = [];
@@ -783,18 +772,20 @@ var rpLib = {
               validFiles.push(file);
             }
           });
+          
           // Show error for invalid files
           if (invalidFiles.length > 0) {
             alert(`The following files are too large (max 4MB each):\n${invalidFiles.join('\n')}\n\nOnly valid files will be added.`);
           }
+          
           // If no valid files, exit
           if (validFiles.length === 0) {
             $(this).val(""); // Reset the input
             return;
           }
           
-          // Get current images count (both existing and newly added)
-          const currentCount = $(`#gallery-${galleryId}-preview .gallery-img`).length;
+          // Get current images count using containers instead of img elements
+          const currentCount = $(`#gallery-${galleryId}-preview .gallery-img-container`).length;
           
           // Check if adding these files would exceed the limit
           if (currentCount + validFiles.length > 25) {
@@ -804,13 +795,13 @@ var rpLib = {
             return;
           }
           
-          // Add new files to the array
+          // Add valid files to the array
           rpLib.eventsPage.state.uploads[`gallery${galleryId}`] = [
             ...rpLib.eventsPage.state.uploads[`gallery${galleryId}`], 
             ...validFiles
           ];
           
-          // Show preview for each file
+          // Show preview for each valid file
           validFiles.forEach((file, index) => {
             rpLib.utils.addImageToGallery(`gallery-${galleryId}`, file, index);
           });
@@ -818,7 +809,7 @@ var rpLib = {
           // Remove temp input after use
           $tempInput.remove();
         });
-        
+
         $("body").append($tempInput);
         $tempInput.trigger("click");
       });
@@ -832,6 +823,9 @@ var rpLib = {
       $("body #save-event").on("click", function () {
         const eventId = $(".collection-item-modal").attr("data-event-id");
         const isCreatingNewEvent = !eventId; // Check if we're creating a new event
+
+        // IMPORTANT: Clean up gallery state before saving
+        rpLib.eventsPage.cleanGalleryStateBeforeSave();
 
         // Show saving status
         $("#save-event").text("Uploading images...");
@@ -931,18 +925,90 @@ var rpLib = {
     addExistingImageToGallery: function (galleryId, imageData) {
       if (imageData && imageData.url) {
         const index = $(`#${galleryId}-preview .gallery-img`).length;
-        const img = $("<img>")
-          .addClass("thumbnail")
-          .addClass("gallery-img")
-          .attr("src", imageData.url)
+
+        // Create container with image and delete button
+        const container = $("<div>")
+          .addClass("gallery-img-container")
           .attr("data-index", index)
           .attr("data-image-id", imageData.id)
-          .attr("data-existing", true)
-          .attr("title", "Click to replace this image");
-        $(`#${galleryId}-preview .add-img-btn`).before(img);
+          .attr("data-existing", true);
+
+        const img = $("<img>").addClass("thumbnail").addClass("gallery-img").attr("src", imageData.url).attr("title", "Click to replace this image");
+
+        const deleteBtn = $("<div>").addClass("delete-image-gallery-btn").attr("title", "Delete this image");
+
+        container.append(img).append(deleteBtn);
+        $(`#${galleryId}-preview .add-img-btn`).before(container);
+
         // Update limits display
         rpLib.utils.updateGalleryLimits(galleryId, index + 1);
       }
+    },
+    removeImageFromGalleryState: function(galleryId, $container) {
+      const galleryNum = galleryId.split("-")[1];
+      const fileIndex = parseInt($container.attr("data-file-index"));
+      const isExisting = $container.attr("data-existing");
+      
+      if (isExisting) {
+        // Remove from existing gallery arrays
+        const imageId = $container.attr("data-image-id");
+        if (galleryNum === "1") {
+          rpLib.eventsPage.state.existingGallery1 = rpLib.eventsPage.state.existingGallery1.filter(img => img.id !== imageId);
+        } else if (galleryNum === "2") {
+          rpLib.eventsPage.state.existingGallery2 = rpLib.eventsPage.state.existingGallery2.filter(img => img.id !== imageId);
+        } else if (galleryNum === "3") {
+          rpLib.eventsPage.state.existingGallery3 = rpLib.eventsPage.state.existingGallery3.filter(img => img.id !== imageId);
+        }
+      } else if (!isNaN(fileIndex)) {
+        // Remove from new uploads array
+        const uploads = rpLib.eventsPage.state.uploads[`gallery${galleryNum}`];
+        if (uploads && uploads[fileIndex]) {
+          uploads.splice(fileIndex, 1);
+        }
+        
+        // Update file indices for remaining containers - THIS IS CRUCIAL
+        $(`#gallery-${galleryNum}-preview .gallery-img-container`).each(function(index) {
+          const $this = $(this);
+          const currentFileIndex = parseInt($this.attr("data-file-index"));
+          
+          if (!$this.attr("data-existing") && !isNaN(currentFileIndex)) {
+            if (currentFileIndex > fileIndex) {
+              // Decrease the file index for items that came after the deleted one
+              $this.attr("data-file-index", currentFileIndex - 1);
+            }
+          }
+        });
+      }
+      
+      // Also clean up any replacement data stored in jQuery data
+      const containerIndex = $container.attr("data-index");
+      const $preview = $(`#gallery-${galleryNum}-preview`);
+      $preview.removeData(`replaced-${containerIndex}`);
+    },
+    cleanGalleryStateBeforeSave: function() {
+      // This function ensures the upload arrays only contain files that are actually in the DOM
+      ['1', '2', '3'].forEach(galleryNum => {
+        const $containers = $(`#gallery-${galleryNum}-preview .gallery-img-container`);
+        const newUploads = [];
+        
+        $containers.each(function() {
+          const $container = $(this);
+          const fileIndex = parseInt($container.attr("data-file-index"));
+          const isExisting = $container.attr("data-existing");
+          
+          if (!isExisting && !isNaN(fileIndex)) {
+            const originalFile = rpLib.eventsPage.state.uploads[`gallery${galleryNum}`][fileIndex];
+            if (originalFile) {
+              // Update the container's file index to match its new position in the array
+              $container.attr("data-file-index", newUploads.length);
+              newUploads.push(originalFile);
+            }
+          }
+        });
+        
+        // Replace the upload array with the cleaned version
+        rpLib.eventsPage.state.uploads[`gallery${galleryNum}`] = newUploads;
+      });
     },
     renderEvent: function (event) {
       const templateRowItem = $(".collection-item-row-template").clone();
@@ -951,7 +1017,10 @@ var rpLib = {
       templateRowItem.attr("data-event-id", event.id);
 
       if (event.fieldData["main-image"]?.url) {
-        templateRowItem.find(".event-pic").attr("src", event.fieldData["main-image"]?.url || "").removeAttr("srcset");
+        templateRowItem
+          .find(".event-pic")
+          .attr("src", event.fieldData["main-image"]?.url || "")
+          .removeAttr("srcset");
       }
       templateRowItem.find(".event-name").text(event.fieldData.name || "");
       if (event.fieldData.date) {
@@ -980,8 +1049,10 @@ var rpLib = {
       $("head").append(scriptTagForSparkMD5);
 
       // @nobleclem/jquery-multiselect
-      const scriptTagForMultiselect = '<script src="https://cdn.jsdelivr.net/npm/@nobleclem/jquery-multiselect@2.4.24/jquery.multiselect.min.js"></script>';
-      const cssLinkForMultiselect = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@nobleclem/jquery-multiselect@2.4.24/jquery.multiselect.min.css">';
+      const scriptTagForMultiselect =
+        '<script src="https://cdn.jsdelivr.net/npm/@nobleclem/jquery-multiselect@2.4.24/jquery.multiselect.min.js"></script>';
+      const cssLinkForMultiselect =
+        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@nobleclem/jquery-multiselect@2.4.24/jquery.multiselect.min.css">';
       $("head").append(scriptTagForMultiselect);
       $("head").append(cssLinkForMultiselect);
 
@@ -1034,14 +1105,20 @@ var rpLib = {
       const reader = new FileReader();
       reader.onload = function (e) {
         const index = $(`#${galleryId}-preview .gallery-img`).length;
+
+        // Create container with image and delete button
+        const container = $("<div>").addClass("gallery-img-container").attr("data-index", index).attr("data-file-index", fileIndex);
+
         const img = $("<img>")
           .addClass("thumbnail")
           .addClass("gallery-img")
           .attr("src", e.target.result)
-          .attr("data-index", index)
-          .attr("data-file-index", fileIndex)
           .attr("title", "Click to replace this image");
-        $(`#${galleryId}-preview .add-img-btn`).before(img);
+
+        const deleteBtn = $("<div>").addClass("delete-image-gallery-btn").attr("title", "Delete this image");
+
+        container.append(img).append(deleteBtn);
+        $(`#${galleryId}-preview .add-img-btn`).before(container);
 
         // Update limits display
         rpLib.utils.updateGalleryLimits(galleryId, index + 1);
@@ -1052,83 +1129,55 @@ var rpLib = {
       return new Promise((resolve) => {
         const $preview = $(`#${galleryId}-preview`);
         const $status = $(`#${galleryId}-upload-status`);
-        const existingImages = $preview.find("img");
+        const existingContainers = $preview.find(".gallery-img-container");
 
         // If there are no images to upload
-        if (existingImages.length === 0 && galleryFiles.length === 0) {
+        if (existingContainers.length === 0 && galleryFiles.length === 0) {
           resolve([]);
           return;
         }
 
-        // If we only have existing images that weren't changed
-        if (galleryFiles.length === 0 && !$preview.find(".replaced").length) {
-          // Just use the existing gallery data
-          const galleryNum = galleryId.split("-")[1]; // eg. #gallery-1-preview
-          if (galleryNum === "1") resolve(rpLib.eventsPage.state.existingGallery1);
-          else if (galleryNum === "2") resolve(rpLib.eventsPage.state.existingGallery2);
-          else if (galleryNum === "3") resolve(rpLib.eventsPage.state.existingGallery3);
-          return;
-        }
-
-        // We need to upload images
-        $status.text("Preparing upload...");
-
-        // Collect all images that need uploading (new or replaced)
+        // Collect current state based on what's actually in the preview
+        let finalResults = [];
         let filesToUpload = [];
-        let imageMap = []; // To maintain order
+        let uploadMap = {}; // Maps upload array index to final result index
 
-        // Process each image in the preview area to maintain order
-        existingImages.each(function () {
-          const $img = $(this);
-          const index = $img.attr("data-index");
+        // Process each container in the preview area to maintain order
+        existingContainers.each(function (finalIndex) {
+          const $container = $(this);
+          const $img = $container.find('.gallery-img');
           const isReplaced = $img.hasClass("replaced");
+          const isExisting = $container.attr("data-existing");
+          const fileIndex = parseInt($container.attr("data-file-index"));
 
           if (isReplaced) {
             // This image was replaced, get the replacement file
-            const replacementFile = $preview.data(`replaced-${index}`); // TODO: use state instead of storing and getting from jquery's data attribute
+            const containerIndex = $container.attr("data-index");
+            const replacementFile = $preview.data(`replaced-${containerIndex}`);
             if (replacementFile) {
+              uploadMap[filesToUpload.length] = finalIndex;
               filesToUpload.push(replacementFile);
-              imageMap.push({
-                originalIndex: index,
-                uploadIndex: filesToUpload.length - 1,
-                isNew: true,
-              });
+              finalResults[finalIndex] = null; // Placeholder for upload result
             }
-          } else if ($img.attr("data-existing")) {
+          } else if (isExisting) {
             // This is an existing image that wasn't changed
-            imageMap.push({
-              originalIndex: index,
-              existingId: $img.attr("data-image-id"),
-              existingUrl: $img.attr("src"),
-              isNew: false,
-            });
-          } else {
-            // This is a completely new image
-            const fileIndex = $img.attr("data-file-index");
-            if (typeof fileIndex !== "undefined" && galleryFiles[fileIndex]) {
-              filesToUpload.push(galleryFiles[fileIndex]);
-              imageMap.push({
-                originalIndex: index,
-                uploadIndex: filesToUpload.length - 1,
-                isNew: true,
-              });
-            }
+            finalResults[finalIndex] = {
+              id: $container.attr("data-image-id"),
+              url: $img.attr("src")
+            };
+          } else if (!isNaN(fileIndex) && galleryFiles[fileIndex]) {
+            // This is a new image that hasn't been uploaded yet
+            uploadMap[filesToUpload.length] = finalIndex;
+            filesToUpload.push(galleryFiles[fileIndex]);
+            finalResults[finalIndex] = null; // Placeholder for upload result
           }
         });
 
-        // If there are no files to upload, just use the existing data
+        // If there are no files to upload, return existing data
         if (filesToUpload.length === 0) {
-          const galleryResults = imageMap
-            .map((item) => {
-              if (!item.isNew) {
-                return { id: item.existingId, url: item.existingUrl };
-              }
-              return null;
-            })
-            .filter(Boolean);
-
+          const cleanResults = finalResults.filter(item => item !== null);
           $status.text("No new images to upload");
-          resolve(galleryResults);
+          resolve(cleanResults);
           return;
         }
 
@@ -1139,20 +1188,19 @@ var rpLib = {
           function (progress, total) {
             $status.text(`Uploading ${progress}/${total}...`);
           },
-          function (results) {
-            // Now rebuild the gallery in the correct order
-            const galleryResults = imageMap.map((item) => {
-              if (item.isNew) {
-                // Use the uploaded file result
-                return results[item.uploadIndex];
-              } else {
-                // Use the existing image data
-                return { id: item.existingId, url: item.existingUrl };
+          function (uploadResults) {
+            // Place upload results in their correct positions
+            uploadResults.forEach((result, uploadIndex) => {
+              const finalIndex = uploadMap[uploadIndex];
+              if (finalIndex !== undefined) {
+                finalResults[finalIndex] = result;
               }
             });
 
+            // Filter out any null values and return clean array
+            const cleanResults = finalResults.filter(item => item !== null);
             $status.text("Upload complete!");
-            resolve(galleryResults);
+            resolve(cleanResults);
           },
           function (error) {
             $status.text("Upload failed: " + error.statusText);
@@ -1198,13 +1246,13 @@ var rpLib = {
 
         // If no city is selected (ie. first default option is selected) then show the notification that no city is selected
         if ($("#city-select").val() === "") {
-          $('#select-city-notification').removeClass("hidden");
+          $("#select-city-notification").removeClass("hidden");
         }
       });
 
       // Fetch all users after city selection
       $("#city-select").on("change", function () {
-        $('#select-city-notification').addClass("hidden");
+        $("#select-city-notification").addClass("hidden");
         let brandId = $(this).val();
         if (brandId) {
           // Store the selected city in sessionStorage
@@ -1213,7 +1261,7 @@ var rpLib = {
           if (typeof callback === "function") {
             callback(brandId);
           }
-        } 
+        }
       });
     },
     setupSingleImgPreviewReplacement: function (imgPreviewId, afterImgSelectedCallback) {
@@ -1259,7 +1307,6 @@ var rpLib = {
           // Callback after selecting image
           if (afterImgSelectedCallback) afterImgSelectedCallback(newFile);
         });
-
       });
     },
     formatWfDate: function (utcDatetimeStr) {
@@ -1270,7 +1317,7 @@ var rpLib = {
       date = new Date(date.toLocaleString("en-US", options));
 
       const monthsShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    
+
       const month = monthsShort[date.getMonth()];
       const day = date.getDate();
       const year = date.getFullYear();
@@ -1279,16 +1326,20 @@ var rpLib = {
       const minutesFormatted = minutes < 10 ? "0" + minutes : minutes;
       const period = hours >= 12 ? "pm" : "am";
       const hourFormatted = hours % 12 === 0 ? 12 : hours % 12;
-      
+
       return `${month}, ${day}${rpLib.utils.getOrdinalSuffix(day)} ${year} ${hourFormatted}:${minutesFormatted}${period}`;
     },
     getOrdinalSuffix: function (day) {
       if (day >= 11 && day <= 13) return "th";
       switch (day % 10) {
-          case 1: return "st";
-          case 2: return "nd";
-          case 3: return "rd";
-          default: return "th";
+        case 1:
+          return "st";
+        case 2:
+          return "nd";
+        case 3:
+          return "rd";
+        default:
+          return "th";
       }
     },
 
@@ -1298,57 +1349,57 @@ var rpLib = {
     turnUtcDateToPstForInputEl: function (utcDatetimeStr) {
       // Create a date object from the UTC string
       const dateObj = new Date(utcDatetimeStr);
-      
+
       // Format the date in PST timezone to get proper components
-      const formatter = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'America/Los_Angeles',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
+      const formatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Los_Angeles",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
       });
-      
+
       // Get formatted parts
       const parts = formatter.formatToParts(dateObj);
-      
+
       // Extract values from parts
       const values = {};
       for (const part of parts) {
-        if (part.type !== 'literal') {
+        if (part.type !== "literal") {
           values[part.type] = part.value;
         }
       }
-      
+
       // Construct the datetime-local string (YYYY-MM-DDTHH:MM)
       return `${values.year}-${values.month}-${values.day}T${values.hour}:${values.minute}`;
     },
     turnPstDateToUtcForInputEl: function (pstDatetimeStr) {
       // Create a date object in the local timezone
       const localDate = new Date(pstDatetimeStr);
-      
+
       // Get the timezone offset for America/Los_Angeles at this specific date
-      const pstOptions = { timeZone: 'America/Los_Angeles', timeZoneName: 'short' };
-      const pstFormatter = new Intl.DateTimeFormat('en-US', pstOptions);
-      
+      const pstOptions = { timeZone: "America/Los_Angeles", timeZoneName: "short" };
+      const pstFormatter = new Intl.DateTimeFormat("en-US", pstOptions);
+
       // Format the date to get time zone name (PDT or PST)
       const formattedDate = pstFormatter.format(localDate);
-      const isDST = formattedDate.includes('PDT');
-      
+      const isDST = formattedDate.includes("PDT");
+
       // Calculate UTC time by adding the appropriate offset (7 hours for PDT, 8 for PST)
       const offset = isDST ? 7 : 8;
-      
+
       // Create a new date with the correct UTC time
       const year = localDate.getFullYear();
-      const month = localDate.getMonth(); 
+      const month = localDate.getMonth();
       const day = localDate.getDate();
       const hour = localDate.getHours();
       const minute = localDate.getMinutes();
-      
+
       // Create a UTC date and add the offset
       const utcDate = new Date(Date.UTC(year, month, day, hour + offset, minute));
-      
+
       // Return ISO format for datetime-local input
       return utcDate.toISOString();
     },
@@ -1357,8 +1408,9 @@ var rpLib = {
     },
     setupGalleryImageReplacement: function (galleryPreviewId) {
       $(`#${galleryPreviewId}`).on("click", ".gallery-img", function () {
-        // Store the index of the clicked image
-        const clickedIndex = $(this).attr("data-index");
+        // Store the container (parent of the clicked image)
+        const $container = $(this).closest(".gallery-img-container");
+        const clickedIndex = $container.attr("data-index");
 
         // Create a temporary file input for replacing this specific image
         const $tempInput = $('<input type="file" accept="image/*" style="display:none">');
@@ -1388,47 +1440,70 @@ var rpLib = {
           const reader = new FileReader();
 
           reader.onload = function (e) {
-            // Update the preview
-            $(`#${galleryPreviewId} .thumbnail[data-index="${clickedIndex}"]`).attr("src", e.target.result).addClass("replaced");
+            // Update the preview image within the container
+            $container.find('.gallery-img').attr("src", e.target.result).addClass("replaced");
 
             // Add to a special mapping for replaced images
-            $(`#${galleryPreviewId}`).data(`replaced-${clickedIndex}`, newFile); // TODO: use state instead of storing  and getting from jquery's data attribute
+            $(`#${galleryPreviewId}`).data(`replaced-${clickedIndex}`, newFile);
           };
 
           reader.readAsDataURL(newFile);
           $tempInput.remove();
         });
       });
+
+      // Add delete functionality with improved state management
+      $(`#${galleryPreviewId}`).on("click", ".delete-image-gallery-btn", function (e) {
+        e.stopPropagation(); // Prevent triggering image replacement
+        
+        const $container = $(this).closest(".gallery-img-container");
+        const galleryId = galleryPreviewId.replace('-preview', '');
+        
+        if (confirm("Are you sure you want to delete this image?")) {
+          // Remove from state BEFORE removing from DOM
+          rpLib.eventsPage.removeImageFromGalleryState(galleryId, $container);
+          
+          // Remove the container from DOM
+          $container.remove();
+          
+          // Reindex remaining containers sequentially
+          $(`#${galleryPreviewId} .gallery-img-container`).each(function(newIndex) {
+            $(this).attr("data-index", newIndex);
+          });
+          
+          // Update limits display
+          const newCount = $(`#${galleryPreviewId} .gallery-img-container`).length;
+          rpLib.utils.updateGalleryLimits(galleryId, newCount);
+        }
+      });
     },
     initRichTextEditor: function (editorId, placeholderContent = "", existingContent = "") {
       // Reset editor elements
-      $(`#${editorId}`).prev('.ql-toolbar').remove();
+      $(`#${editorId}`).prev(".ql-toolbar").remove();
       $(`#${editorId}`).replaceWith(`<div id="${editorId}">${existingContent}</div>`);
 
       const quill = new Quill(`#${editorId}`, {
         modules: {
-          toolbar: [
-            ['bold', 'italic', 'underline'],
-          ],
+          toolbar: [["bold", "italic", "underline"]],
         },
         placeholder: placeholderContent,
-        theme: 'snow', // or 'bubble'
+        theme: "snow", // or 'bubble'
       });
     },
     cleanQuillInnerHTMLToWf: function (innerHTML) {
       // Remove the cursor span elements from Quill editor innerHTML
-      let cleanedHTML = innerHTML.replace(/<span class="ql-cursor">.*?<\/span>/g, '');
+      let cleanedHTML = innerHTML.replace(/<span class="ql-cursor">.*?<\/span>/g, "");
       return cleanedHTML;
     },
     formatUrlWithProtocol: function (url) {
-      if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
-        return 'http://' + url;
+      if (url && !url.startsWith("http://") && !url.startsWith("https://")) {
+        return "http://" + url;
       }
-      return url; 
+      return url;
     },
     getUserSlug: function () {
       return $("[data-ms-member='wf-users-slug']").text();
-    }
+    },
   },
 
   api: {
@@ -1437,7 +1512,9 @@ var rpLib = {
       if (offset === 0) {
         $("#city-select").attr("disabled", true);
         // Add a <progress></progress> element to indicate loading. TODO: replace with a component made in webflow
-        $("#city-select").closest('#wf-form-city-select-form').after('<progress style="background-attachment: revert !important; position: absolute; margin-top: -18px;"></progress>');
+        $("#city-select")
+          .closest("#wf-form-city-select-form")
+          .after('<progress style="background-attachment: revert !important; position: absolute; margin-top: -18px;"></progress>');
       }
 
       $.ajax({
@@ -1455,7 +1532,7 @@ var rpLib = {
             // All pages fetched, re-enable dropdown
             $("#city-select").attr("disabled", false);
             // Remove the loading/progress element
-            $("#city-select").closest('#wf-form-city-select-form').next('progress').remove();
+            $("#city-select").closest("#wf-form-city-select-form").next("progress").remove();
 
             // Invoke the callback if provided
             if (typeof callback === "function") {
@@ -1468,7 +1545,7 @@ var rpLib = {
 
           // Re-enable dropdown in case of an error
           $("#city-select").attr("disabled", false);
-          $("#city-select").closest('#wf-form-city-select-form').next('progress').remove();
+          $("#city-select").closest("#wf-form-city-select-form").next("progress").remove();
 
           // Invoke the callback even on error
           if (typeof callback === "function") {
@@ -1490,7 +1567,7 @@ var rpLib = {
         if (items.length > 0) {
           let brands = items[0].fieldData["brand-s"];
           let fetchBrandPromises = brands.map((brandId) => rpLib.api.fetchBrandDetailsAndPopulateDropdown(brandId));
-    
+
           Promise.all(fetchBrandPromises).then(() => {
             if (callback) callback();
           });
@@ -1498,7 +1575,6 @@ var rpLib = {
           if (callback) callback();
         }
       });
-
     },
     fetchBrandDetailsAndPopulateDropdown: function (brandId) {
       return new Promise((resolve, reject) => {
@@ -1523,27 +1599,30 @@ var rpLib = {
       $("#collection-list .collection-item").not(".collection-item-row-template").remove();
 
       // Fetch all users using the paginated fetch function
-      rpLib.api.fetchAllPaginated(url, (items) => {
-        items.forEach((user) => {
-          // Check if the user has brands and if the specified brandId exists in the user's brand-s array
-          if (
-            user.isArchived === false &&
-            user.fieldData["brand-s"] &&
-            user.fieldData["brand-s"].length > 0 &&
-            user.fieldData["brand-s"].includes(brandId)
-          ) {
-            rpLib.usersPage.renderUser(user);
-          }
+      rpLib.api.fetchAllPaginated(
+        url,
+        (items) => {
+          items.forEach((user) => {
+            // Check if the user has brands and if the specified brandId exists in the user's brand-s array
+            if (
+              user.isArchived === false &&
+              user.fieldData["brand-s"] &&
+              user.fieldData["brand-s"].length > 0 &&
+              user.fieldData["brand-s"].includes(brandId)
+            ) {
+              rpLib.usersPage.renderUser(user);
+            }
 
-          $('.no-collection-items-noti').addClass('hidden');
-        });
-      },
-      0, 
-      function () {
-        if ($('.collection-item').not('.collection-item-row-template').length === 0) {
-          $('.no-collection-items-noti').removeClass('hidden');
+            $(".no-collection-items-noti").addClass("hidden");
+          });
+        },
+        0,
+        function () {
+          if ($(".collection-item").not(".collection-item-row-template").length === 0) {
+            $(".no-collection-items-noti").removeClass("hidden");
+          }
         }
-      });
+      );
     },
     fetchPartnersAndRender: function (brandId) {
       const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNERS_COLLECTION_ID}/items/live?sortBy=lastPublished&sortOrder=desc`;
@@ -1553,22 +1632,23 @@ var rpLib = {
 
       $("select option:first").attr("disabled", "disabled");
 
-      rpLib.api.fetchAllPaginated(url, (items) => {
-        const filteredItems = items
-          .filter((item) => item.isArchived === false)
-          .filter((item) => item.fieldData.city.includes(brandId));
+      rpLib.api.fetchAllPaginated(
+        url,
+        (items) => {
+          const filteredItems = items.filter((item) => item.isArchived === false).filter((item) => item.fieldData.city.includes(brandId));
 
-        filteredItems.forEach((partner) => {
-          rpLib.partnersPage.renderPartner(partner);
-          $('.no-collection-items-noti').addClass('hidden');
-        });
-      },
-      0,
-      function () {
-        if ($('.collection-item').not('.collection-item-row-template').length === 0) {
-          $('.no-collection-items-noti').removeClass('hidden');
+          filteredItems.forEach((partner) => {
+            rpLib.partnersPage.renderPartner(partner);
+            $(".no-collection-items-noti").addClass("hidden");
+          });
+        },
+        0,
+        function () {
+          if ($(".collection-item").not(".collection-item-row-template").length === 0) {
+            $(".no-collection-items-noti").removeClass("hidden");
+          }
         }
-      }); // this is an ugly function call, the 0 represents the offset which should be 0 here cause it's the start of the recursion
+      ); // this is an ugly function call, the 0 represents the offset which should be 0 here cause it's the start of the recursion
     },
     fetchPartnerDetailsAndOpenModal: function (slug) {
       $.ajax({
@@ -1611,20 +1691,15 @@ var rpLib = {
             }
 
             // Populate multi-reference fields (dropdown with multiple selections)
-            if (partner.fieldData["partner-categories"] && 
-                Array.isArray(partner.fieldData["partner-categories"])) {
+            if (partner.fieldData["partner-categories"] && Array.isArray(partner.fieldData["partner-categories"])) {
               $("#partner-categories").val(partner.fieldData["partner-categories"]);
             } else {
               $("#partner-categories").val([]);
             }
-            $("#partner-categories").multiselect('reload');
+            $("#partner-categories").multiselect("reload");
 
             // Init rich text editor for partner description
-            rpLib.utils.initRichTextEditor(
-              "partner-description",
-              "Share partner bio or info here...",
-              partner.fieldData["description"] || ""
-            );
+            rpLib.utils.initRichTextEditor("partner-description", "Share partner bio or info here...", partner.fieldData["description"] || "");
 
             // Show the modal
             $(".collection-item-modal").removeClass("hidden");
@@ -1659,28 +1734,26 @@ var rpLib = {
       };
 
       // get description from quill editor
-      updatedData.fieldData["description"] = rpLib.utils.cleanQuillInnerHTMLToWf(
-        document.querySelector("#partner-description .ql-editor").innerHTML
-      );
+      updatedData.fieldData["description"] = rpLib.utils.cleanQuillInnerHTMLToWf(document.querySelector("#partner-description .ql-editor").innerHTML);
 
       // add preview-text with textContent of ql-editor
       updatedData.fieldData["preview-text"] = document.querySelector("#partner-description .ql-editor").textContent.trim();
 
       // Add profile picture if available
       if (newProfilePicFile) {
-        const newImgUrl = $("#profile-pic-preview").attr('src');
+        const newImgUrl = $("#profile-pic-preview").attr("src");
         updatedData.fieldData["profile-pic"] = { url: newImgUrl };
       }
-      
+
       // Add logo if available
       if (newLogoFile) {
-        const newImgUrl = $("#logo-preview").attr('src');
+        const newImgUrl = $("#logo-preview").attr("src");
         updatedData.fieldData["logo"] = { url: newImgUrl };
       }
 
       // Add advertisement image if available
       if (newAdImageFile) {
-        const newAdImage = $("#ad-image-preview").attr('src');
+        const newAdImage = $("#ad-image-preview").attr("src");
         updatedData.fieldData["advertisement"] = { url: newAdImage };
       }
 
@@ -1701,12 +1774,9 @@ var rpLib = {
 
           // Handle Validation Error and list the fields that failed validation in the alert
           if (errorRes.responseJSON && errorRes.responseJSON?.code === "validation_error" && errorRes.responseJSON?.details.length > 0) {
-            let failedFields = errorRes.responseJSON.details.map((detail) => (
-              `${detail.param}—${detail.description}`
-            ));
+            let failedFields = errorRes.responseJSON.details.map((detail) => `${detail.param}—${detail.description}`);
             alert("Error updating partner. Please try again. Failed fields: " + failedFields.join(", "));
-          }
-          else {
+          } else {
             alert("Error updating partner. Please try again. Error status:" + errorRes.status);
           }
         },
@@ -1737,12 +1807,9 @@ var rpLib = {
 
           // Handle Validation Error and list the fields that failed validation in the alert
           if (errorRes.responseJSON && errorRes.responseJSON?.code === "validation_error" && errorRes.responseJSON?.details.length > 0) {
-            let failedFields = errorRes.responseJSON.details.map((detail) => (
-              `${detail.param}—${detail.description}`
-            ));
+            let failedFields = errorRes.responseJSON.details.map((detail) => `${detail.param}—${detail.description}`);
             alert("Error updating partner. Please try again. Failed fields: " + failedFields.join(", "));
-          }
-          else {
+          } else {
             alert("Error updating partner. Please try again. Error status:" + errorRes.status);
             rpLib.api.fetchPartnersAndRender($("#city-select").val()); // Refresh list
           }
@@ -1768,12 +1835,9 @@ var rpLib = {
           console.error("Error updating event:", errorRes);
           // Handle Validation Error and list the fields that failed validation in the alert
           if (errorRes.responseJSON && errorRes.responseJSON?.code === "validation_error" && errorRes.responseJSON?.details.length > 0) {
-            let failedFields = errorRes.responseJSON.details.map((detail) => (
-              `${detail.param}—${detail.description}`
-            ));
+            let failedFields = errorRes.responseJSON.details.map((detail) => `${detail.param}—${detail.description}`);
             alert("Error updating event. Please try again. Failed fields: " + failedFields.join(", "));
-          }
-          else {
+          } else {
             alert("Error updating event. Please try again. Error status:" + errorRes.status);
           }
         },
@@ -1785,22 +1849,23 @@ var rpLib = {
       // Clear existing events in list
       $("#collection-list .collection-item").not(".collection-item-row-template").remove();
 
-      rpLib.api.fetchAllPaginated(url, (items) => {
-        const filteredItems = items
-          .filter((item) => item.isArchived === false)
-          .filter((item) => item.fieldData.brand === brandId)
+      rpLib.api.fetchAllPaginated(
+        url,
+        (items) => {
+          const filteredItems = items.filter((item) => item.isArchived === false).filter((item) => item.fieldData.brand === brandId);
 
-        filteredItems.forEach((event) => {
-          rpLib.eventsPage.renderEvent(event);
-          $('.no-collection-items-noti').addClass('hidden');
-        });
-      },
-      0, 
-      function () {
-        if ($('.collection-item').not('.collection-item-row-template').length === 0) {
-          $('.no-collection-items-noti').removeClass('hidden');
+          filteredItems.forEach((event) => {
+            rpLib.eventsPage.renderEvent(event);
+            $(".no-collection-items-noti").addClass("hidden");
+          });
+        },
+        0,
+        function () {
+          if ($(".collection-item").not(".collection-item-row-template").length === 0) {
+            $(".no-collection-items-noti").removeClass("hidden");
+          }
         }
-      });
+      );
     },
     fetchEventDetailsAndOpenModal: function (slug) {
       $.ajax({
@@ -1850,7 +1915,7 @@ var rpLib = {
             rpLib.eventsPage.state.existingGallery3 = existingGallery3;
 
             // Reset the gallery previews (but keep the add image button)
-            $("#gallery-1-preview, #gallery-2-preview, #gallery-3-preview").children(':not(.add-img-btn)').remove();
+            $("#gallery-1-preview, #gallery-2-preview, #gallery-3-preview").children(":not(.add-img-btn)").remove();
 
             // Reset the file arrays for new uploads
             rpLib.eventsPage.state.uploads.gallery1 = [];
@@ -1865,7 +1930,7 @@ var rpLib = {
             } else {
               rpLib.utils.updateGalleryLimits("gallery-1", 0);
             }
-            
+
             // Display existing gallery 2 images
             if (existingGallery2.length > 0) {
               existingGallery2.forEach((img) => {
@@ -1874,7 +1939,7 @@ var rpLib = {
             } else {
               rpLib.utils.updateGalleryLimits("gallery-2", 0);
             }
-            
+
             // Display existing gallery 3 images
             if (existingGallery3.length > 0) {
               existingGallery3.forEach((img) => {
@@ -1914,10 +1979,10 @@ var rpLib = {
 
       // Construct youtube video URLs if that exists
       if (eventData.fieldData["youtube-video-id"]) {
-        eventData.fieldData["video"] = {"url": `https://www.youtube.com/watch?v=${eventData.fieldData["youtube-video-id"]}`};
-      }      
+        eventData.fieldData["video"] = { url: `https://www.youtube.com/watch?v=${eventData.fieldData["youtube-video-id"]}` };
+      }
       if (eventData.fieldData["youtube-video-id-2"]) {
-        eventData.fieldData["video-2"] = {"url": `https://www.youtube.com/watch?v=${eventData.fieldData["youtube-video-id-2"]}`};
+        eventData.fieldData["video-2"] = { url: `https://www.youtube.com/watch?v=${eventData.fieldData["youtube-video-id-2"]}` };
       }
 
       // Add main image if there's one uploaded
@@ -1925,7 +1990,7 @@ var rpLib = {
         const newMainImage = $("#main-image-preview").attr("src");
         eventData.fieldData["main-image"] = { url: newMainImage };
       }
-      
+
       // Add flyer image if there's one uploaded
       if (rpLib.eventsPage.state.uploads.flyerImage) {
         const newFlyerImage = $("#event-flyer-preview").attr("src");
@@ -1955,7 +2020,6 @@ var rpLib = {
         data: JSON.stringify(eventData),
         contentType: "application/json",
         success: function () {
-
           // Close modal
           $(".collection-item-modal").addClass("hidden");
 
@@ -2013,11 +2077,7 @@ var rpLib = {
             }
 
             // Init rich text editor for user bio
-            rpLib.utils.initRichTextEditor(
-              "user-bio",
-              "Share user bio or info here...",
-              user.fieldData.bio || ""
-            );
+            rpLib.utils.initRichTextEditor("user-bio", "Share user bio or info here...", user.fieldData.bio || "");
 
             // Show the modal
             $(".collection-item-modal").removeClass("hidden");
@@ -2046,24 +2106,22 @@ var rpLib = {
           "url-youtube": $("#user-url-youtube").val(),
           "url-linkedin": $("#user-url-linkedin").val(),
           "url-tiktok": $("#user-url-tiktok").val(),
-          "order": $("#user-order").val() || "",
+          order: $("#user-order").val() || "",
         },
       };
 
       // get bio from quill editor
-      updatedData.fieldData["bio"] = rpLib.utils.cleanQuillInnerHTMLToWf(
-        document.querySelector("#user-bio .ql-editor").innerHTML
-      );
+      updatedData.fieldData["bio"] = rpLib.utils.cleanQuillInnerHTMLToWf(document.querySelector("#user-bio .ql-editor").innerHTML);
 
       // Add profile picture if available
       if (newProfilePicFile) {
-        const newImgUrl = $("#profile-pic-preview").attr('src');
+        const newImgUrl = $("#profile-pic-preview").attr("src");
         updatedData.fieldData["profile-picture"] = { url: newImgUrl };
       }
 
       // Add full picture if available
       if (newFullPicFile) {
-        const newImgUrl = $("#full-pic-preview").attr('src');
+        const newImgUrl = $("#full-pic-preview").attr("src");
         updatedData.fieldData["full-picture"] = { url: newImgUrl };
       }
 
@@ -2081,15 +2139,12 @@ var rpLib = {
         },
         error: function (error) {
           console.error("Error updating user:", error);
-          
+
           // Handle Validation Error and list the fields that failed validation in the alert
           if (error.responseJSON && error.responseJSON?.code === "validation_error" && error.responseJSON?.details.length > 0) {
-            let failedFields = error.responseJSON.details.map((detail) => (
-              `${detail.param}—${detail.description}`
-            ));
+            let failedFields = error.responseJSON.details.map((detail) => `${detail.param}—${detail.description}`);
             alert("Error updating user. Please try again. Failed fields: " + failedFields.join(", "));
-          }
-          else {
+          } else {
             alert("Error updating user. Please try again. Error status:" + error.status);
           }
         },
@@ -2097,7 +2152,7 @@ var rpLib = {
           if (typeof callback === "function") {
             callback();
           }
-        }
+        },
       });
     },
 
@@ -2120,12 +2175,9 @@ var rpLib = {
           console.error("Error updating user:", errorRes);
           // Handle Validation Error and list the fields that failed validation in the alert
           if (errorRes.responseJSON && errorRes.responseJSON?.code === "validation_error" && errorRes.responseJSON?.details.length > 0) {
-            let failedFields = errorRes.responseJSON.details.map((detail) => (
-              `${detail.param}—${detail.description}`
-            ));
+            let failedFields = errorRes.responseJSON.details.map((detail) => `${detail.param}—${detail.description}`);
             alert("Error updating user. Please try again. Failed fields: " + failedFields.join(", "));
-          }
-          else {
+          } else {
             alert("Error updating user. Please try again. Error status:" + errorRes.status);
           }
         },
@@ -2283,26 +2335,24 @@ var rpLib = {
           "url-youtube": $("#user-url-youtube").val(),
           "url-linkedin": $("#user-url-linkedin").val(),
           "url-tiktok": $("#user-url-tiktok").val(),
-          "order": $("#user-order").val(),
+          order: $("#user-order").val(),
           "show-user": true,
           "brand-s": [brandId], // Sets the brand relationship
         },
       };
 
       // get bio from quill editor
-      newUserData.fieldData["bio"] = rpLib.utils.cleanQuillInnerHTMLToWf(
-        document.querySelector("#user-bio .ql-editor").innerHTML
-      );
+      newUserData.fieldData["bio"] = rpLib.utils.cleanQuillInnerHTMLToWf(document.querySelector("#user-bio .ql-editor").innerHTML);
 
       // Add profile picture if available
       if (newProfilePic) {
-        const newImgUrl = $("#profile-pic-preview").attr('src');
+        const newImgUrl = $("#profile-pic-preview").attr("src");
         newUserData.fieldData["profile-picture"] = { url: newImgUrl };
       }
 
       // Add full picture if available
       if (newFullPic) {
-        const newImgUrl = $("#full-pic-preview").attr('src');
+        const newImgUrl = $("#full-pic-preview").attr("src");
         newUserData.fieldData["full-picture"] = { url: newImgUrl };
       }
 
@@ -2370,19 +2420,19 @@ var rpLib = {
 
       // Add profile picture if available
       if (newProfilePicFile) {
-        const newImgUrl = $("#profile-pic-preview").attr('src');
+        const newImgUrl = $("#profile-pic-preview").attr("src");
         newPartnerData.fieldData["profile-pic"] = { url: newImgUrl };
       }
-      
+
       // Add logo if available
       if (newLogoFile) {
-        const newImgUrl = $("#logo-preview").attr('src');
+        const newImgUrl = $("#logo-preview").attr("src");
         newPartnerData.fieldData["logo"] = { url: newImgUrl };
       }
 
       // Add advertisement image if available
       if (newAdImageFile) {
-        const newAdImage = $("#ad-image-preview").attr('src');
+        const newAdImage = $("#ad-image-preview").attr("src");
         newPartnerData.fieldData["advertisement"] = { url: newAdImage };
       }
 
@@ -2402,9 +2452,7 @@ var rpLib = {
         error: function (errorRes) {
           // Handle Validation Error and list the fields that failed validation in the alert
           if (errorRes.responseJSON && errorRes.responseJSON?.code === "validation_error" && errorRes.responseJSON?.details.length > 0) {
-            let failedFields = errorRes.responseJSON.details.map((detail) => (
-              `${detail.param}—${detail.description}`
-            ));
+            let failedFields = errorRes.responseJSON.details.map((detail) => `${detail.param}—${detail.description}`);
             alert("Error creating partner. Please try again. Failed fields: " + failedFields.join(", "));
           } else {
             console.error("Error creating partner:", errorRes);
@@ -2415,7 +2463,7 @@ var rpLib = {
           if (typeof callback === "function") {
             callback();
           }
-        }
+        },
       });
     },
     createEventAndRefreshList: function (brandId, callback) {
@@ -2442,10 +2490,10 @@ var rpLib = {
 
       // Construct youtube video URLs if that exists
       if (newEventData.fieldData["youtube-video-id"]) {
-        newEventData.fieldData["video"] = {"url": `https://www.youtube.com/watch?v=${$("#youtube-video-id").val()}`};
+        newEventData.fieldData["video"] = { url: `https://www.youtube.com/watch?v=${$("#youtube-video-id").val()}` };
       }
       if (newEventData.fieldData["youtube-video-id-2"]) {
-        newEventData.fieldData["video-2"] = {"url": `https://www.youtube.com/watch?v=${$("#youtube-video-id-2").val()}`};
+        newEventData.fieldData["video-2"] = { url: `https://www.youtube.com/watch?v=${$("#youtube-video-id-2").val()}` };
       }
 
       // Add main image if there's one uploaded
@@ -2504,14 +2552,14 @@ var rpLib = {
     },
     fetchAllPartnerCategories: function (callback) {
       const allCategories = [];
-      
+
       // URL for the categories endpoint
       const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNER_CATEGORIES_COLLECTION_ID}/items?limit=100&sortBy=name&sortOrder=asc`;
-      
+
       // Process function to collect all categories
-      const processCategories = function(items) {
+      const processCategories = function (items) {
         allCategories.push(...items);
-        
+
         // If this is the last batch, sort and call the callback
         if (items.length < 100 || !callback) {
           // Sort categories alphabetically by name
@@ -2520,13 +2568,13 @@ var rpLib = {
             const nameB = (b.fieldData.name || "").toLowerCase();
             return nameA.localeCompare(nameB);
           });
-          
+
           if (typeof callback === "function") {
             callback(allCategories);
           }
         }
       };
-      
+
       // Use the existing fetchAllPaginated function
       rpLib.api.fetchAllPaginated(url, processCategories);
     },
