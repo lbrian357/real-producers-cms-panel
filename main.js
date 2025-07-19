@@ -314,12 +314,17 @@ var rpLib = {
       templateRowItem.removeClass("collection-item-row-template");
       templateRowItem.attr("data-slug", user.fieldData.slug);
       templateRowItem.attr("data-user-id", user.id);
-
-      templateRowItem.find(".user-pic").attr("src", user.fieldData["profile-picture"]?.url || "");
       templateRowItem.find(".user-name").text(user.fieldData.name || "");
       templateRowItem.find(".user-number").text(user.fieldData.phone || "");
       templateRowItem.find(".user-email").text(user.fieldData.email || "");
       templateRowItem.find(".item-view-btn").attr("href", `https://www.realproducersmagazine.com/user/${user.fieldData.slug}` || "");
+
+      if (user.fieldData["profile-picture"]?.url) {
+        templateRowItem
+          .find(".user-pic")
+          .attr("src", user.fieldData["profile-picture"]?.url || "")
+          .removeAttr("srcset");
+      }
 
       const $showOrHideCheckbox = templateRowItem.find(".show-hide-switch .switch input");
       if (user.fieldData["show-user"] === true) {
