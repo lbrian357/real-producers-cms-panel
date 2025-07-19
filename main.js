@@ -2208,6 +2208,7 @@ var rpLib = {
               fileHash: md5Hash,
               fileName: file.name,
               contentType: file.type,
+              parentFolder: "6875801278171d338b074b82", // This is the folder ID for the "Backend Uploads" folder in Webflow
             }),
             success: function (response) {
               const formData = new FormData();
