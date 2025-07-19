@@ -769,12 +769,35 @@ var rpLib = {
         $tempInput.on("change", function (e) {
           const files = Array.from(e.target.files);
           if (files.length === 0) return;
+
+          
+          // Validate each file size
+          const maxSize = 4 * 1024 * 1024; // 4MB per file
+          const invalidFiles = [];
+          const validFiles = [];
+          files.forEach(file => {
+            if (file.size > maxSize) {
+              const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+              invalidFiles.push(`${file.name} (${sizeMB}MB)`);
+            } else {
+              validFiles.push(file);
+            }
+          });
+          // Show error for invalid files
+          if (invalidFiles.length > 0) {
+            alert(`The following files are too large (max 4MB each):\n${invalidFiles.join('\n')}\n\nOnly valid files will be added.`);
+          }
+          // If no valid files, exit
+          if (validFiles.length === 0) {
+            $(this).val(""); // Reset the input
+            return;
+          }
           
           // Get current images count (both existing and newly added)
           const currentCount = $(`#gallery-${galleryId}-preview .gallery-img`).length;
           
           // Check if adding these files would exceed the limit
-          if (currentCount + files.length > 25) {
+          if (currentCount + validFiles.length > 25) {
             const remaining = 25 - currentCount;
             alert(`You can only add ${remaining} more image${remaining !== 1 ? "s" : ""}. Please select fewer images.`);
             $(this).val(""); // Reset the input
@@ -784,11 +807,11 @@ var rpLib = {
           // Add new files to the array
           rpLib.eventsPage.state.uploads[`gallery${galleryId}`] = [
             ...rpLib.eventsPage.state.uploads[`gallery${galleryId}`], 
-            ...files
+            ...validFiles
           ];
           
           // Show preview for each file
-          files.forEach((file, index) => {
+          validFiles.forEach((file, index) => {
             rpLib.utils.addImageToGallery(`gallery-${galleryId}`, file, index);
           });
           
@@ -1210,6 +1233,16 @@ var rpLib = {
           }
 
           const newFile = e.target.files[0];
+
+          // Validate file size
+          const maxSize = 4 * 1024 * 1024; // 4MB in bytes
+          if (newFile.size > maxSize) {
+            const sizeMB = (newFile.size / (1024 * 1024)).toFixed(2);
+            alert(`File too large: ${sizeMB}MB. Maximum allowed size is 4MB. Please select a smaller image.`);
+            $tempInput.remove();
+            return;
+          }
+
           const reader = new FileReader();
 
           reader.onload = function (e) {
@@ -1342,6 +1375,16 @@ var rpLib = {
           }
 
           const newFile = e.target.files[0];
+
+          // Validate file size
+          const maxSize = 4 * 1024 * 1024; // 4MB in bytes
+          if (newFile.size > maxSize) {
+            const sizeMB = (newFile.size / (1024 * 1024)).toFixed(2);
+            alert(`File too large: ${sizeMB}MB. Maximum allowed size is 4MB. Please select a smaller image.`);
+            $tempInput.remove();
+            return;
+          }
+
           const reader = new FileReader();
 
           reader.onload = function (e) {
