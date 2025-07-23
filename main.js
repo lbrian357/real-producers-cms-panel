@@ -2008,12 +2008,18 @@ var rpLib = {
       // Add galleries to the event data if they have images
       if (gallery1Images && gallery1Images.length > 0) {
         eventData.fieldData["image-gallery"] = gallery1Images;
+      } else {
+        eventData.fieldData["image-gallery"] = [];
       }
       if (gallery2Images && gallery2Images.length > 0) {
         eventData.fieldData["image-gallery-2"] = gallery2Images;
+      } else {
+        eventData.fieldData["image-gallery-2"] = [];
       }
       if (gallery3Images && gallery3Images.length > 0) {
         eventData.fieldData["image-gallery-3"] = gallery3Images;
+      } else {
+        eventData.fieldData["image-gallery-3"] = [];
       }
 
       // Save the event data through the API
