@@ -1982,10 +1982,10 @@ var rpLib = {
 
       // Construct youtube video URLs if that exists
       if (eventData.fieldData["youtube-video-id"]) {
-        eventData.fieldData["video"] = { url: `https://youtu.be/${eventData.fieldData["youtube-video-id"]}` };
+        eventData.fieldData["video"] = `https://youtu.be/${eventData.fieldData["youtube-video-id"]}`;
       }
       if (eventData.fieldData["youtube-video-id-2"]) {
-        eventData.fieldData["video-2"] = { url: `https://youtu.be/${eventData.fieldData["youtube-video-id-2"]}` };
+        eventData.fieldData["video-2"] = `https://youtu.be/${eventData.fieldData["youtube-video-id-2"]}`;
       }
 
       // Add main image if there's one uploaded
@@ -2494,10 +2494,10 @@ var rpLib = {
 
       // Construct youtube video URLs if that exists
       if (newEventData.fieldData["youtube-video-id"]) {
-        newEventData.fieldData["video"] = { url: `https://youtu.be/${$("#youtube-video-id").val()}` };
+        newEventData.fieldData["video"] = `https://youtu.be/${$("#youtube-video-id").val()}`;
       }
       if (newEventData.fieldData["youtube-video-id-2"]) {
-        newEventData.fieldData["video-2"] = { url: `https://youtu.be/${$("#youtube-video-id-2").val()}` };
+        newEventData.fieldData["video-2"] = `https://youtu.be/${$("#youtube-video-id-2").val()}`;
       }
 
       // Add main image if there's one uploaded
