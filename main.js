@@ -1680,6 +1680,7 @@ var rpLib = {
             $("#partner-address").val(partner.fieldData["address"]);
             $("#partner-city").val(partner.fieldData["city-state-zip"]);
             $("#partner-show").prop("checked", partner.fieldData["show-partner"]);
+            $("#youtube-video-id").val(partner.fieldData["youtube-video-id"] || "");
             if (partner.fieldData["profile-pic"]?.url) {
               $("#profile-pic-preview").attr("src", partner.fieldData["profile-pic"].url);
               $("#profile-pic-preview").removeAttr("srcset");
@@ -1732,9 +1733,17 @@ var rpLib = {
           "preview-text": $("#partner-preview-text").val(),
           address: $("#partner-address").val(),
           "city-state-zip": $("#partner-city").val(),
+          "youtube-video-id": $("#youtube-video-id").val(),
           "partner-categories": $("#partner-categories").val(), // Multi-reference
         },
       };
+
+      // Construct youtube video URL if that exists
+      if (updatedData.fieldData["youtube-video-id"]) {
+        updatedData.fieldData["video"] = `https://youtu.be/${updatedData.fieldData["youtube-video-id"]}`;
+      } else {
+        updatedData.fieldData["video"] = "";
+      }
 
       // get description from quill editor
       updatedData.fieldData["description"] = rpLib.utils.cleanQuillInnerHTMLToWf(document.querySelector("#partner-description .ql-editor").innerHTML);
@@ -2413,12 +2422,18 @@ var rpLib = {
           address: $("#partner-address").val(),
           "city-state-zip": $("#partner-city").val(),
           "show-partner": true,
+          "youtube-video-id": $("#youtube-video-id").val(),
           "partner-categories": $("#partner-categories").val(), // Multi-reference
           // Set the brand relationship
           brand: brandId,
           city: [brandId],
         },
       };
+
+      // Construct youtube video URL if that exists
+      if (newPartnerData.fieldData["youtube-video-id"]) {
+        newPartnerData.fieldData["video"] = `https://youtu.be/${$("#youtube-video-id").val()}`;
+      }
 
       // get description from quill editor
       newPartnerData.fieldData["description"] = rpLib.utils.cleanQuillInnerHTMLToWf(
