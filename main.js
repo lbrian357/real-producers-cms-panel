@@ -1141,8 +1141,6 @@ var rpLib = {
 
     // Check if partner ID already exists in mixer targets
     isPartnerInMixer: function(partner) {
-      return false; // Temporarily disable this check
-
       if (!this.state.mixer || !this.state.mixer.targets) {
         return false;
       }
