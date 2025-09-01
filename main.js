@@ -16,6 +16,13 @@ $(document).ready(function () {
   if (window.location.pathname === "/account/partners") rpLib.partnersPage.init();
   if (window.location.pathname === "/account/events") rpLib.eventsPage.init();
   if (window.location.pathname === "/account/users") rpLib.usersPage.init();
+
+  if (window.location.pathname.startsWith("/partners/")) {
+    // Wait a bit to ensure MixItUp is initialized
+    setTimeout(() => {
+      rpLib.partnersSearchPage.init();
+    }, 500);
+  }
 });
 
 var rpLib = {
@@ -1044,6 +1051,758 @@ var rpLib = {
       $("#collection-list").append(templateRowItem);
     },
   },
+  partnersSearchPage: {
+    state: {
+      allPartners: [],
+      partnerCategories: [],
+      mixer: null,
+      searchDebounceTimer: null,
+      currentCity: null,
+      currentCityBrandId: null,
+      isLoading: false,
+      loadedPartnerSlugs: new Set() // Track which partners are already in DOM
+    },
+
+    init: function() {
+      const path = window.location.pathname;
+      const partnersPageMatch = path.match(/^\/partners\/([^\/]+)$/);
+      
+      if (!partnersPageMatch) return;
+      
+      const citySlug = partnersPageMatch[1];
+      this.state.currentCity = citySlug;
+      
+      // Initialize search bar immediately
+      this.initializeSearch();
+      
+      // Wait for MixItUp first, then start loading data
+      this.waitForMixItUp(() => {
+        // Add attributes to existing elements FIRST - before any searching can happen
+        this.addMissingAttributesToExistingElements();
+        
+        // Load categories first (needed for partner processing)
+        this.loadPartnerCategories().then(() => {
+          // Start loading partners - they'll be inserted as batches come in
+          this.loadPartnersData(citySlug);
+        });
+      });
+    },
+
+    // Add this new function
+    loadPartnerCategories: function() {
+      return new Promise((resolve) => {
+        rpLib.api.fetchAllPartnerCategories((categories) => {
+          this.state.partnerCategories = categories;
+          console.log(`Loaded ${categories.length} partner categories`);
+          resolve();
+        });
+      });
+    },
+
+    waitForMixItUp: function(callback) {
+      let intervalCleared = false; // Flag to prevent multiple executions
+      
+      const checkMixer = setInterval(() => {
+        if (intervalCleared) return; // Extra safety check
+        
+        if (typeof mixitup !== 'undefined' && mixitup.instances) {
+          const instanceKeys = Object.keys(mixitup.instances);
+          
+          if (instanceKeys.length > 0) {
+            const instanceKey = instanceKeys[0];
+            const mixerInstance = mixitup.instances[instanceKey];
+            
+            // Clear interval and set flag FIRST
+            clearInterval(checkMixer);
+            intervalCleared = true;
+            
+            this.state.mixer = mixerInstance;
+            
+            console.log('Found existing MixItUp instance:', instanceKey);
+            console.log('Mixer targets:', mixerInstance.targets.length);
+            
+            // Execute callback only once
+            callback();
+            return;
+          }
+        }
+      }, 100);
+      
+      // Timeout after 5 seconds
+      setTimeout(() => {
+        if (!intervalCleared) {
+          clearInterval(checkMixer);
+          intervalCleared = true;
+          console.warn('MixItUp instance not found after 5 seconds');
+          callback(); // Continue anyway
+        }
+      }, 5000);
+    },
+
+    // Check if partner ID already exists in mixer targets
+    isPartnerInMixer: function(partner) {
+      return false; // Temporarily disable this check
+
+      if (!this.state.mixer || !this.state.mixer.targets) {
+        return false;
+      }
+      
+      const partnerName = partner.fieldData.name?.trim() || '';
+      const partnerCompany = partner.fieldData.company?.trim() || '';
+      
+      return this.state.mixer.targets.some(target => {
+        const element = target.dom.el;
+        
+        // Get the name from the existing DOM element
+        const existingNameEl = element.querySelector('.heading-partner-name');
+        if (!existingNameEl) return false;
+        
+        const existingName = existingNameEl.textContent.trim();
+        
+        // Check if name matches
+        if (existingName !== partnerName) return false;
+        
+        // Get all .text-partner-title elements
+        const existingCompanyEls = element.querySelectorAll('.text-partner-title');
+        
+        // Check if at least one contains the partner's company
+        const hasMatchingCompany = Array.from(existingCompanyEls).some(el => 
+          el.textContent.trim() === partnerCompany
+        );
+        
+        return hasMatchingCompany;
+      });
+    },
+
+    addMissingAttributesToExistingElements: function() {
+      if (!this.state.mixer) return;
+      
+      this.state.mixer.targets.forEach(target => {
+        const element = target.dom.el;
+        
+        // Skip if already has the attribute
+        if (element.getAttribute('data-partner-slug')) return;
+        
+        // Try to extract slug from href
+        const linkEl = element.querySelector('a[href*="/partner/"]');
+        if (linkEl) {
+          const href = linkEl.getAttribute('href');
+          const match = href.match(/\/partner\/(.+)$/);
+          if (match) {
+            element.setAttribute('data-partner-slug', match[1]);
+          }
+        }
+        
+        // Also add searchable classes to existing elements
+        this.addSearchableClassesToExistingElement(element);
+      });
+    },
+
+    addSearchableClassesToExistingElement: function(element) {
+      // Helper function to add searchable classes for both words and phrases
+      const addSearchableText = (text) => {
+        if (!text) return;
+
+        const cleanText = text.toLowerCase();
+
+        // Add full phrase (with spaces removed)
+        const fullPhrase = cleanText.replace(/[^a-z0-9]/g, '');
+        if (fullPhrase.length > 1) {
+          element.classList.add(`search-${fullPhrase}`);
+        }
+
+        // Add individual words
+        const words = cleanText.split(' ');
+        words.forEach(word => {
+          const cleanWord = word.replace(/[^a-z0-9]/g, '');
+          if (cleanWord.length > 1) {
+            element.classList.add(`search-${cleanWord}`);
+          }
+        });
+      };
+
+      // --- Apply to different elements ---
+
+      // Apply to name
+      const nameEl = element.querySelector('.heading-partner-name');
+      if (nameEl) {
+        addSearchableText(nameEl.textContent);
+      }
+
+      // Apply to company
+      const companyEls = element.querySelectorAll('.text-partner-title');
+      companyEls.forEach(companyEl => {
+        addSearchableText(companyEl.textContent);
+      });
+
+      // Apply to categories
+      const categoryEls = element.querySelectorAll('.category-link, .filter-category');
+      categoryEls.forEach(catEl => {
+        addSearchableText(catEl.textContent);
+      });
+    },
+
+    addMissingPartnersToDOM: function() {
+      // This function is now mostly for cleanup since batches are processed in real-time
+      // Just ensure we didn't miss anything
+      const container = document.querySelector('.collection-list-partners');
+      if (!container) {
+        console.error('Container .collection-list-partners not found');
+        return;
+      }
+      
+      const missingPartners = this.state.allPartners.filter(partner => 
+        !this.isPartnerInMixer(partner)
+      );
+      
+      if (missingPartners.length > 0) {
+        console.log(`Found ${missingPartners.length} partners missed during batch processing`);
+        this.processBatchOfPartners(missingPartners);
+      }
+      
+      this.addMissingAttributesToExistingElements();
+    },
+
+    applyCurrentSearch: function() {
+      const searchInput = document.getElementById('partners-search-input');
+      if (!searchInput) return;
+      
+      const currentTerm = searchInput.value.trim();
+      if (!currentTerm) return;
+      
+      // Apply search without debouncing since this is called after element insertion
+      this.performSearchImmediate(currentTerm);
+    },
+
+    performSearchImmediate: function(searchTerm) {
+      const term = searchTerm.toLowerCase().trim();
+      
+      if (!term) {
+        if (this.state.mixer) {
+          this.state.mixer.filter('all');
+        }
+        return;
+      }
+      
+      if (!this.state.mixer) return;
+      
+      // Handle both phrases and individual words
+      const cleanTerm = term.replace(/[^a-z0-9]/g, ''); // Remove spaces/special chars
+      
+      // Try to match the full phrase first, then fall back to individual words
+      let selector = `[class*="search-${cleanTerm}"]`;
+      
+      this.state.mixer.filter(selector);
+    },
+
+    elementMatchesSearch: function(element, term) {
+      const nameEl = element.querySelector('.heading-partner-name');
+      const companyEls = element.querySelectorAll('.text-partner-title');
+      const categoryEls = element.querySelectorAll('.category-link, .filter-category');
+      const previewEl = element.querySelector('.preview-text-partner-card');
+      
+      if (!nameEl) return false;
+      
+      const name = nameEl.textContent.toLowerCase();
+      
+      // Check company fields
+      const companies = Array.from(companyEls).map(el => el.textContent.toLowerCase());
+      const companyMatch = companies.some(company => company.includes(term));
+      
+      // Check categories
+      const categories = Array.from(categoryEls).map(el => el.textContent.toLowerCase());
+      const categoryMatch = categories.some(category => category.includes(term));
+      
+      // Check preview text
+      const previewText = previewEl ? previewEl.textContent.toLowerCase() : '';
+      
+      return name.includes(term) || 
+            companyMatch || 
+            categoryMatch ||
+            previewText.includes(term);
+    },
+
+    initializeSearch: function() {
+      // Create and inject search bar HTML if it doesn't exist
+      if (!document.getElementById('partners-search-container')) {
+        const searchHTML = `
+          <div id="partners-search-container" class="partners-search-wrapper">
+            <div class="search-bar-container">
+              <input type="text" 
+                    id="partners-search-input" 
+                    class="search-input" 
+                    placeholder="Search partners by name, company, or category..."
+                    autocomplete="off">
+              <div class="search-icon">🔍</div>
+              <div id="search-loading" class="search-loading hidden">Loading...</div>
+            </div>
+            <button id="clear-search" class="clear-search-btn hidden">Clear Search</button>
+          </div>
+        `;
+        
+        // Insert search bar before the partners list
+        const partnersList = document.querySelector('.collection-list-partners');
+        if (partnersList) {
+          partnersList.insertAdjacentHTML('beforebegin', searchHTML);
+        }
+      }
+      
+      // Add CSS for the search bar
+      this.injectSearchStyles();
+      
+      // Bind search events
+      const searchInput = document.getElementById('partners-search-input');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          this.handleSearch(e.target.value);
+        });
+        
+        // Also listen for search clear
+        searchInput.addEventListener('search', (e) => {
+          if (e.target.value === '') {
+            this.clearSearch();
+          }
+        });
+      }
+      
+      // Bind clear button
+      const clearBtn = document.getElementById('clear-search');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          this.clearSearch();
+        });
+      }
+    },
+
+    injectSearchStyles: function() {
+      if (!document.getElementById('partners-search-styles')) {
+        const styles = `
+          <style id="partners-search-styles">
+            .partners-search-wrapper {
+              margin: 20px 0 30px 0;
+              padding: 0 20px;
+            }
+            
+            .search-bar-container {
+              position: relative;
+              max-width: 600px;
+              margin: 0 auto;
+            }
+            
+            .search-input {
+              width: 100%;
+              padding: 12px 45px 12px 15px;
+              font-size: 16px;
+              border: 2px solid #e0e0e0;
+              border-radius: 8px;
+              transition: border-color 0.3s;
+              font-family: inherit;
+            }
+            
+            .search-input:focus {
+              outline: none;
+              border-color: #25a5de;
+            }
+            
+            .search-icon {
+              position: absolute;
+              right: 15px;
+              top: 50%;
+              transform: translateY(-50%);
+              pointer-events: none;
+              opacity: 0.5;
+            }
+            
+            .search-loading {
+              position: absolute;
+              right: 45px;
+              top: 50%;
+              transform: translateY(-50%);
+              font-size: 12px;
+              color: #25a5de;
+            }
+            
+            .search-results-count {
+              margin-top: 10px;
+              text-align: center;
+              font-size: 14px;
+              color: #666;
+            }
+            
+            .clear-search-btn {
+              display: block;
+              margin: 15px auto;
+              padding: 8px 20px;
+              background: #25a5de;
+              color: white;
+              border: none;
+              border-radius: 5px;
+              cursor: pointer;
+              font-size: 14px;
+              transition: background 0.3s;
+            }
+            
+            .clear-search-btn:hover {
+              background: #1a8fc5;
+            }
+            
+            .hidden {
+              display: none !important;
+            }
+          </style>
+        `;
+        document.head.insertAdjacentHTML('beforeend', styles);
+      }
+    },
+
+    loadPartnersData: async function(citySlug) {
+      // Show loading state
+      this.showLoadingState(true);
+      
+      try {
+        // First, get the brand ID from the city slug
+        const brandId = await this.getBrandIdFromSlug(citySlug);
+        
+        if (!brandId) {
+          console.error('Could not find brand ID for city:', citySlug);
+          this.showLoadingState(false);
+          return;
+        }
+        
+        this.state.currentCityBrandId = brandId;
+        
+        // Fetch all partners for this brand
+        await this.fetchAllPartners(brandId);
+        
+        console.log(`Loaded ${this.state.allPartners.length} partners for ${citySlug}`);
+        
+      } catch (error) {
+        console.error('Error loading partners data:', error);
+      } finally {
+        this.showLoadingState(false);
+      }
+    },
+
+    getBrandIdFromSlug: async function(citySlug) {
+      return new Promise((resolve) => {
+        $.ajax({
+          url: `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${BRANDS_COLLECTION_ID}/items/live?slug=${citySlug}`,
+          method: 'GET',
+          success: function(response) {
+            if (response.items && response.items.length > 0) {
+              resolve(response.items[0].id);
+            } else {
+              resolve(null);
+            }
+          },
+          error: function(error) {
+            console.error('Error fetching brand ID:', error);
+            resolve(null);
+          }
+        });
+      });
+    },
+
+    fetchAllPartners: function(brandId) {
+      return new Promise((resolve) => {
+        const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNERS_COLLECTION_ID}/items/live?sortBy=lastPublished&sortOrder=desc`;
+        
+        this.state.allPartners = [];
+        
+        rpLib.api.fetchAllPaginated(
+          url,
+          (items) => {
+            // Filter partners for this brand
+            const brandPartners = items.filter(partner => 
+              !partner.isArchived && 
+              partner.fieldData.city && 
+              partner.fieldData.city.includes(brandId) &&
+              partner.fieldData['show-partner'] === true
+            );
+            
+            // Add to our complete list
+            this.state.allPartners.push(...brandPartners);
+            
+            // Process this batch immediately
+            this.processBatchOfPartners(brandPartners);
+          },
+          0,
+          () => {
+            console.log(`Finished loading all ${this.state.allPartners.length} partners`);
+            resolve();
+          }
+        );
+      });
+    },
+
+    processBatchOfPartners: function(partnerBatch) {
+      if (!this.state.mixer || partnerBatch.length === 0) {
+        return;
+      }
+      
+      // Filter out partners that already exist in mixer
+      const newPartners = partnerBatch.filter(partner => 
+        !this.isPartnerInMixer(partner)
+      );
+      
+      if (newPartners.length === 0) {
+        console.log('No new partners in this batch');
+        return;
+      }
+      
+      console.log(`Processing batch: ${newPartners.length} new partners`);
+      
+      // Get the last element currently in the mixer to use as reference
+      const currentState = this.state.mixer.getState();
+      const lastElement = currentState.show[currentState.show.length - 1];
+      
+      // Create elements for new partners
+      const elementsToInsert = [];
+      
+      newPartners.forEach(partner => {
+        const cardElement = this.createPartnerCardElement(partner);
+        this.processPartnerElement(cardElement, partner);
+        this.state.loadedPartnerSlugs.add(partner.fieldData.slug);
+        elementsToInsert.push(cardElement);
+      });
+      
+      // Insert elements one by one after the last element
+      let insertPromise = Promise.resolve();
+      let referenceElement = lastElement;
+      
+      elementsToInsert.forEach(element => {
+        insertPromise = insertPromise.then(() => {
+          return this.state.mixer.insertAfter(element, referenceElement);
+        }).then(() => {
+          // Update reference element for next insertion
+          referenceElement = element;
+        });
+      });
+      
+      insertPromise.then(() => {
+        console.log(`Inserted ${elementsToInsert.length} partners from batch at end`);
+      }).catch((error) => {
+        console.warn('MixItUp insertAfter failed:', error);
+      });
+    },
+
+    handleSearch: function(searchTerm) {
+      // Clear previous timer
+      if (this.state.searchDebounceTimer) {
+        clearTimeout(this.state.searchDebounceTimer);
+      }
+      
+      // Show/hide clear button
+      const clearBtn = document.getElementById('clear-search');
+      if (clearBtn) {
+        clearBtn.classList.toggle('hidden', !searchTerm);
+      }
+      
+      // Debounce the search
+      this.state.searchDebounceTimer = setTimeout(() => {
+        this.performSearch(searchTerm);
+      }, 300);
+    },
+
+    performSearch: function(searchTerm) {
+      this.performSearchImmediate(searchTerm);
+      console.log(`Searching for: "${searchTerm}"`);
+    },
+
+    createPartnerCardElement: function(partner) {
+      const data = partner.fieldData;
+      const backgroundImage = 'https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b746/6747e52f75e4d2272610c598_659c8f9d187e6da25be61ca6_bg-stripes-wide-real-producers.jpeg';
+
+      const defaultProfilePicClass = 'image-partner-pic';
+      const logoReplacementProfilePicClass = 'image-placeholder-logo';
+      let profilePicClass = defaultProfilePicClass;
+      let profilePic = data['profile-pic']?.url || '';
+      let logo = data.logo?.url || '';
+      if (!profilePic) {
+        profilePic = data.logo?.url || '';
+        logo = '';
+        profilePicClass = logoReplacementProfilePicClass;
+      }
+      
+      // Format date
+      const date = new Date(partner.lastPublished);
+      const formattedDate = date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      
+      // Build partner categories HTML
+      const categoriesHTML = this.buildPartnerCategoriesHTML(data['partner-categories']);
+      
+      // Create the element
+      const div = document.createElement('div');
+      div.setAttribute('role', 'listitem');
+      div.className = 'mix w-dyn-item partner-dynamic';
+      div.setAttribute('data-date', formattedDate);
+      div.setAttribute('data-partner-slug', data.slug);
+      div.setAttribute('data-partner-id', partner.id);
+      
+      div.innerHTML = `
+        <div class="collection-list-wrapper-partner-categories w-dyn-list">
+            ${categoriesHTML}
+          </div>
+        </div>
+        <a style="background-image:url('${backgroundImage}')" 
+          href="/partner/${data.slug}" 
+          target="_blank" 
+          class="grid-partner-wrapper w-inline-block">
+          <img alt="${data.name}" loading="lazy" src="${profilePic}" class="${profilePicClass}">
+          <div class="w-layout-grid grid-partner-info">
+            <div class="w-layout-grid grid-partner-name-logo">
+              ${logo ? `<div style="background-image:url('${logo}')" class="link-partner-logo"></div>` : ''}
+              <h3 class="heading-partner-name">${data.name || ''}</h3>
+              <div class="text-partner-title">${data.company || ''}</div>
+              <div class="text-partner-title">${data['company-type'] || ''}</div>
+            </div>
+            <div class="preview-text-partner-card">${data['preview-text'] || ''}</div>
+            <div class="button-partner-contact">Connect With Me</div>
+          </div>
+          <div class="w-layout-grid grid-partner-category-date">
+            <div class="div-partner-category-date">
+              <div class="date sort-category">${formattedDate}</div>
+            </div>
+          </div>
+        </a>
+      `;
+      
+      return div;
+    },
+
+    buildPartnerCategoriesHTML: function(partnerCategoryIds) {
+      if (!partnerCategoryIds || !Array.isArray(partnerCategoryIds) || partnerCategoryIds.length === 0) {
+        return '<div role="list" class="collection-list-partner-categories w-dyn-items"></div>';
+      }
+      
+      if (!this.state.partnerCategories || this.state.partnerCategories.length === 0) {
+        return '<div role="list" class="collection-list-partner-categories w-dyn-items"></div>';
+      }
+      
+      // Find matching categories
+      const matchingCategories = partnerCategoryIds
+        .map(categoryId => {
+          return this.state.partnerCategories.find(cat => cat.id === categoryId);
+        })
+        .filter(category => category); // Remove any undefined results
+      
+      // Generate individual category items
+      const categoryItems = matchingCategories
+        .map(category => {
+          const categoryClass = this.cleanStringForClass(category.fieldData.name);
+          return `<div role="listitem" class="collection-item-partner-profile-category w-dyn-item">
+            <div class="category-link filter-category ${categoryClass}">${category.fieldData.name}</div>
+          </div>`;
+        })
+        .join('');
+      
+      // Return single w-dyn-items container with all categories inside
+      return `<div role="list" class="collection-list-partner-categories w-dyn-items">
+        ${categoryItems}
+      </div>`;
+    },
+
+    processPartnerElement: function(element, partner) {
+      const data = partner.fieldData;
+      
+      // Helper function to add searchable classes for both words and phrases
+      const addSearchableText = (text) => {
+        if (!text) return;
+        
+        const cleanText = text.toLowerCase();
+        
+        // Add full phrase (with spaces removed)
+        const fullPhrase = cleanText.replace(/[^a-z0-9]/g, '');
+        if (fullPhrase.length > 1) {
+          element.classList.add(`search-${fullPhrase}`);
+        }
+        
+        // Add individual words
+        const words = cleanText.split(' ');
+        words.forEach(word => {
+          const cleanWord = word.replace(/[^a-z0-9]/g, '');
+          if (cleanWord.length > 1) {
+            element.classList.add(`search-${cleanWord}`);
+          }
+        });
+      };
+      
+      // Apply to name
+      addSearchableText(data.name);
+      
+      // Apply to company
+      addSearchableText(data.company);
+      
+      // Apply to company type
+      addSearchableText(data['company-type']);
+      
+      // Apply to categories
+      if (data['partner-categories'] && Array.isArray(data['partner-categories'])) {
+        data['partner-categories'].forEach(categoryId => {
+          const category = this.state.partnerCategories.find(cat => cat.id === categoryId);
+          if (category) {
+            addSearchableText(category.fieldData.name);
+          }
+        });
+      }
+    },
+
+    cleanStringForClass: function(str) {
+      if (!str) return '';
+      return str.replace(/[!\"#$%&'\(\)\*\+,\.\/:;<=>\?\@\[\\\]\^`\{\|\}~]/g, '')
+                .replace(/ /g, "-")
+                .toLowerCase()
+                .trim();
+    },
+
+    clearSearch: function() {
+      const searchInput = document.getElementById('partners-search-input');
+      if (searchInput) {
+        searchInput.value = '';
+      }
+      
+      // Reset filter to show all elements
+      if (this.state.mixer) {
+        this.state.mixer.filter('all');
+      }
+      
+      // Hide clear button
+      const clearBtn = document.getElementById('clear-search');
+      if (clearBtn) {
+        clearBtn.classList.add('hidden');
+      }
+    },
+
+    showLoadingState: function(isLoading) {
+      this.state.isLoading = isLoading;
+      const loadingEl = document.getElementById('search-loading');
+      if (loadingEl) {
+        loadingEl.classList.toggle('hidden', !isLoading);
+      }
+    },
+
+    // Debug function to see what's in the mixer
+    debugMixerPartners: function() {
+      if (!this.state.mixer) {
+        console.log('No mixer available');
+        return;
+      }
+      
+      console.log(`Mixer contains ${this.state.mixer.targets.length} partners:`);
+      
+      const partnerIds = this.state.mixer.targets.map(target => {
+        const element = target.dom.el;
+        return element.getAttribute('data-partner-id');
+      }).filter(id => id); // Remove nulls
+      
+      console.log('Partner IDs in mixer:', partnerIds);
+      return partnerIds;
+    },
+  },
 
   utils: {
     injectDependencies: function () {
@@ -1064,6 +1823,12 @@ var rpLib = {
       const quillJsScript = '<script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>';
       $("head").append(quillCssLink);
       $("head").append(quillJsScript);
+
+      // MixItUp 3 (only load on partners pages)
+      if (window.location.pathname.startsWith("/partners/")) {
+        const mixitupScript = '<script src="https://cdnjs.cloudflare.com/ajax/libs/mixitup/3.3.1/mixitup.min.js"></script>';
+        $("head").append(mixitupScript);
+      }
     },
     injectCSS: function () {
       $("head").append(`
