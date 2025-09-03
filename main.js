@@ -1347,87 +1347,6 @@ var rpLib = {
       }
     },
 
-    injectSearchStyles: function() {
-      if (!document.getElementById('partners-search-styles')) {
-        const styles = `
-          <style id="partners-search-styles">
-            .partners-search-wrapper {
-              margin: 20px 0 30px 0;
-              padding: 0 20px;
-            }
-            
-            .search-bar-container {
-              position: relative;
-              max-width: 600px;
-              margin: 0 auto;
-            }
-            
-            .search-input {
-              width: 100%;
-              padding: 12px 45px 12px 15px;
-              font-size: 16px;
-              border: 2px solid #e0e0e0;
-              border-radius: 8px;
-              transition: border-color 0.3s;
-              font-family: inherit;
-            }
-            
-            .search-input:focus {
-              outline: none;
-              border-color: #25a5de;
-            }
-            
-            .search-icon {
-              position: absolute;
-              right: 15px;
-              top: 50%;
-              transform: translateY(-50%);
-              pointer-events: none;
-              opacity: 0.5;
-            }
-            
-            .search-loading {
-              position: absolute;
-              right: 45px;
-              top: 50%;
-              transform: translateY(-50%);
-              font-size: 12px;
-              color: #25a5de;
-            }
-            
-            .search-results-count {
-              margin-top: 10px;
-              text-align: center;
-              font-size: 14px;
-              color: #666;
-            }
-            
-            .clear-search-btn {
-              display: block;
-              margin: 15px auto;
-              padding: 8px 20px;
-              background: #25a5de;
-              color: white;
-              border: none;
-              border-radius: 5px;
-              cursor: pointer;
-              font-size: 14px;
-              transition: background 0.3s;
-            }
-            
-            .clear-search-btn:hover {
-              background: #1a8fc5;
-            }
-            
-            .hidden {
-              display: none !important;
-            }
-          </style>
-        `;
-        document.head.insertAdjacentHTML('beforeend', styles);
-      }
-    },
-
     loadPartnersData: async function(citySlug) {
       // Show loading state
       this.showLoadingState(true);
@@ -1580,6 +1499,8 @@ var rpLib = {
     performSearch: function(searchTerm) {
       this.performSearchImmediate(searchTerm);
       console.log(`Searching for: "${searchTerm}"`);
+
+      window.scrollTo(0, 0); 
     },
 
     createPartnerCardElement: function(partner) {
