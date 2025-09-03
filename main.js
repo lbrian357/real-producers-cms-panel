@@ -1321,32 +1321,7 @@ var rpLib = {
     },
 
     initializeSearch: function() {
-      // Create and inject search bar HTML if it doesn't exist
-      if (!document.getElementById('partners-search-container')) {
-        const searchHTML = `
-          <div id="partners-search-container" class="partners-search-wrapper">
-            <div class="search-bar-container">
-              <input type="text" 
-                    id="partners-search-input" 
-                    class="search-input" 
-                    placeholder="Search partners by name, company, or category..."
-                    autocomplete="off">
-              <div class="search-icon">🔍</div>
-              <div id="search-loading" class="search-loading hidden">Loading...</div>
-            </div>
-            <button id="clear-search" class="clear-search-btn hidden">Clear Search</button>
-          </div>
-        `;
-        
-        // Insert search bar before the partners list
-        const partnersList = document.querySelector('.collection-list-partners');
-        if (partnersList) {
-          partnersList.insertAdjacentHTML('beforebegin', searchHTML);
-        }
-      }
-      
-      // Add CSS for the search bar
-      this.injectSearchStyles();
+      $('#partners-search-container').show(); // Use this webflow designed element
       
       // Bind search events
       const searchInput = document.getElementById('partners-search-input');
@@ -1778,8 +1753,10 @@ var rpLib = {
     showLoadingState: function(isLoading) {
       this.state.isLoading = isLoading;
       const loadingEl = document.getElementById('search-loading');
-      if (loadingEl) {
-        loadingEl.classList.toggle('hidden', !isLoading);
+      if (isLoading) {
+        $(loadingEl).show();
+      } else {
+        $(loadingEl).hide();
       }
     },
 
