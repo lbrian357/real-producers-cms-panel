@@ -1397,7 +1397,7 @@ var rpLib = {
 
     fetchAllPartners: function(brandId) {
       return new Promise((resolve) => {
-        const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNERS_COLLECTION_ID}/items/live?sortBy=name&sortOrder=asc`;
+        const url = `https://vhpb1dr9je.execute-api.us-east-1.amazonaws.com/dev/https://api.webflow.com/v2/collections/${PARTNERS_COLLECTION_ID}/items/live?sortBy=name&sortOrder=desc`;
         
         this.state.allPartners = [];
         
