@@ -5,6 +5,40 @@ const PARTNERS_COLLECTION_ID = "65e7ff7b313c5cd8cd924886";
 const PARTNER_CATEGORIES_COLLECTION_ID = "65e7fc8199c534cfe2cba083";
 const SITE_ID = "658f30a87b1a52ef8ad0b732";
 
+const additionalCSS = `
+.single-image-container {
+  position: relative;
+  display: inline-block;
+}
+
+.single-image-delete-btn {
+    background-color: #fff;
+    background-image: url(https://cdn.prod.website-files.com/658f30a87b1a52ef8ad0b732/658f30a87b1a52ef8ad0bb2d_x-icon-black.png);
+    background-position: 50%;
+    background-repeat: no-repeat;
+    background-size: 50% 50%;
+    border-radius: 100px;
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    inset: 5px 5px auto auto;
+}
+
+.single-image-container:hover .single-image-delete-btn {
+  opacity: 1;
+}
+
+.single-image-delete-btn:hover {
+  background-color: #cc0000;
+}
+
+.single-image-deleted {
+  opacity: 0.3;
+  filter: grayscale(100%);
+}
+`;
+
+
 
 $(document).ready(function () {
   rpLib.utils.injectCSS();
@@ -278,6 +312,12 @@ var rpLib = {
         fullPic: null,
       };
 
+      // Add deletion tracking
+      rpLib.usersPage.state.deletions = {
+        profilePic: false,
+        fullPic: false,
+      };
+
       // Reset the modal content to template
       cleanModalContentTemplate = $(this.state.modalContentTemplateHTML);
       $(".collection-item-modal").removeAttr("data-user-id");
@@ -293,27 +333,43 @@ var rpLib = {
 
       // On save button click
       $("#save-user").on("click", function () {
-        rpLib.usersPage.handleSaveUserClick(rpLib.usersPage.state.uploads.profilePic, rpLib.usersPage.state.uploads.fullPic);
+        rpLib.usersPage.handleSaveUserClick(
+          rpLib.usersPage.state.uploads.profilePic, 
+          rpLib.usersPage.state.uploads.fullPic
+        );
       });
 
       // Close modal
       $("#close-modal").on("click", function () {
-        // Ask for confirmation before closing the modal
         if (confirm("Are you sure you want to close the modal? Any unsaved changes will be lost.")) {
           $(".collection-item-modal").addClass("hidden");
         }
       });
 
       // On profile pic preview replacement click, open file dialog
-      rpLib.utils.setupSingleImgPreviewReplacement("profile-pic-preview", function (newFile) {
-        $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
-        rpLib.usersPage.state.uploads.profilePic = newFile;
+      rpLib.utils.setupSingleImgPreviewReplacement("profile-pic-preview", function (result) {
+        if (result === 'DELETED') {
+          $("#profile-pic-upload-status").text("Image will be removed when saved");
+          rpLib.usersPage.state.deletions.profilePic = true;
+          rpLib.usersPage.state.uploads.profilePic = null;
+        } else if (result) {
+          $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
+          rpLib.usersPage.state.uploads.profilePic = result;
+          rpLib.usersPage.state.deletions.profilePic = false;
+        }
       });
 
       // On full pic preview replacement click, open file dialog
-      rpLib.utils.setupSingleImgPreviewReplacement("full-pic-preview", function (newFile) {
-        $("#full-pic-upload-status").text("Image selected (will upload when saved)");
-        rpLib.usersPage.state.uploads.fullPic = newFile;
+      rpLib.utils.setupSingleImgPreviewReplacement("full-pic-preview", function (result) {
+        if (result === 'DELETED') {
+          $("#full-pic-upload-status").text("Image will be removed when saved");
+          rpLib.usersPage.state.deletions.fullPic = true;
+          rpLib.usersPage.state.uploads.fullPic = null;
+        } else if (result) {
+          $("#full-pic-upload-status").text("Image selected (will upload when saved)");
+          rpLib.usersPage.state.uploads.fullPic = result;
+          rpLib.usersPage.state.deletions.fullPic = false;
+        }
       });
     },
     renderUser: function (user) {
@@ -1750,6 +1806,7 @@ var rpLib = {
                   border: 1px solid #ccc;
               }
 
+              ${additionalCSS}
             </style>
         `);
     },
@@ -1929,6 +1986,14 @@ var rpLib = {
       });
     },
     setupSingleImgPreviewReplacement: function (imgPreviewId, afterImgSelectedCallback) {
+      // Set up deletion first
+      rpLib.utils.setupSingleImageDeletion(imgPreviewId, function(isDeleted) {
+        // This callback will be triggered when delete happens
+        if (afterImgSelectedCallback) {
+          afterImgSelectedCallback('DELETED');
+        }
+      });
+
       $(`#${imgPreviewId}`).on("click", function (e) {
         // Create a temporary file input for replacing the image
         const $tempInput = $('<input type="file" accept="image/*" style="display:none">');
@@ -1963,6 +2028,16 @@ var rpLib = {
 
             // Remove srcset if it exists (it prevents src from showing)
             $(`#${imgPreviewId}`).removeAttr("srcset");
+            
+            // Remove deleted state if it was deleted
+            $(`#${imgPreviewId}`).removeClass('single-image-deleted').removeAttr('data-deleted');
+            
+            // Re-setup deletion for the new image
+            rpLib.utils.setupSingleImageDeletion(imgPreviewId, function(isDeleted) {
+              if (afterImgSelectedCallback) {
+                afterImgSelectedCallback('DELETED');
+              }
+            });
           };
 
           reader.readAsDataURL(newFile);
@@ -1973,6 +2048,45 @@ var rpLib = {
         });
       });
     },
+
+    setupSingleImageDeletion: function(imageId, onDeleteCallback) {
+      const $image = $(`#${imageId}`);
+      
+      if ($image.length === 0) return;
+      
+      // Wrap the image in a container if it's not already wrapped
+      if (!$image.parent().hasClass('single-image-container')) {
+        $image.wrap('<div class="single-image-container"></div>');
+      }
+      
+      const $container = $image.parent('.single-image-container');
+      
+      // Remove any existing delete button
+      $container.find('.single-image-delete-btn').remove();
+      
+      // Add delete button
+      const $deleteBtn = $('<div class="single-image-delete-btn" title="Delete this image"></div>');
+      $container.append($deleteBtn);
+      
+      // Handle delete click
+      $deleteBtn.on('click', function(e) {
+        e.stopPropagation();
+        
+        if (confirm('Are you sure you want to delete this image?')) {
+          // Mark image as deleted
+          $image.addClass('single-image-deleted');
+          $image.attr('data-deleted', 'true');
+          
+          // Hide the delete button since image is now deleted
+          $deleteBtn.hide();
+          
+          if (typeof onDeleteCallback === 'function') {
+            onDeleteCallback(true); // true = deleted
+          }
+        }
+      });
+    },
+
     formatWfDate: function (utcDatetimeStr) {
       let date = new Date(utcDatetimeStr);
 
@@ -2632,10 +2746,22 @@ var rpLib = {
       });
     },
     updateEventAndRefreshList: function (eventId, callback) {
+      const eventDate = $("#event-date").val();
+      if (!eventDate || !eventDate.includes('T') || eventDate.split('T')[1].split(':').length < 2) {
+        alert("Please enter a complete date and time (YYYY-MM-DD HH:MM)");
+        $("#save-event").text("Save");
+        $("#save-event").prop("disabled", false);
+        $("#full-page-loading-overlay").hide();
+        if (typeof callback === "function") {
+          callback();
+        }
+        return;
+      }
+
       const eventData = {
         fieldData: {
           name: $("#event-name").val(),
-          date: rpLib.utils.turnPstDateToUtcForInputEl($("#event-date").val()),
+          date: rpLib.utils.turnPstDateToUtcForInputEl(eventDate),
           "location-name": $("#event-location-name").val(),
           "location-address": $("#event-location-address").val(),
           "button-url": $("#button-url").val(),
@@ -2774,9 +2900,6 @@ var rpLib = {
           "first-name": $("#user-first-name").val(),
           "last-name": $("#user-last-name").val(),
           title: $("#user-title").val(),
-          // get profile picture from data attribute in preview
-          "profile-picture": $("#profile-pic-preview").attr("uploaded-image"),
-          "full-picture": $("#full-pic-preview").attr("uploaded-image"),
           email: $("#user-email").val(),
           phone: $("#user-phone").val(),
           "url-facebook": $("#user-url-facebook").val(),
@@ -2792,14 +2915,18 @@ var rpLib = {
       // get bio from quill editor
       updatedData.fieldData["bio"] = rpLib.utils.cleanQuillInnerHTMLToWf(document.querySelector("#user-bio .ql-editor").innerHTML);
 
-      // Add profile picture if available
-      if (newProfilePicFile) {
+      // Handle profile picture - check for deletion first
+      if (rpLib.usersPage.state.deletions.profilePic) {
+        updatedData.fieldData["profile-picture"] = null; // This will remove the image
+      } else if (newProfilePicFile) {
         const newImgUrl = $("#profile-pic-preview").attr("src");
         updatedData.fieldData["profile-picture"] = { url: newImgUrl };
       }
 
-      // Add full picture if available
-      if (newFullPicFile) {
+      // Handle full picture - check for deletion first
+      if (rpLib.usersPage.state.deletions.fullPic) {
+        updatedData.fieldData["full-picture"] = null; // This will remove the image
+      } else if (newFullPicFile) {
         const newImgUrl = $("#full-pic-preview").attr("src");
         updatedData.fieldData["full-picture"] = { url: newImgUrl };
       }
@@ -3153,10 +3280,20 @@ var rpLib = {
       });
     },
     createEventAndRefreshList: function (brandId, callback) {
+      // Quick fix for imcomplete datetime-local input values, needs rework on next iteration
+      const eventDate = $("#event-date").val();
+      if (!eventDate || !eventDate.includes('T') || eventDate.split('T')[1].split(':').length < 2) {
+        alert("Please enter a complete date and time (YYYY-MM-DD HH:MM)");
+          $("#save-event").text("Save");
+          $("#save-event").prop("disabled", false);
+          $("#full-page-loading-overlay").hide();
+        return;
+      }
+
       let newEventData = {
         fieldData: {
           name: $("#event-name").val(),
-          date: rpLib.utils.turnPstDateToUtcForInputEl($("#event-date").val()),
+          date: rpLib.utils.turnPstDateToUtcForInputEl(eventDate),
           "location-name": $("#event-location-name").val(),
           "location-address": $("#event-location-address").val(),
           "button-url": $("#button-url").val(),
