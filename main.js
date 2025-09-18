@@ -2748,7 +2748,7 @@ var rpLib = {
     updateEventAndRefreshList: function (eventId, callback) {
       const eventDate = $("#event-date").val();
       if (!eventDate || !eventDate.includes('T') || eventDate.split('T')[1].split(':').length < 2) {
-        alert("Please enter a complete date and time (YYYY-MM-DD HH:MM)");
+        alert("Please enter a complete date and time (MM/DD/YYYY HH:MM)");
         $("#save-event").text("Save");
         $("#save-event").prop("disabled", false);
         $("#full-page-loading-overlay").hide();
@@ -3283,7 +3283,7 @@ var rpLib = {
       // Quick fix for imcomplete datetime-local input values, needs rework on next iteration
       const eventDate = $("#event-date").val();
       if (!eventDate || !eventDate.includes('T') || eventDate.split('T')[1].split(':').length < 2) {
-        alert("Please enter a complete date and time (YYYY-MM-DD HH:MM)");
+        alert("Please enter a complete date and time (MM/DD/YYYY HH:MM)");
           $("#save-event").text("Save");
           $("#save-event").prop("disabled", false);
           $("#full-page-loading-overlay").hide();
