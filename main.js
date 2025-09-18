@@ -502,6 +502,12 @@ var rpLib = {
         adImage: null,
       };
 
+      rpLib.partnersPage.state.deletions = {
+        profilePic: false,
+        logo: false,
+        adImage: false,
+      };
+
       cleanModalContentTemplate = $(this.state.modalContentTemplateHTML);
       $(".collection-item-modal").removeAttr("data-partner-id");
       $(".collection-item-modal").empty();
@@ -546,20 +552,38 @@ var rpLib = {
       });
 
       // On image preview replacement click, open file dialog
-      rpLib.utils.setupSingleImgPreviewReplacement("profile-pic-preview", function (newFile) {
-        // Update the status text after selecting a new image
-        $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
-
-        // Update the state/variable to indicate a new file was selected
-        rpLib.partnersPage.state.uploads.profilePic = newFile;
+      rpLib.utils.setupSingleImgPreviewReplacement("profile-pic-preview", function (result) {
+        if (result === 'DELETED') {
+          $("#profile-pic-upload-status").text("Image will be removed when saved");
+          rpLib.partnersPage.state.deletions.profilePic = true;
+          rpLib.partnersPage.state.uploads.profilePic = null;
+        } else if (result) {
+          $("#profile-pic-upload-status").text("Image selected (will upload when saved)");
+          rpLib.partnersPage.state.uploads.profilePic = result;
+          rpLib.partnersPage.state.deletions.profilePic = false;
+        }
       });
-      rpLib.utils.setupSingleImgPreviewReplacement("logo-preview", function (newFile) {
-        $("#logo-upload-status").text("Image selected (will upload when saved)");
-        rpLib.partnersPage.state.uploads.logo = newFile;
+      rpLib.utils.setupSingleImgPreviewReplacement("logo-preview", function (result) {
+        if (result === 'DELETED') {
+          $("#logo-upload-status").text("Image will be removed when saved");
+          rpLib.partnersPage.state.deletions.logo = true;
+          rpLib.partnersPage.state.uploads.logo = null;
+        } else if (result) {
+          $("#logo-upload-status").text("Image selected (will upload when saved)");
+          rpLib.partnersPage.state.uploads.logo = result;
+          rpLib.partnersPage.state.deletions.logo = false;
+        }
       });
-      rpLib.utils.setupSingleImgPreviewReplacement("ad-image-preview", function (newFile) {
-        $("#ad-image-upload-status").text("Image selected (will upload when saved)");
-        rpLib.partnersPage.state.uploads.adImage = newFile;
+      rpLib.utils.setupSingleImgPreviewReplacement("ad-image-preview", function (result) {
+        if (result === 'DELETED') {
+          $("#ad-image-upload-status").text("Image will be removed when saved");
+          rpLib.partnersPage.state.deletions.adImage = true;
+          rpLib.partnersPage.state.uploads.adImage = null;
+        } else if (result) {
+          $("#ad-image-upload-status").text("Image selected (will upload when saved)");
+          rpLib.partnersPage.state.uploads.adImage = result;
+          rpLib.partnersPage.state.deletions.adImage = false;
+        }
       });
     },
     renderPartner: function (partner) {
@@ -782,6 +806,11 @@ var rpLib = {
       rpLib.eventsPage.state.existingGallery2 = [];
       rpLib.eventsPage.state.existingGallery3 = [];
 
+      rpLib.eventsPage.state.deletions = {
+        mainImage: false,
+        flyerImage: false,
+      };
+
       cleanModalContentTemplate = $(this.state.modalContentTemplateHTML);
       $(".collection-item-modal").removeAttr("data-event-id");
       $(".collection-item-modal").empty();
@@ -800,16 +829,28 @@ var rpLib = {
         afterResetCallback();
       }
 
-      rpLib.utils.setupSingleImgPreviewReplacement("main-image-preview", function (newFile) {
-        // Update the status text after selecting a new image
-        $("#main-image-upload-status").text("Image selected (will upload when saved)");
-
-        // Update uploads state to indicate a new file was selected
-        rpLib.eventsPage.state.uploads.mainImage = newFile;
+      rpLib.utils.setupSingleImgPreviewReplacement("main-image-preview", function (result) {
+        if (result === 'DELETED') {
+          $("#main-image-upload-status").text("Image will be removed when saved");
+          rpLib.eventsPage.state.deletions.mainImage = true;
+          rpLib.eventsPage.state.uploads.mainImage = null;
+        } else if (result) {
+          $("#main-image-upload-status").text("Image selected (will upload when saved)");
+          rpLib.eventsPage.state.uploads.mainImage = result;
+          rpLib.eventsPage.state.deletions.mainImage = false;
+        }
       });
-      rpLib.utils.setupSingleImgPreviewReplacement("event-flyer-preview", function (newFile) {
-        $("#event-flyer-status").text("Image selected (will upload when saved)");
-        rpLib.eventsPage.state.uploads.flyerImage = newFile;
+
+      rpLib.utils.setupSingleImgPreviewReplacement("event-flyer-preview", function (result) {
+        if (result === 'DELETED') {
+          $("#event-flyer-status").text("Image will be removed when saved");
+          rpLib.eventsPage.state.deletions.flyerImage = true;
+          rpLib.eventsPage.state.uploads.flyerImage = null;
+        } else if (result) {
+          $("#event-flyer-status").text("Image selected (will upload when saved)");
+          rpLib.eventsPage.state.uploads.flyerImage = result;
+          rpLib.eventsPage.state.deletions.flyerImage = false;
+        }
       });
 
       // When an .add-img-btn is clicked, create a new invisible temp file input and trigger the click event
@@ -2526,20 +2567,26 @@ var rpLib = {
       // add preview-text with textContent of ql-editor
       updatedData.fieldData["preview-text"] = document.querySelector("#partner-description .ql-editor").textContent.trim();
 
-      // Add profile picture if available
-      if (newProfilePicFile) {
+      // Handle profile picture - check for deletion first
+      if (rpLib.partnersPage.state.deletions.profilePic) {
+        updatedData.fieldData["profile-pic"] = null;
+      } else if (newProfilePicFile) {
         const newImgUrl = $("#profile-pic-preview").attr("src");
         updatedData.fieldData["profile-pic"] = { url: newImgUrl };
       }
 
-      // Add logo if available
-      if (newLogoFile) {
+      // Handle logo - check for deletion first
+      if (rpLib.partnersPage.state.deletions.logo) {
+        updatedData.fieldData["logo"] = null;
+      } else if (newLogoFile) {
         const newImgUrl = $("#logo-preview").attr("src");
         updatedData.fieldData["logo"] = { url: newImgUrl };
       }
 
-      // Add advertisement image if available
-      if (newAdImageFile) {
+      // Handle advertisement image - check for deletion first
+      if (rpLib.partnersPage.state.deletions.adImage) {
+        updatedData.fieldData["advertisement"] = null;
+      } else if (newAdImageFile) {
         const newAdImage = $("#ad-image-preview").attr("src");
         updatedData.fieldData["advertisement"] = { url: newAdImage };
       }
@@ -2784,14 +2831,18 @@ var rpLib = {
         eventData.fieldData["video-2"] = `https://youtu.be/${eventData.fieldData["youtube-video-id-2"]}`;
       }
 
-      // Add main image if there's one uploaded
-      if (rpLib.eventsPage.state.uploads.mainImage) {
+      // Handle main image - check for deletion first
+      if (rpLib.eventsPage.state.deletions.mainImage) {
+        eventData.fieldData["main-image"] = null;
+      } else if (rpLib.eventsPage.state.uploads.mainImage) {
         const newMainImage = $("#main-image-preview").attr("src");
         eventData.fieldData["main-image"] = { url: newMainImage };
       }
 
-      // Add flyer image if there's one uploaded
-      if (rpLib.eventsPage.state.uploads.flyerImage) {
+      // Handle flyer image - check for deletion first
+      if (rpLib.eventsPage.state.deletions.flyerImage) {
+        eventData.fieldData["event-flyer"] = null;
+      } else if (rpLib.eventsPage.state.uploads.flyerImage) {
         const newFlyerImage = $("#event-flyer-preview").attr("src");
         eventData.fieldData["event-flyer"] = { url: newFlyerImage };
       }
